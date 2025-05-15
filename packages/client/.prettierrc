@@ -1,0 +1,8 @@
+{
+  "arrowParens": "always",
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tapWidth": 2,
+  "printWidth": 80
+}
