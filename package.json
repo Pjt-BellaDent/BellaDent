@@ -1,0 +1,18 @@
+{
+  "name": "BellaDent",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Pjt-BellaDent/BellaDent.git",
+  "author": "GOpro <dae.gyeon.go@gmail.com>",
+  "license": "MIT",
+  "packageManager": "yarn@1.22.22",
+  "private": true,
+  "workspaces": [
+    "packages/server",
+    "packages/client"
+  ],
+  "scripts": {
+    "server": "yarn workspace server run dev",
+    "client": "yarn workspace client run dev"
+  }
+}
