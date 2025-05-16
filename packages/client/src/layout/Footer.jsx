@@ -2,15 +2,14 @@ import React from 'react';
 import styled from '@emotion/styled';
 
 function Footer() {
-  let Footer = styled.footer`
+  const Footer = styled.footer`
     width: 100%;
     height: 200px;
     background-color: #f0f0f0;
-    position: sticky;
-    bottom: 0;
-    left: 0;
+    flex-grow: 0;
+    flex-shrink: 0;
   `;
-  let Container = styled.div`
+  const Container = styled.div`
     width: 1440px;
     margin: 0 auto;
   `;
@@ -26,7 +25,7 @@ function Footer() {
         <p>
           Tel: 062-987-6543 | Copyright ⓒ 2025 벨라덴치과. All rights reserved.
         </p>
-        <p className='mt-5'>Marketing Management By team A</p>
+        <p className="mt-5">Marketing Management By team A</p>
       </Container>
     </Footer>
   );
