@@ -6,6 +6,7 @@ function SignUp() {
     email: '',
     password: '',
     password_check: '',
+    name: '',
     phone: '',
     address: '',
     birth_date: '',
@@ -34,12 +35,12 @@ function SignUp() {
       const response = await axios.post(url, {
         email: formData.email,
         password: formData.password,
+        name: formData.name,
         phone: formData.phone,
         address: formData.address,
         birthDate: formData.birth_date,
         gender: formData.gender,
       });
-      console.log(response.data);
     } catch (err) {
       console.error(err);
     }
@@ -109,6 +110,24 @@ function SignUp() {
                     비밀번호를 확인하세요
                   </span>
                 )}
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="name"
+              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
+            >
+              이름
+            </label>
+            <div className="mt-2 flex-3/4">
+              <input
+                type="text"
+                name="name"
+                id="name"
+                required
+                onChange={handleChange}
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+              />
             </div>
           </div>
           <div className="flex items-center justify-between">
