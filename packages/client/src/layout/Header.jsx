@@ -1,6 +1,7 @@
 import { useState, useRef, useEffectS, useEffect } from 'react';
 import { Link } from 'react-router';
 import styled from '@emotion/styled';
+import logo from '../assets/logo.png';
 
 function Header() {
   const Header = styled.header`
@@ -102,7 +103,7 @@ function Header() {
     <Header>
       <Container className="flex justify-between items-center">
         <ImageBox>
-          <img src="" alt="logo" />
+          <img src={logo} alt="logo" />
         </ImageBox>
         <nav className="text-center" ref={navRef}>
           <ul className="list flex gap-10">
