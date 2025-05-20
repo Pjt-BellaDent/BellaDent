@@ -1,0 +1,60 @@
+html {
+  font-size: 18px;
+}
+.d-flex {
+  display: flex;
+}
+.p {
+  font-style: oblique;
+}
+.accent {
+  font-weight: bold;
+  color: blue;
+}
+.accent2 {
+  background-color: #222;
+  color: white;
+}
+
+.gap-1 {
+  gap: 1rem;
+}
+.row-reverse {
+  flex-direction: row-reverse;
+}
+.treatment_container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.table,
+th,
+td {
+  border: 1px solid darkblue;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 10px;
+  text-align: center;
+}
+.text-align {
+  background-origin: padding-box;
+}
+.table {
+    max-width: 1440px;
+    margin: 0 auto;
+    margin-top:  15px;
+}
+.col1 {
+    width: 240px;
+    background-color: blue;
+    color: white;
+}
+.col2 {
+    width: 720px;
+    background-color: blue;
+    color: white;
+}
+.text {
+    padding: 10px 0;
+}
