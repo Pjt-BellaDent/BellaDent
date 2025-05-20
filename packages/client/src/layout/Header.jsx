@@ -140,6 +140,9 @@ function Header() {
             <li className="login_menu">
               <Link to={'/signup'}>회원가입</Link>
             </li>
+            <li className="login_menu">
+              <Link to={'/Dashboard'}>대시보드</Link>
+            </li>
           </ul>
         </div>
       </Container>
