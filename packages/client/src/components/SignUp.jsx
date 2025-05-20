@@ -1,13 +1,57 @@
-import React from 'react';
+import { useState } from 'react';
+import axios from 'axios';
 
 function SignUp() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    password_check: '',
+    phone: '',
+    address: '',
+    birth_date: '',
+    gender: '',
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  function handleChangeRadio(e) {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.id,
+    });
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (formData.password !== formData.password_check) {
+        alert('비밀번호가 일치하지 않습니다. 다시 확인하세요.');
+        return;
+      }
+      const url = 'http://localhost:3000/users/signUp';
+      const response = await axios.post(url, {
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        address: formData.address,
+        birthDate: formData.birth_date,
+        gender: formData.gender,
+      });
+      console.log(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-lg">
-        <form className="space-y-6" action="#" method="POST">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="flex items-center">
             <label
-              for="email"
+              htmlFor="email"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               이메일
@@ -17,15 +61,16 @@ function SignUp() {
                 type="email"
                 name="email"
                 id="email"
-                autocomplete="email"
+                placeholder="example@email.com"
                 required
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
-              for="password"
+              htmlFor="password"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               비밀번호
@@ -35,33 +80,40 @@ function SignUp() {
                 type="password"
                 name="password"
                 id="password"
-                autocomplete="current-password"
+                minLength={6}
                 required
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
-              for="password_check"
+              htmlFor="password_check"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               비밀번호 확인
             </label>
-            <div className="mt-2 flex-3/4">
+            <div className="flex relative mt-2 flex-3/4">
               <input
                 type="password"
                 name="password_check"
                 id="password_check"
-                autocomplete="current-password"
                 required
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
+              {formData.password_check &&
+                formData.password !== formData.password_check && (
+                  <span className="absolute text-xs text-red-600 right-3 top-1/2 -translate-y-1/2">
+                    비밀번호를 확인하세요
+                  </span>
+                )}
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
-              for="phone"
+              htmlFor="phone"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               연락처
@@ -71,14 +123,17 @@ function SignUp() {
                 type="text"
                 name="phone"
                 id="phone"
+                maxLength={13}
                 required
+                placeholder="01X-XXXX-XXXX"
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
-              for="address"
+              htmlFor="address"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               주소
@@ -88,40 +143,44 @@ function SignUp() {
                 type="text"
                 name="address"
                 id="address"
-                required
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
-              for="birthday"
+              htmlFor="birth_date"
               className="block text-sm/6 font-medium text-gray-900 flex-1/4"
             >
               생년월일
             </label>
             <div className="mt-2 flex-3/4">
               <input
-                type="number"
-                name="birthday"
-                id="birthday"
+                type="text"
+                name="birth_date"
+                id="birth_date"
+                maxLength={8}
+                minLength={8}
                 required
+                placeholder="YYYYMMDD"
+                onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
           </div>
-
           <div className="flex items-center mt-6 space-y-6">
             <div className="flex items-center gap-x-3">
               <input
-                defaultChecked
-                id="push-everything"
-                name="push-notifications"
+                id="남성"
+                name="gender"
                 type="radio"
+                required
+                onChange={handleChangeRadio}
                 className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
               />
               <label
-                htmlFor="push-everything"
+                htmlFor="남성"
                 className="block text-sm/6 font-medium text-gray-900"
               >
                 남성
@@ -129,20 +188,21 @@ function SignUp() {
             </div>
             <div className="flex items-center gap-x-3">
               <input
-                id="push-email"
-                name="push-notifications"
+                id="여성"
+                name="gender"
                 type="radio"
+                required
+                onChange={handleChangeRadio}
                 className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
               />
               <label
-                htmlFor="push-email"
+                htmlFor="여성"
                 className="block text-sm/6 font-medium text-gray-900"
               >
                 여성
               </label>
             </div>
           </div>
-
           <div className="mt-6 space-y-6">
             <div className="flex gap-3">
               <div className="flex h-6 shrink-0 items-center">
@@ -151,6 +211,7 @@ function SignUp() {
                     id="comments"
                     name="comments"
                     type="checkbox"
+                    required
                     aria-describedby="comments-description"
                     className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
                   />
@@ -183,17 +244,15 @@ function SignUp() {
               </div>
             </div>
           </div>
-
           <div>
             <button
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign in
+              등록
             </button>
           </div>
         </form>
-
         <p className="mt-10 text-center text-sm/6 text-gray-500">
           Not a member?
           <a
