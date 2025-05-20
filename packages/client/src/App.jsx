@@ -15,16 +15,17 @@ import Gallery from './routes/Gallery.jsx';
 import Reservation from './routes/Reservation.jsx';
 import Consultation from './routes/Consultation.jsx';
 import Faq from './routes/Faq.jsx';
-import Notice from './routes/Notice.jsx';
+import Announcement from './routes/Announcement.jsx';
 import Review from './routes/Review.jsx';
 import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
 
+import DashboardFrame from './routes/DashboardFrame.jsx';
 import Dashboard from './components/Dashboard';
 import Notice from './components/Notice';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
-import PatientList from './components/PatientList/PatientList';  // ✅ 수정
+import PatientList from './components/PatientList/PatientList'; // ✅ 수정
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
@@ -49,26 +50,24 @@ function App() {
           <Route path="/reservation" element={<Reservation />} />
           <Route path="/consultation" element={<Consultation />} />
           <Route path="/faq" element={<Faq />} />
-          <Route path="/notice" element={<Notice />} />
+          <Route path="/Announcement" element={<Announcement />} />
           <Route path="/review" element={<Review />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
         </Route>
+        <Route path="/Dashboard" element={<DashboardFrame />}>
+          <Route index element={<Dashboard />} />
+          <Route path="/Dashboard/notice" element={<Notice />} />
+          <Route path="/Dashboard/waiting" element={<WaitingStatus />} />
+          <Route path="/Dashboard/schedule" element={<StaffSchedule />} />
+          <Route path="/Dashboard/patients" element={<PatientList />} />
+          <Route path="/Dashboard/reservations" element={<ReservationManager />} />
+          <Route path="/Dashboard/chat" element={<Chat />} />
+          <Route path="/Dashboard/chat-settings" element={<ChatbotSettings />} />
+          <Route path="/Dashboard/settings" element={<GeneralSettings />} />
+        </Route>
       </Routes>
     </>
-    <Routes>
-      <Route path="/" element={<Frame />}>
-        <Route index element={<Dashboard />} />
-        <Route path="notice" element={<Notice />} />
-        <Route path="waiting" element={<WaitingStatus />} />
-        <Route path="schedule" element={<StaffSchedule />} />
-        <Route path="patients" element={<PatientList />} />
-        <Route path="reservations" element={<ReservationManager />} />
-        <Route path="chat" element={<Chat />} />
-        <Route path="chat-settings" element={<ChatbotSettings />} />
-        <Route path="settings" element={<GeneralSettings />} />
-      </Route>
-    </Routes>
   );
 }
 

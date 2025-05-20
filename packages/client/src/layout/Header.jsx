@@ -80,7 +80,7 @@ function Header() {
           menu: '자주 묻는 질문 (FAQ)',
           link: '/faq',
         },
-        { menu: '공지사항', link: '/notice' },
+        { menu: '공지사항', link: '/Announcement' },
         { menu: '치료 후기 게시판', link: '/review' },
       ],
     },
