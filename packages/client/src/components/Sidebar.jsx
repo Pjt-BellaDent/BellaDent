@@ -1,46 +1,71 @@
+import { useLocation } from 'react-router-dom';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
+import isPropValid from '@emotion/is-prop-valid';
 
-const SidebarContainer = styled.aside`
-  width: 200px;
-  background-color: #fff;
-  border-right: 1px solid #ddd;
+const Wrapper = styled.nav`
+  width: 220px;
+  background: #f9f9f9;
   padding: 20px;
+  border-right: 1px solid #ddd;
 `;
 
-const MenuItem = styled(Link)`
+const UserInfo = styled.div`
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ccc;
+`;
+
+const NavLink = styled(Link, {
+  shouldForwardProp: (prop) => isPropValid(prop) && prop !== 'active',
+})`
   display: block;
-  margin-bottom: 15px;
-  font-size: 15px;
-  color: #007bff;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border-radius: 6px;
   text-decoration: none;
+  color: #333;
+  background: ${({ active }) => (active ? '#e6f0ff' : 'transparent')};
+  font-weight: ${({ active }) => (active ? 'bold' : 'normal')};
 
   &:hover {
-    font-weight: bold;
+    background: #f0f0f0;
   }
 `;
 
-const Sidebar = () => {
-    const menu = [
-        { path: '/Dashboard/notice', label: '📢 직원 공지사항' },
-        { path: '/Dashboard', label: '🏠 대시보드' },
-        { path: '/Dashboard/waiting', label: '⏳ 진료 대기' },
-        { path: '/Dashboard/schedule', label: '📆 의료진 근무 스케줄' },
-        { path: '/Dashboard/patients', label: '📋 환자 리스트' },
-        { path: '/Dashboard/reservations', label: '📅 예약 관리' },
-        { path: '/Dashboard/chat', label: '💬 AI 채팅' },
-        { path: '/Dashboard/chat-settings', label: '⚙️ AI 채팅 설정' },
-        { path: '/Dashboard/settings', label: '⚙️ 전체 설정' },
-      ];
-      
+const menuItems = [
+  { path: '/Dashboard/notice', label: '📢 공지사항', roles: ['super_admin', 'manager'] },
+  { path: '/Dashboard', label: '📊 대시보드', roles: ['super_admin', 'doctor', 'consultant'] },
+  { path: '/Dashboard/waiting', label: '⏳ 대기현황', roles: ['super_admin', 'doctor'] },
+  { path: '/Dashboard/reservations', label: '📅 예약 관리', roles: ['super_admin', 'consultant'] },
+  { path: '/Dashboard/schedule', label: '📆 의료진 일정', roles: ['super_admin', 'doctor'] },
+  { path: '/Dashboard/patients', label: '📋 환자 목록', roles: ['super_admin', 'doctor'] },
+  { path: '/Dashboard/chat', label: '💬 AI 채팅/상담', roles: ['super_admin', 'consultant'] },
+  { path: '/Dashboard/chat-settings', label: '⚙️ 챗봇 설정', roles: ['super_admin'] },
+  { path: '/Dashboard/settings', label: '⚙️ 설정', roles: ['super_admin'] },
+];
+
+const Sidebar = ({ role = 'super_admin', name = '홍길동' }) => {
+  const location = useLocation();
+
   return (
-    <SidebarContainer>
-      <h2>Menu</h2>
-      {menu.map(({ path, label }) => (
-        <MenuItem key={path} to={path}>{label}</MenuItem>
-      ))}
-    </SidebarContainer>
+    <Wrapper>
+      <UserInfo>👤 {name}</UserInfo>
+      {menuItems
+        .filter(item => item.roles.includes(role))
+        .map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            active={location.pathname === item.path}
+          >
+            {item.label}
+          </NavLink>
+        ))}
+    </Wrapper>
   );
 };
 
