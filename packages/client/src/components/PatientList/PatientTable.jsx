@@ -43,7 +43,7 @@ const Table = styled.table`
   .survey { background-color: #17a2b8; }
 `;
 
-const PatientTable = ({ data, onProcedureClick, onSurveyClick }) => {
+const PatientTable = ({ data, onProcedureClick, onSurveyClick, onEditClick }) => {
   return (
     <TableWrapper>
       <Table>
@@ -70,8 +70,7 @@ const PatientTable = ({ data, onProcedureClick, onSurveyClick }) => {
               <td>{p.lastVisit}</td>
               <td>{p.status}</td>
               <td>
-                <button className="view">보기</button>
-                <button className="edit">수정</button>
+                <button className="edit" onClick={() => onEditClick(p.name)}>수정</button>
                 <button className="survey" onClick={() => onSurveyClick(p.name)}>설문</button>
               </td>
             </tr>
