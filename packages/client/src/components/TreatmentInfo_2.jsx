@@ -6,11 +6,8 @@ function TreatmentInfo_2() {
     <div className="treatment_container">
       <title>non-covered items</title>
       <div>
-        <br />
-
-        <br />
-        <h2>
-          <b>비급여 항목 안내</b>
+        <h2 className='mt-14 and mb-6'>
+          <b >비급여 항목 안내</b>
         </h2>
         <hr />
         <h3 className="text">제증명수수료</h3>
@@ -98,12 +95,10 @@ function TreatmentInfo_2() {
           </tr>
         </table>
         <div>
-          <br />
-          <h4>
+                    <h4 className='mt-20 mb-6'>
             <b>비급여항목임플란트</b>
-          </h4>
-          <br />
-          <table>
+          </h4 >
+                   <table className='my-16,my-3'>
             <tr>
               <th className="col1">구분</th>
               <th className="col2">비급여항목</th>
@@ -156,11 +151,10 @@ function TreatmentInfo_2() {
         </div>
 
         <div>
-          <br />
-          <h5>
+                   <h5 className='mt-20 mb-6'>
             <b>비급여항목치은이식성형</b>
           </h5>
-          <br />
+          
           <table>
             <tr>
               <th className="col1">구분</th>
@@ -206,12 +200,10 @@ function TreatmentInfo_2() {
           </table>
         </div>
         <div>
-          <br />
-          <h6>
+                    <h6 className='mt-20 mb-6'>
             <b>비급여항목레진</b>
           </h6>
-          <br />
-          <table>
+                   <table>
             <tr>
               <th className="col1">구분</th>
               <th className="col2">비급여항목</th>
@@ -252,11 +244,11 @@ function TreatmentInfo_2() {
           </table>
         </div>
         <div>
-          <br />
-          <h6>
+          
+          <h6 className='mt-20 mb-6'>
             <b>비급여항목보존 및 보철치료</b>
           </h6>
-          <br />
+          
           <table>
             <tr>
               <th className="col1">구분</th>
@@ -318,11 +310,11 @@ function TreatmentInfo_2() {
           </table>
         </div>
         <div>
-          <br />
-          <h6>
+          
+          <h6 className='mt-20 mb-6' >
             <b>비급여항목인레이,온레이</b>
           </h6>
-          <br />
+          
           <table>
             <tr>
               <th className="col1">구분</th>
@@ -354,11 +346,11 @@ function TreatmentInfo_2() {
           </table>
           <table>
             <div>
-              <br />
-              <h6>
+             
+              <h6 className='mt-20 mb-6'> 
                 <b>비급여항목교정치료</b>
               </h6>
-              <br />
+              
               <table>
             <tr>
               <th className="col1">구분</th>
@@ -447,11 +439,11 @@ function TreatmentInfo_2() {
           </table>
            
            <div>
-          <br />
-          <h6>
+         
+          <h6 className='mt-20 mb-6 '>
             <b>비급여항목틀니</b>
           </h6>
-          <br />
+       
           <table>
             <tr>
               <th className="col1">구분</th>
@@ -520,12 +512,12 @@ function TreatmentInfo_2() {
           </table>
         </div>
         <div>
-          <br />
-          <h6>
+         
+          <h6 className='mt-20 mb-6'>
             <b>비급여항목기타진료</b>
           </h6>
-          <br />
-          <table>
+        
+          <table className='mb-10'>
             <tr>
               <th className="col1">구분</th>
               <th className="col2">비급여항목</th>

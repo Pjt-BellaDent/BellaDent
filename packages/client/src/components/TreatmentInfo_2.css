@@ -23,7 +23,7 @@ html {
   flex-direction: row-reverse;
 }
 .treatment_container {
-  max-width: 1440px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 .table,
