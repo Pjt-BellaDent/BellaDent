@@ -5,10 +5,10 @@ import logo from '../assets/logo.png';
 
 function Header() {
   const Header = styled.header`
-    width: 100%;
-    height: 80px;
-    flex-grow: 0;
-    flex-shrink: 0;
+  width: 100%;
+  height: 80px;
+  flex-grow: 0;
+  flex-shrink: 0;
   `;
   const Container = styled.div`
     width: 1440px;
