@@ -22,11 +22,13 @@ import SignUp from './components/SignUp.jsx';
 
 import DashboardFrame from './routes/DashboardFrame.jsx';
 import Dashboard from './components/Dashboard';
-import Notice from './components/Notice';
+import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
 import PatientList from './components/PatientList/PatientList'; // ✅ 수정
 import ReservationManager from './components/ReservationManager/ReservationManager';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings';
@@ -56,16 +58,17 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
         </Route>
         <Route path="/Dashboard" element={<DashboardFrame />}>
-          <Route index element={<Dashboard />} />
-          <Route path="/Dashboard/notice" element={<Notice />} />
-          <Route path="/Dashboard/waiting" element={<WaitingStatus />} />
-          <Route path="/Dashboard/schedule" element={<StaffSchedule />} />
-          <Route path="/Dashboard/patients" element={<PatientList />} />
-          <Route path="/Dashboard/reservations" element={<ReservationManager />} />
-          <Route path="/Dashboard/chat" element={<Chat />} />
-          <Route path="/Dashboard/chat-settings" element={<ChatbotSettings />} />
-          <Route path="/Dashboard/settings" element={<GeneralSettings />} />
-        </Route>
+  <Route index element={<Dashboard />} />
+  <Route path="waiting" element={<WaitingStatus />} />
+  <Route path="schedule" element={<StaffSchedule />} />
+  <Route path="patients" element={<PatientList />} />
+  <Route path="reservations" element={<ReservationManager />} />
+  <Route path="chat" element={<Chat />} />
+  <Route path="chat-settings" element={<ChatbotSettings />} />
+  <Route path="settings" element={<GeneralSettings />} />
+  <Route path="sms" element={<Sms />} />
+  <Route path="feedback" element={<Feedback />} />
+</Route>
       </Routes>
     </>
   );
