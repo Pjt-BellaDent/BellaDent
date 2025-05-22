@@ -26,13 +26,22 @@ const Row = styled.div`
   padding: 12px 0;
 `;
 
+const Column = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: 8px;
+`;
+
 const Button = styled.button`
-  background: #f6f6f6;
+  background: ${({ primary }) => (primary ? '#007bff' : '#f6f6f6')};
+  color: ${({ primary }) => (primary ? '#fff' : '#000')};
   border: 1px solid #ccc;
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 14px;
-  margin-right: 10px;
+  margin-right: 8px;
+  cursor: pointer;
 `;
 
 const ToggleSwitch = styled.label`
@@ -74,6 +83,17 @@ const ToggleSwitch = styled.label`
   }
 `;
 
+const Textarea = styled.textarea`
+  width: 100%;
+  min-height: 80px;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  resize: vertical;
+`;
+
 const Preview = styled.div`
   flex: 1;
   background: white;
@@ -92,6 +112,14 @@ const Preview = styled.div`
 `;
 
 const ChatbotSettings = () => {
+  const defaultAnswers = {
+    접수: '진료 접수는 방문 또는 전화로 가능합니다.',
+    예약: '예약 변경은 24시간 전에 연락 주시면 처리됩니다.',
+    검사: '검사 결과는 진료 후 마이페이지에서 확인 가능합니다.',
+    진료비: '진료비는 시술 항목에 따라 상이하니 전화문의 주세요.',
+    시간: '평일 9시~18시 / 토요일 9시~13시 운영, 일요일/공휴일 휴무입니다.'
+  };
+
   const [toggles, setToggles] = useState({
     접수: true,
     예약: false,
@@ -100,8 +128,31 @@ const ChatbotSettings = () => {
     시간: true
   });
 
+  const [answers, setAnswers] = useState(defaultAnswers);
+  const [editBuffer, setEditBuffer] = useState(defaultAnswers);
+  const [selectedKey, setSelectedKey] = useState('시간');
+
   const toggleChange = (key) => {
     setToggles(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleEditClick = (key) => {
+    setSelectedKey(key);
+    setEditBuffer(prev => ({ ...prev, [key]: answers[key] }));
+  };
+
+  const handleAnswerChange = (key, value) => {
+    setEditBuffer(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSave = (key) => {
+    setAnswers(prev => ({ ...prev, [key]: editBuffer[key] }));
+    setSelectedKey(null);
+  };
+
+  const handleCancel = (key) => {
+    setEditBuffer(prev => ({ ...prev, [key]: answers[key] }));
+    setSelectedKey(null);
   };
 
   return (
@@ -111,37 +162,50 @@ const ChatbotSettings = () => {
       <SettingsContainer>
         <SettingsList>
           <h3>자주 묻는 질문 설정</h3>
-          {[
-            ['접수', '진료 접수 방법'],
-            ['예약', '예약 변경 방법'],
-            ['검사', '검사 결과 조회'],
-            ['진료비', '진료비 문의'],
-            ['시간', '진료 시간'],
-          ].map(([key, label]) => (
-            <Row key={key}>
-              <span>{label}</span>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <Button>답변 편집</Button>
-                <ToggleSwitch>
-                  <input
-                    type="checkbox"
-                    checked={toggles[key]}
-                    onChange={() => toggleChange(key)}
+          {Object.entries({
+            접수: '진료 접수 방법',
+            예약: '예약 변경 방법',
+            검사: '검사 결과 조회',
+            진료비: '진료비 문의',
+            시간: '진료 시간'
+          }).map(([key, label]) => (
+            <div key={key}>
+              <Row>
+                <span>{label}</span>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Button onClick={() => handleEditClick(key)}>답변 편집</Button>
+                  <ToggleSwitch>
+                    <input
+                      type="checkbox"
+                      checked={toggles[key]}
+                      onChange={() => toggleChange(key)}
+                    />
+                    <span className="slider"></span>
+                  </ToggleSwitch>
+                </div>
+              </Row>
+              {selectedKey === key && (
+                <Column>
+                  <Textarea
+                    value={editBuffer[key]}
+                    onChange={(e) => handleAnswerChange(key, e.target.value)}
                   />
-                  <span className="slider"></span>
-                </ToggleSwitch>
-              </div>
-            </Row>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                    <Button onClick={() => handleCancel(key)}>취소</Button>
+                    <Button primary onClick={() => handleSave(key)}>저장</Button>
+                  </div>
+                </Column>
+              )}
+            </div>
           ))}
         </SettingsList>
 
         <Preview>
           <h4>💬 고객에게 보이는 응답 예시</h4>
           <div className="preview-box">
-            <strong>질문:</strong> 진료 시간은 어떻게 되나요?<br /><br />
+            <strong>질문:</strong> {selectedKey ? `${selectedKey} 관련 질문` : ''}<br /><br />
             <strong>AI 답변:</strong><br />
-            저희 병원의 진료 시간은 평일 오전 9시부터 오후 6시까지이며,<br />
-            토요일은 1시까지 운영됩니다. 일요일 및 공휴일은 휴진입니다.
+            {answers[selectedKey]}
           </div>
         </Preview>
       </SettingsContainer>
