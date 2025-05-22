@@ -4,6 +4,7 @@ import PatientTable from './PatientTable';
 import ProcedureModal from './ProcedureModal';
 import SurveyModal from './SurveyModal';
 import Charts from './Charts';
+import EditPatientModal from './EditPatientModal';
 
 const Container = styled.div`
   padding: 30px;
@@ -56,6 +57,11 @@ const PatientList = () => {
   const [surveyModalOpen, setSurveyModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
+  // ✅ 수정용 상태
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [editProcedures, setEditProcedures] = useState([]);
+
   const openProcedureModal = (name) => {
     setSelectedPatient(name);
     setProcedureModalOpen(true);
@@ -64,6 +70,15 @@ const PatientList = () => {
   const openSurveyModal = (name) => {
     setSelectedPatient(name);
     setSurveyModalOpen(true);
+  };
+
+  // ✅ 수정 모달 열기
+  const openEditModal = (name) => {
+    const patient = patients.find(p => p.name === name);
+    const history = proceduresData[name] || [];
+    setEditTarget(patient);
+    setEditProcedures(history);
+    setEditModalOpen(true);
   };
 
   return (
@@ -92,6 +107,15 @@ const PatientList = () => {
         data={patients}
         onProcedureClick={openProcedureModal}
         onSurveyClick={openSurveyModal}
+        onEditClick={openEditModal}
+      />
+
+      {/* ✅ 수정 모달 */}
+      <EditPatientModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        patientData={editTarget}
+        procedures={editProcedures}
       />
 
       <Charts proceduresData={proceduresData} />
