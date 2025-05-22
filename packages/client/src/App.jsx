@@ -30,10 +30,12 @@ import ReservationManager from './components/ReservationManager/ReservationManag
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings';
+import { HospitalProvider } from './contexts/HospitalContext.jsx';
 
 function App() {
   return (
     <>
+    <HospitalProvider>
       <Routes>
         <Route path="/" element={<Frame />}>
           <Route index element={<Home />} />
@@ -67,6 +69,7 @@ function App() {
           <Route path="/Dashboard/settings" element={<GeneralSettings />} />
         </Route>
       </Routes>
+    </HospitalProvider>
     </>
   );
 }
