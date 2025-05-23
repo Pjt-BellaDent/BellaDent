@@ -19,9 +19,9 @@ html {
 .gap-1 {
   gap: 1rem;
 }
-.row-reverse {
+/* .row-reverse {
   flex-direction: row-reverse;
-}
+} */
 .treatment_container {
   max-width: 1200px;
   margin: 0 auto;
@@ -55,6 +55,4 @@ td {
     background-color: blue;
     color: white;
 }
-.text {
-    padding: 10px 0;
-}
+
