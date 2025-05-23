@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import { useHospitalInfo } from '../contexts/HospitalContext';
+import { useHospitalInfo } from '../../contexts/HospitalContext';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`padding: 30px;`;
 const Section = styled.div`
@@ -71,6 +72,7 @@ const GeneralSettings = () => {
 
   const [user, setUser] = useState({ role: 'doctor', name: '', email: '' });
   const [system, setSystem] = useState({ notify: 'ON', interval: 15, emr: '사용' });
+  const navigate = useNavigate();
 
   const saveHospitalInfo = () => {
     setHospitalInfo({ ...hospital }); // 전역 상태 업데이트
@@ -78,7 +80,7 @@ const GeneralSettings = () => {
     setEditMode(false);
     alert('병원 정보가 저장되었습니다.');
   };
-  
+
 
   const cancelEdit = () => {
     setHospital({ ...hospitalInfo });
@@ -90,61 +92,14 @@ const GeneralSettings = () => {
       <h2>⚙️ 전체 설정</h2>
 
       <Section>
-        <h3>🏥 병원 정보</h3>
-        {['name', 'address', 'ceo', 'bizNumber', 'phone'].map((field, idx) => (
-          <Group key={idx}>
-            <Label>
-              {{
-                name: '병원명',
-                address: '주소',
-                ceo: '대표자명',
-                bizNumber: '사업자등록번호',
-                phone: '연락처'
-              }[field]}
-            </Label>
-            {editMode ? (
-              <Input
-                value={hospital[field]}
-                onChange={e => setHospital({ ...hospital, [field]: e.target.value })}
-              />
-            ) : (
-              <Text>{hospitalInfo[field]}</Text>
-            )}
-          </Group>
-        ))}
-        {!editMode ? (
-          <Button onClick={() => setEditMode(true)}>수정</Button>
-        ) : (
-          <>
-            <Button onClick={saveHospitalInfo}>저장</Button>
-            <CancelButton onClick={cancelEdit}>취소</CancelButton>
-          </>
-        )}
+        <Button onClick={() => navigate('/Dashboard/hospital-info')}>
+          병원 정보 관리
+        </Button>
+
       </Section>
 
       <Section>
-        <h3>👤 사용자 권한 관리</h3>
-        <Group>
-          <Label>역할 선택</Label>
-          <Select value={user.role} onChange={e => setUser({ ...user, role: e.target.value })}>
-            <option value="super_admin">대표원장 (super_admin)</option>
-            <option value="doctor">의사 (doctor)</option>
-            <option value="manager">실장 (manager)</option>
-            <option value="consultant">상담사 (consultant)</option>
-            <option value="hygienist">위생사 (hygienist)</option>
-            <option value="receptionist">수납/접수 (receptionist)</option>
-          </Select>
-          <RoleDescription>{roleInfo[user.role]}</RoleDescription>
-        </Group>
-        <Group>
-          <Label>이름</Label>
-          <Input value={user.name} onChange={e => setUser({ ...user, name: e.target.value })} />
-        </Group>
-        <Group>
-          <Label>이메일</Label>
-          <Input type="email" value={user.email} onChange={e => setUser({ ...user, email: e.target.value })} />
-        </Group>
-        <Button>사용자 추가</Button>
+        <Button onClick={() => navigate('/Dashboard/user-permissions')}>사용자 권한 관리</Button>
       </Section>
 
       <Section>

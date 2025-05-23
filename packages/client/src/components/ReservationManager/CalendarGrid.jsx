@@ -27,6 +27,7 @@ const Cell = styled.div`
   padding: 8px;
   cursor: pointer;
   position: relative;
+  overflow: hidden;
 `;
 
 const DayNumber = styled.div`
@@ -42,10 +43,18 @@ const Event = styled.div`
   border-radius: 4px;
   padding: 2px 6px;
   margin-top: 4px;
-  display: inline-block;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const CalendarGrid = ({ date, events, onDayClick }) => {
+const EventWrapper = styled.div`
+  max-height: 90px; // 셀 내에서 스크롤이 필요한 영역 높이
+  overflow-y: auto;
+`;
+
+const CalendarGrid = ({ date, events, onDayClick, filterDept }) => {
   const year = date.getFullYear();
   const month = date.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -59,15 +68,25 @@ const CalendarGrid = ({ date, events, onDayClick }) => {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayEvents = events[key] || [];
+    let dayEvents = events[key] || [];
+
+    if (filterDept !== '전체') {
+      dayEvents = dayEvents.filter(e => e.type === filterDept);
+    }
+
+    const sortedEvents = [...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
 
     cells.push(
       <Cell key={key} onClick={() => onDayClick(year, month, day)}>
-        <DayNumber>{day}</DayNumber>
+      <DayNumber>{day}</DayNumber>
+      <EventWrapper>
         {dayEvents.map((e, i) => (
-          <Event key={i}>{e.type}</Event>
+          <Event key={i}>
+            {`${e.type || '진료과'} - ${e.time || '시간'} - ${e.name || '이름'}`}
+          </Event>
         ))}
-      </Cell>
+      </EventWrapper>
+    </Cell>
     );
   }
 

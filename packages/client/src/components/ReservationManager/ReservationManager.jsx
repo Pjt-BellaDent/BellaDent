@@ -28,22 +28,45 @@ const CalendarHeader = styled.div`
   }
 `;
 
+const FilterBar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+`;
+
 const ReservationManager = () => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 4)); // 2025년 5월
-  const [events, setEvents] = useState({
-    '2025-05-01': [
-      { time: '10:00', type: '🦷 치과 예약', doctor: '이승호' },
-      { time: '14:00', type: '🧪 검사 일정', doctor: '김의사' }
-    ],
-    '2025-05-05': [
-      { time: '11:00', type: '👶 소아과', doctor: '정소아' }
-    ]
-  });
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 4));
+  const [selectedDept, setSelectedDept] = useState('전체');
   const [selectedDate, setSelectedDate] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editData, setEditData] = useState(null);
+
+  const [events, setEvents] = useState({
+    '2025-05-01': [
+      { time: '10:00', type: '보철과', name: '이수민', memo: '앞니 시술상담' },
+      { time: '14:00', type: '교정과', name: '김하늘', memo: '교정 중간 체크' }
+    ],
+    '2025-05-05': [
+      { time: '11:00', type: '잇몸클리닉', name: '정하늘', memo: '잇몸 염증 체크' }
+    ]
+  });
 
   const formatDateKey = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+  const changeMonth = (delta) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(currentDate.getMonth() + delta);
+    setCurrentDate(newDate);
+    setSelectedDate(null);
+  };
 
   const handleDayClick = (year, month, day) => {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -59,14 +82,17 @@ const ReservationManager = () => {
       return updated;
     });
     setModalOpen(false);
+    setEditData(null);
   };
 
-  const handleEditEvent = (dateKey, index, newTime) => {
+  const handleEditEvent = (dateKey, index, newData) => {
     setEvents(prev => {
       const updated = { ...prev };
-      updated[dateKey][index].time = newTime;
+      updated[dateKey][index] = newData;
       return updated;
     });
+    setModalOpen(false);
+    setEditData(null);
   };
 
   const handleDeleteEvent = (dateKey, index) => {
@@ -81,11 +107,9 @@ const ReservationManager = () => {
     }
   };
 
-  const changeMonth = (delta) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + delta);
-    setCurrentDate(newDate);
-    setSelectedDate(null);
+  const handleEditClick = (eventData) => {
+    setEditData(eventData);
+    setModalOpen(true);
   };
 
   return (
@@ -98,24 +122,51 @@ const ReservationManager = () => {
         <button onClick={() => changeMonth(1)}>다음 ➡</button>
       </CalendarHeader>
 
+      <FilterBar>
+        <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
+          <option value="전체">전체</option>
+          <option value="보철과">보철과</option>
+          <option value="교정과">교정과</option>
+          <option value="잇몸클리닉">잇몸클리닉</option>
+        </select>
+      </FilterBar>
+
       <CalendarGrid
         date={currentDate}
         events={events}
         onDayClick={handleDayClick}
+        filterDept={selectedDept}
       />
+
 
       <ReservationDetail
         dateKey={selectedDate}
         events={events}
-        onAdd={() => setModalOpen(true)}
-        onEdit={handleEditEvent}
+        onAdd={() => {
+          setEditData(null);
+          setModalOpen(true);
+        }}
+        onEdit={handleEditClick}
         onDelete={handleDeleteEvent}
       />
 
       <ReservationModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSave={handleAddEvent}
+        onClose={() => {
+          setModalOpen(false);
+          setEditData(null);
+        }}
+        onSave={(data) => {
+          if (editData) {
+            const idx = events[selectedDate]?.findIndex(e =>
+              e.name === editData.name && e.time === editData.time
+            );
+            if (idx > -1) handleEditEvent(selectedDate, idx, data);
+          } else {
+            handleAddEvent(data);
+          }
+        }}
+        initialData={editData}
       />
     </Container>
   );

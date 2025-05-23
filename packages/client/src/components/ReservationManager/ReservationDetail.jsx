@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
+import ReservationModal from './ReservationModal';
 
 const DetailWrapper = styled.div`
   background: white;
@@ -15,6 +16,7 @@ const Item = styled.div`
   align-items: center;
   border-bottom: 1px solid #eee;
   padding: 8px 0;
+  position: relative;
 `;
 
 const Info = styled.div`
@@ -51,7 +53,16 @@ const AddButton = styled.button`
   cursor: pointer;
 `;
 
+const EditModalWrapper = styled.div`
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+`;
+
 const ReservationDetail = ({ dateKey, events, onAdd, onEdit, onDelete }) => {
+
   if (!dateKey) {
     return (
       <DetailWrapper>
@@ -60,7 +71,10 @@ const ReservationDetail = ({ dateKey, events, onAdd, onEdit, onDelete }) => {
     );
   }
 
-  const reservations = events[dateKey] || [];
+  const reservations = [...(events[dateKey] || [])].sort((a, b) =>
+    a.time.localeCompare(b.time)
+  );
+
 
   return (
     <DetailWrapper>
@@ -70,18 +84,13 @@ const ReservationDetail = ({ dateKey, events, onAdd, onEdit, onDelete }) => {
       ) : (
         reservations.map((item, index) => (
           <Item key={index}>
-            <Info>⏰ {item.time} | {item.type} - {item.doctor}</Info>
+            <Info>
+              🦷 {item.type || '진료과 미지정'} | ⏰ {item.time || '시간 없음'} | 👤 {item.name || '이름 없음'}
+              {item.memo && <> | 📝 {item.memo}</>}
+            </Info>
             <Actions>
-              <button
-                className="edit-btn"
-                onClick={() => {
-                  const newTime = prompt("새로운 시간:", item.time);
-                  if (newTime) onEdit(dateKey, index, newTime);
-                }}
-              >
-                수정
-              </button>
-              <button
+            <button className="edit-btn" onClick={() => onEdit(item)}>수정</button>
+            <button
                 className="delete-btn"
                 onClick={() => {
                   if (window.confirm("이 예약을 삭제하시겠습니까?")) {
@@ -92,6 +101,7 @@ const ReservationDetail = ({ dateKey, events, onAdd, onEdit, onDelete }) => {
                 삭제
               </button>
             </Actions>
+
           </Item>
         ))
       )}
