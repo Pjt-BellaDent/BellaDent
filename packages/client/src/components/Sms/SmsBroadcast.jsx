@@ -34,7 +34,7 @@ const Table = styled.table`
 `;
 
 const Th = styled.th`
-  background-color: #007bff;
+  background-color: #6699CC;
   color: white;
   padding: 12px;
   font-size: 14px;
@@ -48,10 +48,11 @@ const Td = styled.td`
 
 const Button = styled.button`
   padding: 8px 16px;
-  background-color: ${({ color }) => color || '#007bff'};
+  background-color: ${({ color }) => color || '#AAAAAA'};
   color: white;
   border: none;
   border-radius: 5px;
+  margin-bottom: 4px;
   margin-right: 10px;
   cursor: pointer;
   font-size: 14px;
