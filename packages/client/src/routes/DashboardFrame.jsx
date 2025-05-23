@@ -5,24 +5,44 @@ import NoticeModal from '../components/Notice/NoticeModal';
 
 function DashboardFrame() {
   const [showNotice, setShowNotice] = useState(false);
-  const [notices, setNotices] = useState([
-    '✅ 5월 20일 전 직원 회의 예정',
-    '🦷 신규 장비 설치 일정: 5월 22일',
-  ]);
-  const [newNotice, setNewNotice] = useState('');
+  const [notices, setNotices] = useState([]);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
 
   const handleAdd = () => {
-    const text = newNotice.trim();
-    if (!text) return alert('공지사항을 입력하세요.');
-    setNotices([...notices, `🆕 ${text}`]);
-    setNewNotice('');
+    if (!title.trim()) return alert('제목을 입력하세요.');
+    const newNotice = { title: title.trim(), body: body.trim() };
+
+    if (editIndex !== null) {
+      const updated = [...notices];
+      updated[editIndex] = newNotice;
+      setNotices(updated);
+    } else {
+      setNotices([...notices, newNotice]);
+    }
+
+    setTitle('');
+    setBody('');
+    setEditIndex(null);
+    setShowForm(false);
   };
 
-  const handleDelete = (index) => {
-    setNotices(notices.filter((_, i) => i !== index));
+  const handleDelete = (idx) => {
+    setNotices(notices.filter((_, i) => i !== idx));
+  };
+
+  const handleEdit = (idx) => {
+    const item = notices[idx];
+    setTitle(item.title);
+    setBody(item.body);
+    setEditIndex(idx);
+    setShowForm(true);
   };
 
   return (
+    <>
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar onOpenNotice={() => setShowNotice(true)} />
       <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
@@ -31,15 +51,27 @@ function DashboardFrame() {
       {showNotice && (
         <NoticeModal
           show={showNotice}
-          onClose={() => setShowNotice(false)}
+          onClose={() => {
+            setShowNotice(false);
+            setShowForm(false);
+            setTitle('');
+            setBody('');
+            setEditIndex(null);
+          }}
           notices={notices}
-          newNotice={newNotice}
-          setNewNotice={setNewNotice}
           onAdd={handleAdd}
           onDelete={handleDelete}
+          onEdit={handleEdit}
+          title={title}
+          setTitle={setTitle}
+          body={body}
+          setBody={setBody}
+          showForm={showForm}
+          setShowForm={setShowForm}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
