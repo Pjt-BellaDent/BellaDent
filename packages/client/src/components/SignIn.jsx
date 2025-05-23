@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserInfoContext } from '../context/UserInfoContext.jsx';
 import axios from 'axios';
 
 function SignIn() {
+  const navigate = useNavigate();
+  const { roleLocation, isLogin, setIsLogin } = useContext(UserInfoContext);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,11 +19,28 @@ function SignIn() {
     e.preventDefault();
     try {
       const url = 'http://localhost:3000/users/signIn';
-      const response = await axios.post(url, {
-        email: formData.email,
-        password: formData.password,
-      });
+      const res = await axios
+        .post(
+          url,
+          {
+            email: formData.email,
+            password: formData.password,
+          },
+          { withCredentials: true }
+        )
+        .then((res) => {
+          if (res.status === 201) {
+            alert('로그인 성공');
+            setIsLogin(!isLogin);
+            navigate(roleLocation);
+          }
+        });
     } catch (err) {
+      if (err.status === 404) {
+        alert('사용자를 찾을 수 없습니다.');
+      } else if (err.status === 401) {
+        alert('비밀번호가 일치하지 않습니다.');
+      }
       console.error(err);
     }
   };
