@@ -16,7 +16,7 @@ const ModalContent = styled.div`
   background-color: white;
   padding: 20px;
   border-radius: 8px;
-  width: 300px;
+  width: 340px;
 
   h3 {
     margin-bottom: 15px;
@@ -29,11 +29,17 @@ const ModalContent = styled.div`
     font-size: 14px;
   }
 
-  input {
+  input, select, textarea {
     width: 100%;
     padding: 6px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 14px;
+  }
+
+  textarea {
+    height: 60px;
+    resize: vertical;
   }
 
   button {
@@ -56,38 +62,57 @@ const ModalContent = styled.div`
   }
 `;
 
-const ReservationModal = ({ open, onClose, onSave }) => {
-  const [form, setForm] = useState({ time: '', type: '', doctor: '' });
+const ReservationModal = ({ open, onClose, onSave, initialData = null }) => {
+  const [form, setForm] = useState({
+    time: '',
+    type: '',
+    name: '',
+    memo: ''
+  });
 
   useEffect(() => {
-    if (open) setForm({ time: '', type: '', doctor: '' });
-  }, [open]);
+    if (initialData) {
+      setForm(initialData);
+    }
+  }, [initialData]);
 
   const handleSubmit = () => {
-    const { time, type, doctor } = form;
-    if (!time || !type.trim() || !doctor.trim()) {
-      alert('모든 항목을 입력해주세요.');
+    const { time, type, name } = form;
+    if (!time || !type || !name) {
+      alert('시간, 진료과, 환자 이름을 모두 입력해주세요.');
       return;
     }
 
     onSave(form);
+    onClose();
   };
 
   return (
     <ModalOverlay open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <ModalContent>
-        <h3>예약 등록</h3>
+        <h3>{initialData ? '예약 수정' : '예약 등록'}</h3>
+
         <label>시간</label>
         <input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
 
         <label>진료과</label>
-        <input type="text" placeholder="예: 내과" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} />
+        <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+          <option value="">선택</option>
+          <option value="보철과">보철과</option>
+          <option value="교정과">교정과</option>
+          <option value="잇몸클리닉">잇몸클리닉</option>
+        </select>
 
-        <label>의사 이름</label>
-        <input type="text" placeholder="예: 김의사" value={form.doctor} onChange={e => setForm({ ...form, doctor: e.target.value })} />
+        <label>환자 이름</label>
+        <input type="text" placeholder="예: 홍길동" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+
+        <label>메모</label>
+        <textarea placeholder="추가 메모" value={form.memo} onChange={e => setForm({ ...form, memo: e.target.value })} />
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button className="save-btn" onClick={handleSubmit}>등록</button>
+          <button className="save-btn" onClick={handleSubmit}>
+            {initialData ? '수정' : '등록'}
+          </button>
           <button className="close-btn" onClick={onClose}>취소</button>
         </div>
       </ModalContent>
