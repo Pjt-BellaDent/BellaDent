@@ -19,7 +19,7 @@ import Announcement from './routes/Announcement.jsx';
 import Review from './routes/Review.jsx';
 import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
-
+import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import DashboardFrame from './routes/DashboardFrame.jsx';
 import Dashboard from './components/Dashboard';
 import Notice from './components/Notice';
@@ -29,9 +29,9 @@ import PatientList from './components/PatientList/PatientList'; // ✅ 수정
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
-import GeneralSettings from './components/GeneralSettings';
+import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
 import { HospitalProvider } from './contexts/HospitalContext.jsx';
-
+import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 function App() {
   return (
     <>
@@ -67,6 +67,8 @@ function App() {
           <Route path="/Dashboard/chat" element={<Chat />} />
           <Route path="/Dashboard/chat-settings" element={<ChatbotSettings />} />
           <Route path="/Dashboard/settings" element={<GeneralSettings />} />
+          <Route path="/Dashboard/user-permissions" element={<UserPermission />} />
+          <Route path="/Dashboard/hospital-info" element={<HospitalInfo />} />
         </Route>
       </Routes>
     </HospitalProvider>
