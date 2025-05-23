@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "firebase": "^11.7.3",
     "firebase-admin": "^13.4.0",
     "fs.promises": "^0.1.2",
     "joi": "^17.13.3",
