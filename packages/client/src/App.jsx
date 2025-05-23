@@ -58,17 +58,17 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
         </Route>
         <Route path="/Dashboard" element={<DashboardFrame />}>
-  <Route index element={<Dashboard />} />
-  <Route path="waiting" element={<WaitingStatus />} />
-  <Route path="schedule" element={<StaffSchedule />} />
-  <Route path="patients" element={<PatientList />} />
-  <Route path="reservations" element={<ReservationManager />} />
-  <Route path="chat" element={<Chat />} />
-  <Route path="chat-settings" element={<ChatbotSettings />} />
-  <Route path="settings" element={<GeneralSettings />} />
-  <Route path="sms" element={<Sms />} />
-  <Route path="feedback" element={<Feedback />} />
-</Route>
+            <Route index element={<Dashboard />} />
+            <Route path="waiting" element={<WaitingStatus />} />        {/* ✅ 상대경로 */}
+            <Route path="schedule" element={<StaffSchedule />} />
+            <Route path="patients" element={<PatientList />} />
+            <Route path="reservations" element={<ReservationManager />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="chat-settings" element={<ChatbotSettings />} />
+            <Route path="settings" element={<GeneralSettings />} />
+            <Route path="sms" element={<Sms />} />
+            <Route path="feedback" element={<Feedback />} />
+        </Route>
       </Routes>
     </>
   );

@@ -47,7 +47,7 @@ const Sidebar = ({ onOpenNotice }) => {
       <MenuItem to="/Dashboard/schedule">📆 의료진 근무 스케줄</MenuItem>
       <MenuItem to="/Dashboard/patients">📋 환자 리스트</MenuItem>
       <MenuItem to="/Dashboard/reservations">📅 예약 관리</MenuItem>
-      <MenuItem to="/Dashboard/feedback">📝 고객의 소리</MenuItem>
+      <MenuItem to="/Dashboard/feedback">📝 후기</MenuItem>
       <MenuItem to="/Dashboard/sms">📱 단체 문자 발송</MenuItem>
       <MenuItem to="/Dashboard/chat">💬 AI 채팅</MenuItem>
       <MenuItem to="/Dashboard/chat-settings">⚙️ AI 채팅 설정</MenuItem>
