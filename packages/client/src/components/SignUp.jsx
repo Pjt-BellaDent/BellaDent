@@ -11,6 +11,8 @@ function SignUp() {
     name: '',
     phone: '',
     address: '',
+    birthDate: null,
+    gender: null,
     createdAt: '',
   });
 
@@ -33,6 +35,8 @@ function SignUp() {
           name: formData.name,
           phone: formData.phone,
           address: formData.address,
+          birthDate: formData.birthDate,
+          gender: formData.gender,
           createdAt: new Date(),
         })
         .then((res) => {
