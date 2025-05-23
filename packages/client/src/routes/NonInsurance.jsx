@@ -1,9 +1,12 @@
-import React from 'react'
+import React from 'react';
+import TreatmentInfo_2 from '../components/TreatmentInfo_2';
 
 function NonInsurance() {
   return (
-    <div>NonInsurance</div>
-  )
+    <>
+      <TreatmentInfo_2 />
+    </>
+  );
 }
 
-export default NonInsurance
+export default NonInsurance;
