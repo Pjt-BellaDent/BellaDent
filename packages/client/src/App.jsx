@@ -1,5 +1,4 @@
-import React from 'react';
-import { Routes, Route } from 'react-router';
+import { Routes, Route } from 'react-router-dom';
 import Frame from './routes/Frame.jsx';
 import Home from './routes/Home.jsx';
 import Greeting from './routes/Greeting.jsx';
@@ -19,6 +18,8 @@ import Notice from './routes/Notice.jsx';
 import Review from './routes/Review.jsx';
 import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
+import UserInfo from './routes/UserInfo.jsx';
+import UserUpdate from './components/UserUpdate.jsx';
 
 function App() {
   return (
@@ -43,6 +44,8 @@ function App() {
           <Route path="/review" element={<Review />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/userinfo" element={<UserInfo />} />
+          <Route path="/user-update" element={<UserUpdate />} />
         </Route>
       </Routes>
     </>
