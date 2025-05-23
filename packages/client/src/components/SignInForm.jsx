@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserInfoContext } from '../context/UserInfoContext.jsx';
 import axios from 'axios';
 
-function SignIn() {
+function SignInForm() {
   const navigate = useNavigate();
   const { roleLocation, isLogin, setIsLogin } = useContext(UserInfoContext);
   const [formData, setFormData] = useState({
@@ -117,4 +117,4 @@ function SignIn() {
   );
 }
 
-export default SignIn;
+export default SignInForm;
