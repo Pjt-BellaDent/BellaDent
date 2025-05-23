@@ -46,16 +46,16 @@ function Header() {
       label: '병원소개',
       sub: [
         { menu: '인사말 / 병원 철학', link: '/greeting' },
-        { menu: '의료진 소개', link: '/doctor' },
-        { menu: '내부 둘러보기', link: '/inside' },
+        { menu: '의료진 소개', link: '/doctors' },
+        { menu: '내부 둘러보기', link: '/tour' },
         { menu: '오시는 길', link: '/location' },
       ],
     },
     {
       label: '진료 안내',
       sub: [
-        { menu: '진료 과목 안내', link: '/treatment' },
-        { menu: '비급여 진료 과목 안내', link: '/non-insurance' },
+        { menu: '진료 과목 안내', link: '/services' },
+        { menu: '비급여 진료 과목 안내', link: '/non-covered' },
         { menu: '장비 소개', link: '/equipment' },
       ],
     },
@@ -64,9 +64,9 @@ function Header() {
       sub: [
         {
           menu: '교정 치료 안내',
-          link: '/orthodontic',
+          link: '/orthodontics',
         },
-        { menu: '미백 / 라미네이트', link: '/teeth-whitening' },
+        { menu: '미백 / 라미네이트', link: '/whitening' },
         { menu: '전후 사진 갤러리', link: '/gallery' },
       ],
     },
@@ -74,7 +74,7 @@ function Header() {
       label: '상담 / 예약',
       sub: [
         { menu: '온라인 예약', link: '/reservation' },
-        { menu: '실시간 상담', link: '/consultation' },
+        { menu: '실시간 상담', link: '/live-chat' },
       ],
     },
     {
@@ -84,8 +84,8 @@ function Header() {
           menu: '자주 묻는 질문 (FAQ)',
           link: '/faq',
         },
-        { menu: '공지사항', link: '/Announcement' },
-        { menu: '치료 후기 게시판', link: '/review' },
+        { menu: '공지사항', link: '/clinic-news' },
+        { menu: '치료 후기 게시판', link: '/reviews' },
       ],
     },
   ];

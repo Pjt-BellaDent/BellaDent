@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import axios from 'axios';
 
-function SignUp() {
+function SignUpForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -240,4 +240,4 @@ function SignUp() {
   );
 }
 
-export default SignUp;
+export default SignUpForm;

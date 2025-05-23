@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserInfoContext } from '../context/UserInfoContext.jsx';
 import axios from 'axios';
 
-function userUpdate() {
+function UserUpdateFrom() {
   const navigate = useNavigate();
   const { userInfo } = useContext(UserInfoContext);
   const [formData, setFormData] = useState({
@@ -170,4 +170,4 @@ function userUpdate() {
   );
 }
 
-export default userUpdate;
+export default UserUpdateFrom;

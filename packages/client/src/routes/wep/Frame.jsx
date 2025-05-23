@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from '@emotion/styled';
 import { Outlet } from 'react-router-dom';
-import Header from '../layout/Header';
-import Footer from '../layout/Footer';
+import Header from '../../layout/Header';
+import Footer from '../../layout/Footer';
 
 const Wrapper = styled.div`
   height: 100vh;
@@ -11,7 +11,7 @@ const Wrapper = styled.div`
 `;
 
 const Main = styled.main`
-    width: 100%;
+  width: 100%;
   flex-grow: 1;
 `;
 
