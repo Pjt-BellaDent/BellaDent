@@ -21,13 +21,26 @@ const Info = styled.div`
   font-size: 14px;
 `;
 
-const DeleteButton = styled.button`
-  background: #dc3545;
-  border: none;
-  padding: 6px 10px;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
+const Actions = styled.div`
+  display: flex;
+  gap: 6px;
+
+  button {
+    padding: 4px 8px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+  }
+
+  .edit {
+    background: #ffc107;
+  }
+
+  .delete {
+    background: #dc3545;
+  }
 `;
 
 const AddButton = styled.button`
@@ -39,7 +52,7 @@ const AddButton = styled.button`
   border-radius: 4px;
 `;
 
-const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup }) => {
+const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdit }) => {
   if (!selectedDate) {
     return (
       <Wrapper>
@@ -59,8 +72,11 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup }) => 
       ) : (
         list.map((item, i) => (
           <Entry key={i}>
-            <Info>👨‍⚕️ {item.name} | 🕒 {item.time}</Info>
-            <DeleteButton onClick={() => onDelete(i)}>삭제</DeleteButton>
+            <Info>👤 {item.rank} {item.name} | 🕒 {item.time} {item.off ? '🌙휴무' : ''}</Info>
+            <Actions>
+              <button className="edit" onClick={() => onEdit(item)}>수정</button>
+              <button className="delete" onClick={() => onDelete(i)}>삭제</button>
+            </Actions>
           </Entry>
         ))
       )}

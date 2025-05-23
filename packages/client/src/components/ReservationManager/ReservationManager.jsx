@@ -12,21 +12,35 @@ const CalendarHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
 
-  button {
-    background: #007bff;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  .nav {
+    display: flex;
+    gap: 10px;
+
+    button {
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  }
+
+  .month {
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .filter select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
   }
 `;
+
 
 const FilterBar = styled.div`
   display: flex;
@@ -117,19 +131,24 @@ const ReservationManager = () => {
       <h2>📅 예약 관리</h2>
 
       <CalendarHeader>
-        <button onClick={() => changeMonth(-1)}>⬅ 이전</button>
-        <div><strong>{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</strong></div>
-        <button onClick={() => changeMonth(1)}>다음 ➡</button>
-      </CalendarHeader>
+  <div className="nav">
+    <button onClick={() => changeMonth(-1)}>⬅ 이전</button>
+    <button onClick={() => changeMonth(1)}>다음 ➡</button>
+  </div>
 
-      <FilterBar>
-        <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
-          <option value="전체">전체</option>
-          <option value="보철과">보철과</option>
-          <option value="교정과">교정과</option>
-          <option value="잇몸클리닉">잇몸클리닉</option>
-        </select>
-      </FilterBar>
+  <div className="month">
+    {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+  </div>
+
+  <div className="filter">
+    <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
+      <option value="전체">전체</option>
+      <option value="보철과">보철과</option>
+      <option value="교정과">교정과</option>
+      <option value="잇몸클리닉">잇몸클리닉</option>
+    </select>
+  </div>
+</CalendarHeader>
 
       <CalendarGrid
         date={currentDate}
