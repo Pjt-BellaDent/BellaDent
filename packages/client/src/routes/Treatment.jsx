@@ -1,9 +1,12 @@
-import React from 'react'
+import React from 'react';
+import TreatmentInfo_1 from '../components/TreatmentInfo_1';
 
 function treatment() {
   return (
-    <div>treatment</div>
-  )
+    <>
+      <TreatmentInfo_1 />
+    </>
+  );
 }
 
-export default treatment
+export default treatment;
