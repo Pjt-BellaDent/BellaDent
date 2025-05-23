@@ -1,6 +1,8 @@
-import { useState, useRef, useEffectS, useEffect } from 'react';
-import { Link } from 'react-router';
+import { useState, useRef, useContext, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
+import Cookies from 'js-cookie';
+import { UserInfoContext } from '../context/UserInfoContext.jsx';
 import logo from '../assets/logo.png';
 
 function Header() {
@@ -34,8 +36,10 @@ function Header() {
     padding: 10px 0;
   `;
 
-  const [onMenu, setOnMenu] = useState();
+  const { userInfo, isLogin, setIsLogin } = useContext(UserInfoContext);
+  const [onMenu, setOnMenu] = useState(null);
   const navRef = useRef();
+  const navigate = useNavigate();
 
   const menuList = [
     {
@@ -97,7 +101,14 @@ function Header() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  });
+  }, []);
+
+  const handleLogout = () => {
+    Cookies.remove('token');
+    alert('로그아웃 되었습니다.');
+    setIsLogin(!isLogin);
+    navigate(0);
+  };
 
   return (
     <Header>
@@ -132,14 +143,29 @@ function Header() {
             ))}
           </ul>
         </nav>
-        <div className="login_box">
-          <ul className="login_list flex gap-5">
-            <li className="login_menu">
-              <Link to={'/signin'}>로그인</Link>
-            </li>
-            <li className="login_menu">
-              <Link to={'/signup'}>회원가입</Link>
-            </li>
+        <div>
+          <ul className="flex gap-5">
+            {userInfo ? (
+              <>
+                <li>
+                  <Link to={'/userinfo'}>회원정보</Link>
+                </li>
+                <li>
+                  <button className="cursor-pointer" onClick={handleLogout}>
+                    로그아웃
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to={'/signin'}>로그인</Link>
+                </li>
+                <li>
+                  <Link to={'/signup'}>회원가입</Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </Container>
