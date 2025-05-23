@@ -28,7 +28,6 @@ function DashboardFrame() {
       <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
         <Outlet />
       </main>
-
       {showNotice && (
         <NoticeModal
           show={showNotice}
