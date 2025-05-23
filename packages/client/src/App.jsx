@@ -14,16 +14,29 @@ import Gallery from './routes/Gallery.jsx';
 import Reservation from './routes/Reservation.jsx';
 import Consultation from './routes/Consultation.jsx';
 import Faq from './routes/Faq.jsx';
-import Notice from './routes/Notice.jsx';
+import Announcement from './routes/Announcement.jsx';
 import Review from './routes/Review.jsx';
 import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
 import UserInfo from './routes/UserInfo.jsx';
 import UserUpdate from './components/UserUpdate.jsx';
 
+import DashboardFrame from './routes/DashboardFrame.jsx';
+import Dashboard from './components/Dashboard';
+import Notice from './components/Notice';
+import WaitingStatus from './components/WaitingStatus/WaitingStatus';
+import StaffSchedule from './components/StaffSchedule/StaffSchedule';
+import PatientList from './components/PatientList/PatientList'; // ✅ 수정
+import ReservationManager from './components/ReservationManager/ReservationManager';
+import Chat from './components/Chat';
+import ChatbotSettings from './components/ChatbotSettings';
+import GeneralSettings from './components/GeneralSettings';
+import { HospitalProvider } from './contexts/HospitalContext.jsx';
+
 function App() {
   return (
     <>
+    <HospitalProvider>
       <Routes>
         <Route path="/" element={<Frame />}>
           <Route index element={<Home />} />
@@ -40,14 +53,26 @@ function App() {
           <Route path="/reservation" element={<Reservation />} />
           <Route path="/consultation" element={<Consultation />} />
           <Route path="/faq" element={<Faq />} />
-          <Route path="/notice" element={<Notice />} />
+          <Route path="/Announcement" element={<Announcement />} />
           <Route path="/review" element={<Review />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/userinfo" element={<UserInfo />} />
           <Route path="/user-update" element={<UserUpdate />} />
         </Route>
+        <Route path="/Dashboard" element={<DashboardFrame />}>
+          <Route index element={<Dashboard />} />
+          <Route path="/Dashboard/notice" element={<Notice />} />
+          <Route path="/Dashboard/waiting" element={<WaitingStatus />} />
+          <Route path="/Dashboard/schedule" element={<StaffSchedule />} />
+          <Route path="/Dashboard/patients" element={<PatientList />} />
+          <Route path="/Dashboard/reservations" element={<ReservationManager />} />
+          <Route path="/Dashboard/chat" element={<Chat />} />
+          <Route path="/Dashboard/chat-settings" element={<ChatbotSettings />} />
+          <Route path="/Dashboard/settings" element={<GeneralSettings />} />
+        </Route>
       </Routes>
+    </HospitalProvider>
     </>
   );
 }
