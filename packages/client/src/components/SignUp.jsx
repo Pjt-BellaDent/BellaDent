@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import axios from 'axios';
 
 function SignUp() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -9,20 +11,12 @@ function SignUp() {
     name: '',
     phone: '',
     address: '',
-    birth_date: '',
-    gender: '',
+    createdAt: '',
   });
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  function handleChangeRadio(e) {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.id,
-    });
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,16 +26,27 @@ function SignUp() {
         return;
       }
       const url = 'http://localhost:3000/users/signUp';
-      const response = await axios.post(url, {
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        phone: formData.phone,
-        address: formData.address,
-        birthDate: formData.birth_date,
-        gender: formData.gender,
-      });
+      const response = await axios
+        .post(url, {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          createdAt: new Date(),
+        })
+        .then((res) => {
+          if (res.status === 201) {
+            alert('회원가입이 완료되었습니다.');
+            navigate('/');
+          }
+        });
     } catch (err) {
+      if (err.status === 404) {
+        alert('이미 사용중인 이메일입니다.');
+      } else if (err.status === 400) {
+        alert('입력값이 형식을 벗어났습니다.');
+      }
       console.error(err);
     }
   };
@@ -167,62 +172,7 @@ function SignUp() {
               />
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="birth_date"
-              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
-            >
-              생년월일
-            </label>
-            <div className="mt-2 flex-3/4">
-              <input
-                type="text"
-                name="birth_date"
-                id="birth_date"
-                maxLength={8}
-                minLength={8}
-                required
-                placeholder="YYYYMMDD"
-                onChange={handleChange}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
-            </div>
-          </div>
-          <div className="flex items-center mt-6 space-y-6">
-            <div className="flex items-center gap-x-3">
-              <input
-                id="남성"
-                name="gender"
-                type="radio"
-                required
-                onChange={handleChangeRadio}
-                className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
-              />
-              <label
-                htmlFor="남성"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
-                남성
-              </label>
-            </div>
-            <div className="flex items-center gap-x-3">
-              <input
-                id="여성"
-                name="gender"
-                type="radio"
-                required
-                onChange={handleChangeRadio}
-                className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
-              />
-              <label
-                htmlFor="여성"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
-                여성
-              </label>
-            </div>
-          </div>
-          <div className="mt-6 space-y-6">
+          <div className="mt-12 space-y-6">
             <div className="flex gap-3">
               <div className="flex h-6 shrink-0 items-center">
                 <div className="group grid size-4 grid-cols-1">
