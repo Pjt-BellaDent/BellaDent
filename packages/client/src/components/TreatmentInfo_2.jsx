@@ -6,11 +6,11 @@ function TreatmentInfo_2() {
     <div className="treatment_container">
       <title>non-covered items</title>
       <div>
-        <h2 className='mt-14 and mb-6'>
+        <h2 className='mt-14 mb-6'>
           <b >비급여 항목 안내</b>
         </h2>
         <hr />
-        <h3 className="text">제증명수수료</h3>
+        <h3 className="py-2.5"><b>제증명수수료</b></h3>
         <p>
           1. 증명서 발급 당일 기본 1통에 대한 기준임 / 부수적인 검진료는 별도로
           함
