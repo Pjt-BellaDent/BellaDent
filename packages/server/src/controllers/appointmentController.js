@@ -61,4 +61,27 @@ export const getWeeklyReservations = async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   };
+  export const getMonthlyAppointments = async (req, res) => {
+    try {
+      const month = req.query.month; // ex) "2025-05"
+      if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+        return res.status(400).json({ error: "Invalid or missing month param" });
+      }
+  
+      const startDate = `${month}-01`;
+      const endDate = `${month}-31`;
+  
+      const snapshot = await db
+        .collection("appointments")
+        .where("reservationDate", ">=", startDate)
+        .where("reservationDate", "<=", endDate)
+        .get();
+  
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      res.json(data);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
   
