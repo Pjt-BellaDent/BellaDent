@@ -2,9 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styled from '@emotion/styled';
-import isPropValid from '@emotion/is-prop-valid';
 
-const Wrapper = styled.nav`
+const SidebarContainer = styled.nav`
   width: 220px;
   background: #f9f9f9;
   padding: 20px;

@@ -1,6 +1,9 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { HospitalProvider } from './contexts/HospitalContext.jsx';
+
 import Frame from './routes/web/Frame';
+
 import Home from './routes/web/Home';
 import SignIn from './routes/web/users/SignIn';
 import SignUp from './routes/web/users/SignUp';
@@ -21,7 +24,9 @@ import LiveChat from './routes/web/nev/booking/LiveChat';
 import ClinicNews from './routes/web/nev/support/ClinicNews';
 import Faq from './routes/web/nev/support/Faq';
 import Reviews from './routes/web/nev/support/Reviews';
+
 import DashboardFrame from './routes/DashboardFrame';
+
 import Dashboard from './components/Dashboard';
 import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
@@ -33,15 +38,15 @@ import Feedback from './components/Feedback/FeedbackList';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
-import { HospitalProvider } from './contexts/HospitalContext.jsx';
+import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+
 function App() {
   return (
     <>
       <HospitalProvider>
         <Routes>
           <Route path="/" element={<Frame />}>
-
             <Route index element={<Home />} />
             <Route path="SignIn" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
@@ -67,9 +72,8 @@ function App() {
 
           <Route path="/Dashboard" element={<DashboardFrame />}>
             <Route index element={<Dashboard />} />
-
-          <Route path="/Dashboard/notice" element={<Notice />} />
-            <Route path="waiting" element={<WaitingStatus />} />        {/* ✅ 상대경로 */}
+            <Route path="notice" element={<NoticeModal />} />
+            <Route path="waiting" element={<WaitingStatus />} />{' '}
             <Route path="schedule" element={<StaffSchedule />} />
             <Route path="patients" element={<PatientList />} />
             <Route path="reservations" element={<ReservationManager />} />
@@ -78,8 +82,8 @@ function App() {
             <Route path="settings" element={<GeneralSettings />} />
             <Route path="sms" element={<Sms />} />
             <Route path="feedback" element={<Feedback />} />
-          <Route path="/Dashboard/user-permissions" element={<UserPermission />} />
-          <Route path="/Dashboard/hospital-info" element={<HospitalInfo />} />
+            <Route path="user-permissions" element={<UserPermission />} />
+            <Route path="hospital-info" element={<HospitalInfo />} />
           </Route>
         </Routes>
       </HospitalProvider>
