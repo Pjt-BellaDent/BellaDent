@@ -7,6 +7,48 @@ const CalendarWrapper = styled.div`
   border-radius: 8px;
 `;
 
+const EventWrapper = styled.div`
+  overflow-y: auto;
+  max-height: 60px;
+  width: 100%;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+
+  .left, .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .month {
+    font-weight: bold;
+    font-size: 16px;
+    color: #222;
+  }
+
+  button {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+`;
+
 const DaysHeader = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -14,47 +56,48 @@ const DaysHeader = styled.div`
   background: #f1f3f5;
   padding: 10px 0;
   font-weight: bold;
+  color: #444;
 `;
 
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 120px;
+  grid-auto-rows: 100px;
 `;
 
 const Cell = styled.div`
   border: 1px solid #eee;
-  padding: 8px;
-  cursor: pointer;
+  padding: 6px 8px;
   position: relative;
-  overflow: hidden;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `;
 
 const DayNumber = styled.div`
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6px;
 `;
 
 const Event = styled.div`
-  font-size: 12px;
-  background: #007bff;
-  color: white;
-  border-radius: 4px;
-  padding: 2px 6px;
-  margin-top: 4px;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.6;
 `;
 
-const EventWrapper = styled.div`
-  max-height: 90px; // 셀 내에서 스크롤이 필요한 영역 높이
-  overflow-y: auto;
-`;
-
-const CalendarGrid = ({ date, events, onDayClick, filterDept }) => {
+const CalendarGrid = ({
+  date,
+  events = {},
+  onDayClick,
+  filterDept = '전체',
+  selectedDept,
+  onFilterChange,
+  onPrevMonth,
+  onNextMonth
+}) => {
   const year = date.getFullYear();
   const month = date.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -68,32 +111,52 @@ const CalendarGrid = ({ date, events, onDayClick, filterDept }) => {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    let dayEvents = events[key] || [];
+    let dayEvents = Array.isArray(events[key]) ? events[key] : [];
 
     if (filterDept !== '전체') {
       dayEvents = dayEvents.filter(e => e.type === filterDept);
     }
 
-    const sortedEvents = [...dayEvents].sort((a, b) => a.time.localeCompare(b.time));
+    const sortedEvents = [...dayEvents].sort((a, b) =>
+      (a.time ?? '').localeCompare(b.time ?? '')
+    );
 
     cells.push(
       <Cell key={key} onClick={() => onDayClick(year, month, day)}>
-      <DayNumber>{day}</DayNumber>
-      <EventWrapper>
-        {dayEvents.map((e, i) => (
-          <Event key={i}>
-            {`${e.type || '진료과'} - ${e.time || '시간'} - ${e.name || '이름'}`}
-          </Event>
-        ))}
-      </EventWrapper>
-    </Cell>
+        <DayNumber>{day}</DayNumber>
+        <EventWrapper>
+          {sortedEvents.map((e, i) => (
+            <Event key={i}>• {`${e.name || '-'} (${e.type || '진료과'})`}</Event>
+          ))}
+        </EventWrapper>
+      </Cell>
     );
   }
 
   return (
     <CalendarWrapper>
+      <Header>
+        <div className="left">
+          <button onClick={onPrevMonth}>⬅ 이전</button>
+          <button onClick={onNextMonth}>다음 ➡</button>
+        </div>
+        <div className="month">
+          {year}년 {month + 1}월
+        </div>
+        <div className="right">
+          <select value={selectedDept} onChange={onFilterChange}>
+            <option value="전체">전체</option>
+            <option value="보철과">보철과</option>
+            <option value="교정과">교정과</option>
+            <option value="잇몸클리닉">잇몸클리닉</option>
+          </select>
+        </div>
+      </Header>
+
       <DaysHeader>
-        {['일', '월', '화', '수', '목', '금', '토'].map(d => <div key={d}>{d}</div>)}
+        {['일', '월', '화', '수', '목', '금', '토'].map(d => (
+          <div key={d}>{d}</div>
+        ))}
       </DaysHeader>
       <Grid>{cells}</Grid>
     </CalendarWrapper>
