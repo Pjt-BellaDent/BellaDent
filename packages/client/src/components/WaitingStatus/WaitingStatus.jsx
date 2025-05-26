@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import DoctorCard from './DoctorCard';
 
@@ -18,31 +18,23 @@ const FooterMessage = styled.div`
   margin-top: 30px;
 `;
 
-const doctorData = [
-  {
-    room: '진료실 1',
-    doctor: '김치과 원장',
-    department: '보철과',
-    current: '김민수님',
-    waiting: ['이수정님', '김하늘님', '최은정님']
-  },
-  {
-    room: '진료실 2',
-    doctor: '박의사',
-    department: '교정과',
-    current: '구영수님',
-    waiting: ['박수빈님', '정예린님']
-  },
-  {
-    room: '진료실 3',
-    doctor: '이치과 원장',
-    department: '잇몸클리닉',
-    current: '김지환님',
-    waiting: ['김수정님', '박한주님']
-  }
-];
-
 const WaitingStatus = () => {
+  const [doctorData, setDoctorData] = useState([]);
+
+  useEffect(() => {
+    const fetchWaitingStatus = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/waiting/status');
+        const data = await res.json();
+        setDoctorData(data);
+      } catch (err) {
+        console.error('대기 현황 불러오기 실패:', err);
+      }
+    };
+
+    fetchWaitingStatus();
+  }, []);
+
   return (
     <Container>
       <h2>⏳ 진료 대기 현황</h2>
