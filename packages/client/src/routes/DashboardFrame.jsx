@@ -4,6 +4,13 @@ import Sidebar from '../components/Sidebar';
 import NoticeModal from '../components/Notice/NoticeModal';
 
 function DashboardFrame() {
+  // ✅ 임시 로그인 사용자 정보
+  const currentUser = {
+    name: '최나영',
+    role: 'super_admin',
+  };
+
+
   const [showNotice, setShowNotice] = useState(false);
   const [notices, setNotices] = useState([]);
   const [title, setTitle] = useState('');
@@ -44,8 +51,9 @@ function DashboardFrame() {
   return (
     <>
     <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <Sidebar role={currentUser.role} name={currentUser.name} />
+    <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
       <Sidebar onOpenNotice={() => setShowNotice(true)} />
-      <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
         <Outlet />
       </main>
       {showNotice && (
