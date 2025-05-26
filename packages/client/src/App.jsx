@@ -22,16 +22,20 @@ import SignUp from './components/SignUp.jsx';
 import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import DashboardFrame from './routes/DashboardFrame.jsx';
 import Dashboard from './components/Dashboard';
-import Notice from './components/Notice';
+import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
 import PatientList from './components/PatientList/PatientList'; // ✅ 수정
 import ReservationManager from './components/ReservationManager/ReservationManager';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
 import { HospitalProvider } from './contexts/HospitalContext.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
 function App() {
   return (
     <>
@@ -69,6 +73,8 @@ function App() {
           <Route path="/Dashboard/settings" element={<GeneralSettings />} />
           <Route path="/Dashboard/user-permissions" element={<UserPermission />} />
           <Route path="/Dashboard/hospital-info" element={<HospitalInfo />} />
+          <Route path="/Dashboard/sms" element={<Sms />} />
+          <Route path="/Dashboard/feedback" element={<Feedback />} />
         </Route>
       </Routes>
     </HospitalProvider>
