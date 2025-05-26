@@ -33,12 +33,11 @@ import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
 import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
-import Sms from './components/Sms/SmsBroadcast';
-import Feedback from './components/Feedback/FeedbackList';
-import Registry from './components/OnsiteRegistration.jsx';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
 import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 
