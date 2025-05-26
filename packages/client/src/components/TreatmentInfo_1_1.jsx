@@ -5,12 +5,12 @@ import cavi from '../assets/cavi.png';
 function TreatmentInfo_1_1() {
   return (
      <div className='treatment_container'>
-         <header>진료과목소개</header>
+         <header className='mt-16 mb-3'><b>진료과목소개</b></header>
           <div className="flex gap-7">
             <img src={teeth} alt="teeth" className="w-70" />
             <div>
-              <h2>
-                <em>충치치료</em>
+              <h2 className='mt-16 mb-3'>
+                <b>충치치료</b>
               </h2>
               <p>
                 치아 신경 치료는 심한 충치, 외상, 파절 등으로 인해 염증이 발생한
@@ -29,8 +29,8 @@ function TreatmentInfo_1_1() {
               <img src={cavities} alt="cavities" className='W-70'/>
               
               <div>
-                <p>
-                  <strong>신경치료</strong>
+                <p className='mt-16 mb-3'>
+                  <strong className='mt-16 mb-3'>신경치료</strong>
                 </p>
                 <p>신경 조직 제거: 치아 내부의 신경 조직을 제거합니다. </p>
                 <p>
@@ -45,8 +45,8 @@ function TreatmentInfo_1_1() {
           <hr className='my-2'/>
             <div className="d-flex gap-7 row-reverse">
               <img src={cavi} alt="cavi" />
-              <div>
-                <p>신경 조직</p>
+              <div className='mt-16 mb-3'>
+                <p className='mt-16 mb-3'><b>신경 조직</b></p>
                 <p>신경 조직 제거: 치아 내부의 신경 조직을 제거합니다. </p>
                 <p>
                   소독 및 충전: 제거된 신경 조직 공간을 소독하고 생체 친화적인
