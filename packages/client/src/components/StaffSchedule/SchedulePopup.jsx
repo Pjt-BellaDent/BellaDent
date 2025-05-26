@@ -16,7 +16,7 @@ const Modal = styled.div`
   background: white;
   padding: 20px;
   border-radius: 10px;
-  width: 280px;
+  width: 300px;
 `;
 
 const Field = styled.div`
@@ -28,12 +28,27 @@ const Field = styled.div`
     font-size: 14px;
   }
 
-  input {
+  input, select, textarea {
     width: 100%;
-    padding: 8px;
+    padding: 6px;
     font-size: 14px;
     border-radius: 4px;
     border: 1px solid #ccc;
+  }
+
+  textarea {
+    height: 60px;
+    resize: vertical;
+  }
+`;
+
+const CheckboxField = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+
+  input {
+    margin-right: 6px;
   }
 `;
 
@@ -60,33 +75,54 @@ const ButtonRow = styled.div`
   }
 `;
 
-const SchedulePopup = ({ open, onClose, onSave }) => {
-  const [form, setForm] = useState({ name: '', time: '' });
+const SchedulePopup = ({ open, onClose, onSave, initialData = null }) => {
+  const [form, setForm] = useState({
+    rank: '',
+    name: '',
+    time: '',
+    memo: '',
+    off: false
+  });
 
   useEffect(() => {
-    if (open) {
-      setForm({ name: '', time: '' });
+    if (initialData) {
+      setForm(initialData);
+    } else {
+      setForm({ rank: '', name: '', time: '', memo: '', off: false });
     }
-  }, [open]);
+  }, [initialData, open]);
 
   const handleSubmit = () => {
-    if (!form.name || !form.time) {
-      alert('의료진 이름과 시간을 입력해주세요.');
+    if (!form.rank || !form.name || !form.time) {
+      alert('직급, 이름, 시간을 모두 입력해주세요.');
       return;
     }
     onSave(form);
+    onClose();
   };
 
   return (
     <Overlay open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <Modal>
-        <h3>스케줄 추가</h3>
+        <h3>{initialData ? '스케줄 수정' : '스케줄 등록'}</h3>
 
         <Field>
-          <label>의료진 이름</label>
+          <label>직급</label>
+          <select value={form.rank} onChange={e => setForm({ ...form, rank: e.target.value })}>
+            <option value="">선택</option>
+            <option value="원장">원장</option>
+            <option value="부원장">부원장</option>
+            <option value="과장">과장</option>
+            <option value="상담사">상담사</option>
+            <option value="수납">수납</option>
+            <option value="치위생사">치위생사</option>
+          </select>
+        </Field>
+
+        <Field>
+          <label>이름</label>
           <input
             type="text"
-            placeholder="예: 김치과"
             value={form.name}
             onChange={e => setForm({ ...form, name: e.target.value })}
           />
@@ -101,8 +137,27 @@ const SchedulePopup = ({ open, onClose, onSave }) => {
           />
         </Field>
 
+        <Field>
+          <label>메모</label>
+          <textarea
+            value={form.memo}
+            onChange={e => setForm({ ...form, memo: e.target.value })}
+          />
+        </Field>
+
+        <CheckboxField>
+          <input
+            type="checkbox"
+            checked={form.off}
+            onChange={e => setForm({ ...form, off: e.target.checked })}
+          />
+          <label>휴무</label>
+        </CheckboxField>
+
         <ButtonRow>
-          <button className="save" onClick={handleSubmit}>등록</button>
+          <button className="save" onClick={handleSubmit}>
+            {initialData ? '수정' : '등록'}
+          </button>
           <button className="cancel" onClick={onClose}>취소</button>
         </ButtonRow>
       </Modal>

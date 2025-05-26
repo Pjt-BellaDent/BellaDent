@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Frame from './routes/web/Frame';
 import Home from './routes/web/Home';
@@ -5,23 +6,21 @@ import SignIn from './routes/web/users/SignIn';
 import SignUp from './routes/web/users/SignUp';
 import UserInfo from './routes/web/users/UserInfo';
 import UserUpdate from './routes/web/users/UserUpdate';
-
 import Greeting from './routes/web/nev/clinic/Greeting';
 import Doctors from './routes/web/nev/clinic/Doctors';
 import Tour from './routes/web/nev/clinic/Tour';
 import Location from './routes/web/nev/clinic/Location';
 import Services from './routes/web/nev/treatments/Services';
 import NonCovered from './routes/web/nev/treatments/NonCovered';
-import Equipment from './routes/web/nev/treatments/Equipment';
 import Orthodontics from './routes/web/nev/aesthetics/Orthodontics';
+import Equipment from './routes/web/nev/treatments/Equipment';
 import Whitening from './routes/web/nev/aesthetics/Whitening';
 import Gallery from './routes/web/nev/aesthetics/Gallery';
 import Reservation from './routes/web/nev/booking/Reservation';
 import LiveChat from './routes/web/nev/booking/LiveChat';
-import Faq from './routes/web/nev/support/Faq';
 import ClinicNews from './routes/web/nev/support/ClinicNews';
+import Faq from './routes/web/nev/support/Faq';
 import Reviews from './routes/web/nev/support/Reviews';
-
 import DashboardFrame from './routes/DashboardFrame';
 import Dashboard from './components/Dashboard';
 import NoticeModal from './components/Notice/NoticeModal';
@@ -33,9 +32,9 @@ import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
-import GeneralSettings from './components/GeneralSettings';
+import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
 import { HospitalProvider } from './contexts/HospitalContext.jsx';
-
+import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 function App() {
   return (
     <>
@@ -69,6 +68,7 @@ function App() {
           <Route path="/Dashboard" element={<DashboardFrame />}>
             <Route index element={<Dashboard />} />
 
+          <Route path="/Dashboard/notice" element={<Notice />} />
             <Route path="waiting" element={<WaitingStatus />} />        {/* ✅ 상대경로 */}
             <Route path="schedule" element={<StaffSchedule />} />
             <Route path="patients" element={<PatientList />} />
@@ -78,6 +78,8 @@ function App() {
             <Route path="settings" element={<GeneralSettings />} />
             <Route path="sms" element={<Sms />} />
             <Route path="feedback" element={<Feedback />} />
+          <Route path="/Dashboard/user-permissions" element={<UserPermission />} />
+          <Route path="/Dashboard/hospital-info" element={<HospitalInfo />} />
           </Route>
         </Routes>
       </HospitalProvider>
