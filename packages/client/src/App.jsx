@@ -1,22 +1,92 @@
 import React from 'react';
-import { Routes, Route } from 'react-router';
-import Frame from './routes/Frame.jsx';
-import Home from './components/Home.jsx';
-import TreatmentInfo_1 from './components/TreatmentInfo_1.jsx';
-import TreatmentInfo_2 from './components/TreatmentInfo_2.jsx';
-import TreatmentInfo_3 from './components/TreatmentInfo_3.jsx';
+import { Routes, Route } from 'react-router-dom';
+import { HospitalProvider } from './contexts/HospitalContext.jsx';
+
+import Frame from './routes/web/Frame';
+
+import Home from './routes/web/Home';
+import SignIn from './routes/web/users/SignIn';
+import SignUp from './routes/web/users/SignUp';
+import UserInfo from './routes/web/users/UserInfo';
+import UserUpdate from './routes/web/users/UserUpdate';
+import Greeting from './routes/web/nev/clinic/Greeting';
+import Doctors from './routes/web/nev/clinic/Doctors';
+import Tour from './routes/web/nev/clinic/Tour';
+import Location from './routes/web/nev/clinic/Location';
+import Services from './routes/web/nev/treatments/Services';
+import NonCovered from './routes/web/nev/treatments/NonCovered';
+import Orthodontics from './routes/web/nev/aesthetics/Orthodontics';
+import Equipment from './routes/web/nev/treatments/Equipment';
+import Whitening from './routes/web/nev/aesthetics/Whitening';
+import Gallery from './routes/web/nev/aesthetics/Gallery';
+import Reservation from './routes/web/nev/booking/Reservation';
+import LiveChat from './routes/web/nev/booking/LiveChat';
+import ClinicNews from './routes/web/nev/support/ClinicNews';
+import Faq from './routes/web/nev/support/Faq';
+import Reviews from './routes/web/nev/support/Reviews';
+
+import DashboardFrame from './routes/DashboardFrame';
+
+import Dashboard from './components/Dashboard';
+import NoticeModal from './components/Notice/NoticeModal';
+import WaitingStatus from './components/WaitingStatus/WaitingStatus';
+import StaffSchedule from './components/StaffSchedule/StaffSchedule';
+import PatientList from './components/PatientList/PatientList';
+import ReservationManager from './components/ReservationManager/ReservationManager';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
+import Chat from './components/Chat';
+import ChatbotSettings from './components/ChatbotSettings';
+import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
+import UserPermission from './components/GeneralSettings/UserPermission.jsx';
+import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 
 function App() {
   return (
     <>
-      <Routes>
-        <Route path="/" element={<Frame />}>
-          <Route index element={<Home />} />
-          <Route element={<TreatmentInfo_1 />} />
-          <Route element={<TreatmentInfo_2 />} />
-          <Route element={<TreatmentInfo_3 />} />
-        </Route>
-      </Routes>
+      <HospitalProvider>
+        <Routes>
+          <Route path="/" element={<Frame />}>
+            <Route index element={<Home />} />
+            <Route path="SignIn" element={<SignIn />} />
+            <Route path="signup" element={<SignUp />} />
+            <Route path="userinfo" element={<UserInfo />} />
+
+            <Route path="user-update" element={<UserUpdate />} />
+            <Route path="greeting" element={<Greeting />} />
+            <Route path="tour" element={<Tour />} />
+            <Route path="doctors" element={<Doctors />} />
+            <Route path="location" element={<Location />} />
+            <Route path="services" element={<Services />} />
+            <Route path="non-covered" element={<NonCovered />} />
+            <Route path="equipment" element={<Equipment />} />
+            <Route path="orthodontics" element={<Orthodontics />} />
+            <Route path="whitening" element={<Whitening />} />
+            <Route path="gallery" element={<Gallery />} />
+            <Route path="reservation" element={<Reservation />} />
+            <Route path="live-chat" element={<LiveChat />} />
+            <Route path="clinic-news" element={<ClinicNews />} />
+            <Route path="faq" element={<Faq />} />
+            <Route path="reviews" element={<Reviews />} />
+          </Route>
+
+          <Route path="/Dashboard" element={<DashboardFrame />}>
+            <Route index element={<Dashboard />} />
+            <Route path="notice" element={<NoticeModal />} />
+            <Route path="waiting" element={<WaitingStatus />} />{' '}
+            <Route path="schedule" element={<StaffSchedule />} />
+            <Route path="patients" element={<PatientList />} />
+            <Route path="reservations" element={<ReservationManager />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="chat-settings" element={<ChatbotSettings />} />
+            <Route path="settings" element={<GeneralSettings />} />
+            <Route path="sms" element={<Sms />} />
+            <Route path="feedback" element={<Feedback />} />
+            <Route path="user-permissions" element={<UserPermission />} />
+            <Route path="hospital-info" element={<HospitalInfo />} />
+          </Route>
+        </Routes>
+      </HospitalProvider>
     </>
   );
 }
