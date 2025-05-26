@@ -10,7 +10,6 @@ function DashboardFrame() {
     role: 'super_admin',
   };
 
-
   const [showNotice, setShowNotice] = useState(false);
   const [notices, setNotices] = useState([]);
   const [title, setTitle] = useState('');
@@ -50,34 +49,37 @@ function DashboardFrame() {
 
   return (
     <>
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-    <Sidebar role={currentUser.role} name={currentUser.name} />
-    <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
-      <Sidebar onOpenNotice={() => setShowNotice(true)} />
-        <Outlet />
-      </main>
-      {showNotice && (
-        <NoticeModal
-          show={showNotice}
-          onClose={() => {
-            setShowNotice(false);
-            setShowForm(false);
-            setTitle('');
-            setBody('');
-            setEditIndex(null);
-          }}
-          notices={notices}
-          onAdd={handleAdd}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-          title={title}
-          setTitle={setTitle}
-          body={body}
-          setBody={setBody}
-          showForm={showForm}
-          setShowForm={setShowForm}
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar
+          role={currentUser.role}
+          name={currentUser.name}
+          onOpenNotice={() => setShowNotice(true)}
         />
-      )}
+        <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
+          <Outlet />
+        </main>
+        {showNotice && (
+          <NoticeModal
+            show={showNotice}
+            onClose={() => {
+              setShowNotice(false);
+              setShowForm(false);
+              setTitle('');
+              setBody('');
+              setEditIndex(null);
+            }}
+            notices={notices}
+            onAdd={handleAdd}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            title={title}
+            setTitle={setTitle}
+            body={body}
+            setBody={setBody}
+            showForm={showForm}
+            setShowForm={setShowForm}
+          />
+        )}
       </div>
     </>
   );
