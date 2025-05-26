@@ -27,10 +27,7 @@ const Cell = styled.div`
   padding: 6px;
   position: relative;
   cursor: pointer;
-
-  &:hover {
-    background-color: #f1f3f5;
-  }
+  overflow-y: auto;
 `;
 
 const DayNumber = styled.div`
@@ -46,7 +43,15 @@ const Dot = styled.div`
   margin-top: 6px;
 `;
 
-const ScheduleCalendar = ({ currentDate, scheduleData, onDateClick }) => {
+const Entry = styled.div`
+  font-size: 12px;
+  margin-top: 4px;
+  padding: 2px 4px;
+  background: #e9f5ff;
+  border-radius: 4px;
+`;
+
+const ScheduleCalendar = ({ currentDate, scheduleData, onDateClick, filterRank }) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
@@ -60,12 +65,21 @@ const ScheduleCalendar = ({ currentDate, scheduleData, onDateClick }) => {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const hasSchedule = !!scheduleData[key]?.length;
+    let daySchedules = scheduleData[key] || [];
+
+    // 🔍 직급 필터링
+    if (filterRank !== '전체') {
+      daySchedules = daySchedules.filter(e => e.rank === filterRank);
+    }
 
     cells.push(
       <Cell key={key} onClick={() => onDateClick(year, month, day)}>
         <DayNumber>{day}</DayNumber>
-        {hasSchedule && <Dot />}
+        {daySchedules.length > 0 ? (
+          daySchedules.map((e, i) => (
+            <Entry key={i}>{`${e.rank} ${e.name} (${e.time})`}</Entry>
+          ))
+        ) : null}
       </Cell>
     );
   }
