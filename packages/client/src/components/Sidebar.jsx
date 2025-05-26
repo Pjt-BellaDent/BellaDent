@@ -49,6 +49,7 @@ const Sidebar = ({ onOpenNotice }) => {
       <MenuItem to="/Dashboard/reservations">📅 예약 관리</MenuItem>
       <MenuItem to="/Dashboard/feedback">📝 후기</MenuItem>
       <MenuItem to="/Dashboard/sms">📱 단체 문자 발송</MenuItem>
+      <MenuItem to="/Dashboard/OnsiteRegistration.jsx">📠현장 접수</MenuItem>
       <MenuItem to="/Dashboard/chat">💬 AI 채팅</MenuItem>
       <MenuItem to="/Dashboard/chat-settings">⚙️ AI 채팅 설정</MenuItem>
       <MenuItem to="/Dashboard/settings">⚙️ 전체 설정</MenuItem>

@@ -29,6 +29,7 @@ import PatientList from './components/PatientList/PatientList'; // ✅ 수정
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
+import Registry from './components/OnsiteRegistration.jsx';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings';

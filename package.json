@@ -14,5 +14,10 @@
   "scripts": {
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.6",
+    "morgan": "^1.10.0",
+    "react-bootstrap": "^2.10.10"
   }
 }
