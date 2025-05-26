@@ -1,33 +1,47 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { useHospitalInfo } from '../contexts/HospitalContext';
+
+// styled 컴포넌트는 컴포넌트 바깥에서 정의
+const FooterWrapper = styled.footer`
+  width: 100%;
+  height: 200px;
+  background-color: #f0f0f0;
+  flex-grow: 0;
+  flex-shrink: 0;
+`;
+
+const Container = styled.div`
+  width: 1440px;
+  margin: 0 auto;
+  text-align: center;
+
+  h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 4px 0;
+  }
+`;
 
 function Footer() {
-  const Footer = styled.footer`
-    width: 100%;
-    height: 200px;
-    background-color: #f0f0f0;
-    flex-grow: 0;
-    flex-shrink: 0;
-  `;
-  const Container = styled.div`
-    width: 1440px;
-    margin: 0 auto;
-  `;
+  const { hospitalInfo } = useHospitalInfo(); // 전역 병원 정보
 
   return (
-    <Footer>
-      <Container className="text-center">
-        <h3 className="text-xl mb-5">벨라덴치과</h3>
+    <FooterWrapper>
+      <Container>
+        <h3>{hospitalInfo.name}</h3>
         <p>
-          주소: 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층 | 대표자명:
-          이서윤 | 사업자등록번호: 847-12-34567
+          주소: {hospitalInfo.address} | 대표자명: {hospitalInfo.ceo} | 사업자등록번호: {hospitalInfo.bizNumber}
         </p>
         <p>
-          Tel: 062-987-6543 | Copyright ⓒ 2025 벨라덴치과. All rights reserved.
+          Tel: {hospitalInfo.phone} | Copyright ⓒ 2025 {hospitalInfo.name}. All rights reserved.
         </p>
         <p className="mt-5">Marketing Management By team A</p>
       </Container>
-    </Footer>
+    </FooterWrapper>
   );
 }
 
