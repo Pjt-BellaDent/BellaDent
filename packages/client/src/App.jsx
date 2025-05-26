@@ -24,11 +24,13 @@ import Reviews from './routes/web/nev/support/Reviews';
 
 import DashboardFrame from './routes/DashboardFrame';
 import Dashboard from './components/Dashboard';
-import Notice from './components/Notice';
+import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
 import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
+import Sms from './components/Sms/SmsBroadcast';
+import Feedback from './components/Feedback/FeedbackList';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings';
@@ -40,16 +42,16 @@ function App() {
       <HospitalProvider>
         <Routes>
           <Route path="/" element={<Frame />}>
-            <Route index element={<Home />} />
 
+            <Route index element={<Home />} />
             <Route path="SignIn" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
             <Route path="userinfo" element={<UserInfo />} />
-            <Route path="user-update" element={<UserUpdate />} />
 
+            <Route path="user-update" element={<UserUpdate />} />
             <Route path="greeting" element={<Greeting />} />
-            <Route path="doctors" element={<Doctors />} />
             <Route path="tour" element={<Tour />} />
+            <Route path="doctors" element={<Doctors />} />
             <Route path="location" element={<Location />} />
             <Route path="services" element={<Services />} />
             <Route path="non-covered" element={<NonCovered />} />
@@ -59,28 +61,23 @@ function App() {
             <Route path="gallery" element={<Gallery />} />
             <Route path="reservation" element={<Reservation />} />
             <Route path="live-chat" element={<LiveChat />} />
-            <Route path="faq" element={<Faq />} />
             <Route path="clinic-news" element={<ClinicNews />} />
+            <Route path="faq" element={<Faq />} />
             <Route path="reviews" element={<Reviews />} />
           </Route>
 
           <Route path="/Dashboard" element={<DashboardFrame />}>
             <Route index element={<Dashboard />} />
 
-            <Route path="notice" element={<Notice />} />
-            <Route path="waiting" element={<WaitingStatus />} />
+            <Route path="waiting" element={<WaitingStatus />} />        {/* ✅ 상대경로 */}
             <Route path="schedule" element={<StaffSchedule />} />
             <Route path="patients" element={<PatientList />} />
-            <Route
-              path="reservations"
-              element={<ReservationManager />}
-            />
+            <Route path="reservations" element={<ReservationManager />} />
             <Route path="chat" element={<Chat />} />
-            <Route
-              path="chat-settings"
-              element={<ChatbotSettings />}
-            />
+            <Route path="chat-settings" element={<ChatbotSettings />} />
             <Route path="settings" element={<GeneralSettings />} />
+            <Route path="sms" element={<Sms />} />
+            <Route path="feedback" element={<Feedback />} />
           </Route>
         </Routes>
       </HospitalProvider>
