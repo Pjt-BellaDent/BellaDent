@@ -1,112 +1,115 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import ReservationModal from './ReservationModal';
 
-const DetailWrapper = styled.div`
-  background: white;
+const Panel = styled.div`
   margin-top: 20px;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 `;
 
-const Item = styled.div`
+const Card = styled.div`
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+`;
+
+const MetaRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
-  padding: 8px 0;
-  position: relative;
+  margin-bottom: 6px;
 `;
 
-const Info = styled.div`
-  font-size: 14px;
+const Badge = styled.span`
+  background: #f1f3f5;
+  color: #333;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
 `;
 
-const Actions = styled.div`
+const ButtonGroup = styled.div`
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+
   button {
-    margin-left: 6px;
-    padding: 4px 10px;
+    padding: 4px 8px;
     font-size: 12px;
-    border: none;
     border-radius: 4px;
+    border: none;
     cursor: pointer;
-    color: white;
   }
 
-  .edit-btn {
-    background: #ffc107;
-  }
+  .edit { background-color: #ffc107; color: black; }
+  .delete { background-color: #dc3545; color: white; }
+`;
 
-  .delete-btn {
-    background: #dc3545;
+const EmptyBox = styled.div`
+  margin-top: 20px;
+  font-size: 15px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: "📭";
+    font-size: 20px;
   }
 `;
 
-const AddButton = styled.button`
-  margin-top: 10px;
-  padding: 6px 12px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-`;
+const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
+  const [reservations, setReservations] = useState([]);
 
-const EditModalWrapper = styled.div`
-  position: absolute;
-  top: 40px;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-`;
+  useEffect(() => {
+    console.log("Fetching with dateKey:", dateKey); // 추가
+    if (!dateKey || dateKey.length !== 10) return;
 
-const ReservationDetail = ({ dateKey, events, onAdd, onEdit, onDelete }) => {
+    const fetchData = async () => {
+      if (!dateKey || dateKey.length !== 10) return;
+    
+      try {
+        const res = await fetch(`http://localhost:3000/test/appointments?reservationDate=${dateKey}`);
+        const data = await res.json();
+        setReservations(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('예약 불러오기 실패:', err);
+        setReservations([]);
+      }
+    };
+    
+    
 
-  if (!dateKey) {
-    return (
-      <DetailWrapper>
-        <h3>날짜를 클릭하면 예약 정보가 표시됩니다.</h3>
-      </DetailWrapper>
-    );
-  }
-
-  const reservations = [...(events[dateKey] || [])].sort((a, b) =>
-    a.time.localeCompare(b.time)
-  );
-
+    fetchData();
+  }, [dateKey]);
 
   return (
-    <DetailWrapper>
-      <h3>{dateKey} 예약 목록</h3>
+    <Panel>
       {reservations.length === 0 ? (
-        <p>등록된 예약이 없습니다.</p>
+        <EmptyBox>예약이 없습니다.</EmptyBox>
       ) : (
-        reservations.map((item, index) => (
-          <Item key={index}>
-            <Info>
-              🦷 {item.type || '진료과 미지정'} | ⏰ {item.time || '시간 없음'} | 👤 {item.name || '이름 없음'}
-              {item.memo && <> | 📝 {item.memo}</>}
-            </Info>
-            <Actions>
-            <button className="edit-btn" onClick={() => onEdit(item)}>수정</button>
-            <button
-                className="delete-btn"
-                onClick={() => {
-                  if (window.confirm("이 예약을 삭제하시겠습니까?")) {
-                    onDelete(dateKey, index);
-                  }
-                }}
-              >
-                삭제
-              </button>
-            </Actions>
-
-          </Item>
+        reservations.map((resv, i) => (
+          <Card key={i}>
+            <MetaRow>
+              <strong>{resv.time} | {resv.name}</strong>
+              <Badge>{resv.department}</Badge>
+            </MetaRow>
+            <div style={{ marginBottom: '4px' }}>{resv.doctor} 원장</div>
+            <div style={{ color: '#666' }}>{resv.memo}</div>
+            <ButtonGroup>
+              <button className="edit" onClick={() => onEdit(resv)}>수정</button>
+              <button className="delete" onClick={() => onDelete(resv.id)}>삭제</button>
+            </ButtonGroup>
+          </Card>
         ))
       )}
-      <AddButton onClick={onAdd}>+ 예약 추가</AddButton>
-    </DetailWrapper>
+    </Panel>
   );
 };
 

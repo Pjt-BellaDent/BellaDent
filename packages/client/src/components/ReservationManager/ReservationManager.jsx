@@ -1,76 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import CalendarGrid from './CalendarGrid';
 import ReservationDetail from './ReservationDetail';
 import ReservationModal from './ReservationModal';
+import { useNavigate } from 'react-router-dom';
 
-const Container = styled.div`
-  padding: 30px;
-`;
-
-const CalendarHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: 14px;
-
-  .nav {
-    display: flex;
-    gap: 10px;
-
-    button {
-      background: none;
-      border: none;
-      color: #007bff;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-  }
-
-  .month {
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .filter select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-`;
-
-
-const FilterBar = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 20px;
-
-  select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-`;
+const Container = styled.div` padding: 30px; `;
 
 const ReservationManager = () => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 4));
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDept, setSelectedDept] = useState('전체');
   const [selectedDate, setSelectedDate] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [events, setEvents] = useState({});
+  const navigate = useNavigate();
 
-  const [events, setEvents] = useState({
-    '2025-05-01': [
-      { time: '10:00', type: '보철과', name: '이수민', memo: '앞니 시술상담' },
-      { time: '14:00', type: '교정과', name: '김하늘', memo: '교정 중간 체크' }
-    ],
-    '2025-05-05': [
-      { time: '11:00', type: '잇몸클리닉', name: '정하늘', memo: '잇몸 염증 체크' }
-    ]
-  });
+  const getMonthStr = (date) => {
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    return `${y}-${m.toString().padStart(2, '0')}`;
+  };
 
   const formatDateKey = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -82,42 +32,85 @@ const ReservationManager = () => {
     setSelectedDate(null);
   };
 
+  const fetchAppointments = async () => {
+    const month = getMonthStr(currentDate);
+    try {
+      const res = await fetch(`http://localhost:3000/test/appointments?month=${month}`);
+      const data = await res.json();
+      const grouped = {};
+      data.forEach(item => {
+        const { id, reservationDate, time, name, department, memo } = item;
+        if (!grouped[reservationDate]) grouped[reservationDate] = [];
+        grouped[reservationDate].push({
+          id,
+          time,
+          name,
+          type: department,
+          memo
+        });
+      });
+      setEvents(grouped);
+    } catch (err) {
+      console.error("예약 로딩 실패:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [currentDate]);
+
   const handleDayClick = (year, month, day) => {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(key);
   };
 
-  const handleAddEvent = (eventData) => {
+  const handleAddEvent = async (data) => {
     if (!selectedDate) return;
-    setEvents(prev => {
-      const updated = { ...prev };
-      if (!updated[selectedDate]) updated[selectedDate] = [];
-      updated[selectedDate].push(eventData);
-      return updated;
-    });
+    try {
+      await fetch('http://localhost:3000/test/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservationDate: selectedDate,
+          time: data.time,
+          name: data.name,
+          department: data.type, // type을 department로 변경
+          memo: data.memo
+        })
+      });
+      fetchAppointments();
+    } catch (err) {
+      console.error("추가 실패:", err);
+    }
     setModalOpen(false);
-    setEditData(null);
   };
 
-  const handleEditEvent = (dateKey, index, newData) => {
-    setEvents(prev => {
-      const updated = { ...prev };
-      updated[dateKey][index] = newData;
-      return updated;
-    });
+  const handleEditEvent = async (dateKey, index, newData) => {
+    const target = events[dateKey]?.[index];
+    if (!target || !target.id) return;
+    try {
+      await fetch(`http://localhost:3000/test/appointments/${target.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newData)
+      });
+      fetchAppointments();
+    } catch (err) {
+      console.error("수정 실패:", err);
+    }
     setModalOpen(false);
-    setEditData(null);
   };
 
-  const handleDeleteEvent = (dateKey, index) => {
-    setEvents(prev => {
-      const updated = { ...prev };
-      updated[dateKey].splice(index, 1);
-      if (updated[dateKey].length === 0) delete updated[dateKey];
-      return updated;
-    });
-    if (selectedDate === dateKey && !events[dateKey]?.length) {
-      setSelectedDate(null);
+  const handleDeleteEvent = async (dateKey, index) => {
+    const target = events[dateKey]?.[index];
+    if (!target || !target.id) return;
+    try {
+      await fetch(`http://localhost:3000/test/appointments/${target.id}`, {
+        method: 'DELETE'
+      });
+      fetchAppointments();
+    } catch (err) {
+      console.error("삭제 실패:", err);
     }
   };
 
@@ -128,39 +121,34 @@ const ReservationManager = () => {
 
   return (
     <Container>
-      <h2>📅 예약 관리</h2>
-
-      <CalendarHeader>
-  <div className="nav">
-    <button onClick={() => changeMonth(-1)}>⬅ 이전</button>
-    <button onClick={() => changeMonth(1)}>다음 ➡</button>
-  </div>
-
-  <div className="month">
-    {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
-  </div>
-
-  <div className="filter">
-    <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
-      <option value="전체">전체</option>
-      <option value="보철과">보철과</option>
-      <option value="교정과">교정과</option>
-      <option value="잇몸클리닉">잇몸클리닉</option>
-    </select>
-  </div>
-</CalendarHeader>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>📅 예약 관리</h2>
+        <button onClick={() => navigate('/Dashboard/reservations/list')} style={{
+          padding: '6px 12px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '14px',
+          cursor: 'pointer'
+        }}>
+          전체 목록 보기
+        </button>
+      </div>
 
       <CalendarGrid
         date={currentDate}
         events={events}
         onDayClick={handleDayClick}
         filterDept={selectedDept}
+        selectedDept={selectedDept}
+        onFilterChange={e => setSelectedDept(e.target.value)}
+        onPrevMonth={() => changeMonth(-1)}
+        onNextMonth={() => changeMonth(1)}
       />
-
 
       <ReservationDetail
         dateKey={selectedDate}
-        events={events}
         onAdd={() => {
           setEditData(null);
           setModalOpen(true);
