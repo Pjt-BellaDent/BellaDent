@@ -128,85 +128,97 @@ const ModalContent = styled.div`
   }
 `;
 
-const Dashboard = () => {
+export default function Dashboard() {
   const reservationRef = useRef(null);
   const procedureRef = useRef(null);
+  const [appointments, setAppointments] = useState([]);
   const [modalData, setModalData] = useState({ visible: false, title: '', data: [] });
 
-  const todayAppointments = [
-    { time: '09:00', name: '홍길동', procedure: '라미네이트', note: '치아 6개 시술', doctor: '김치과 원장' },
-    { time: '10:30', name: '김하나', procedure: '스케일링', note: '잇몸 민감', doctor: '홍의사' },
-    { time: '13:00', name: '이수정', procedure: '잇몸성형', note: '지혈 체크 필요', doctor: '김치과 원장' }
-  ];
-
-  const chartData = {
-    reservation: [10, 15, 7, 20, 13, 9, 4],
-    procedure: [3, 5, 2]
-  };
-
   useEffect(() => {
-    new Chart(reservationRef.current, {
-      type: 'line',
-      data: {
-        labels: ['월', '화', '수', '목', '금', '토', '일'],
-        datasets: [{
-          label: '예약 수',
-          data: chartData.reservation,
-          fill: false,
-          borderColor: '#007bff',
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
+    const fetchData = async () => {
+      try {
+        const resAppointments = await fetch('http://localhost:3000/appointments/today');
+        const appointmentsData = await resAppointments.json();
+        setAppointments(appointmentsData);
+        const resChart = await fetch('http://localhost:3000/stats/chart');
+        const stats = await resChart.json();
 
-    new Chart(procedureRef.current, {
-      type: 'bar',
-      data: {
-        labels: ['라미네이트', '스케일링', '잇몸성형'],
-        datasets: [{
-          label: '시술 횟수',
-          data: chartData.procedure,
-          backgroundColor: ['#007bff', '#28a745', '#ffc107']
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
+        // 예약 추이 라인 차트
+        new Chart(reservationRef.current, {
+          type: 'line',
+          data: {
+            labels: ['일', '월', '화', '수', '목', '금', '토'],
+            datasets: [{
+              label: '예약 수',
+              data: stats.reservations,
+              fill: false,
+              borderColor: '#007bff',
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        // 시술 통계 바 차트
+        new Chart(procedureRef.current, {
+          type: 'bar',
+          data: {
+            labels: stats.procedureLabels,
+            datasets: [{
+              label: '시술 횟수',
+              data: stats.procedures,
+              backgroundColor: ['#007bff', '#28a745', '#ffc107']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+      } catch (error) {
+        console.error('데이터 불러오기 실패:', error);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   const showModal = (title, data) => {
     setModalData({ visible: true, title, data });
   };
-
   return (
     <Wrapper>
       <Title>대시보드</Title>
 
       <Filter>
         <label>의료진:</label>
-        <select><option>전체</option><option>김치과 원장</option><option>홍의사</option></select>
+        <select>
+          <option>전체</option>
+          <option>김치과 원장</option>
+          <option>홍의사</option>
+        </select>
         <label>기간:</label>
-        <select><option>주간</option><option>월간</option></select>
+        <select>
+          <option>주간</option>
+          <option>월간</option>
+        </select>
       </Filter>
 
       <CardRow>
-        <Card onClick={() => showModal('오늘 진료 일정', todayAppointments)}>
+        <Card onClick={() => showModal('오늘 진료 일정', appointments)}>
           <div>오늘 진료</div>
-          <strong>18명</strong>
+          <strong>{appointments.length}명</strong>
         </Card>
-        <Card onClick={() => showModal('예약 건수 상세', todayAppointments)}>
+        <Card onClick={() => showModal('예약 건수 상세', appointments)}>
           <div>예약 건수</div>
-          <strong>27건</strong>
+          <strong>{appointments.length + 5}건</strong>
         </Card>
-        <Card onClick={() => showModal('대기 환자 목록', todayAppointments.filter(x => x.name !== '이수정'))}>
+        <Card onClick={() => showModal('대기 환자 목록', appointments.filter(x => x.status === '대기'))}>
           <div>대기 환자</div>
-          <strong>5명</strong>
+          <strong>{appointments.filter(x => x.status === '대기').length}명</strong>
         </Card>
       </CardRow>
 
@@ -243,7 +255,11 @@ const Dashboard = () => {
               <tbody>
                 {modalData.data.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.time}</td><td>{item.name}</td><td>{item.procedure}</td><td>{item.note}</td><td>{item.doctor}</td>
+                    <td>{item.time}</td>
+                    <td>{item.name}</td>
+                    <td>{item.procedure}</td>
+                    <td>{item.note}</td>
+                    <td>{item.doctor}</td>
                   </tr>
                 ))}
               </tbody>
@@ -254,6 +270,4 @@ const Dashboard = () => {
       </Modal>
     </Wrapper>
   );
-};
-
-export default Dashboard;
+}

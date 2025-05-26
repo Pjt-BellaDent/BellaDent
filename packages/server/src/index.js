@@ -4,6 +4,11 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRouter from "./routes/users.js";
+import appointmentRouter from "./routes/appointments.js";
+import procedureRouter from "./routes/procedures.js";
+import statRouter from "./routes/stats.js";
+import waitingRouter from "./routes/waiting.js";
+import testRouter from "./routes/test.js";
 
 dotenv.config();
 
@@ -21,7 +26,13 @@ app.use(
 app.use(logger('dev'))
 
 app.use("/users", userRouter);
+app.use("/appointments", appointmentRouter);
+app.use("/procedures", procedureRouter);
+app.use("/stats", statRouter);
+app.use("/waiting", waitingRouter);
+app.use("/test", testRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
