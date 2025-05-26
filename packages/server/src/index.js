@@ -1,11 +1,27 @@
-import express from 'express';
-const app = express()
-const port = 3000
+import express from "express";
+import logger from "morgan";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
+import userRouter from "./routes/users.js";
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+dotenv.config();
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+app.use(cookieParser())
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+)
+app.use(logger('dev'))
+
+app.use("/users", userRouter);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Example app listening on port ${port}`);
+});
