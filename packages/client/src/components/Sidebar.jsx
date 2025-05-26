@@ -53,25 +53,30 @@ const NavLink = styled(Link, {
 `;
 
 const menuItems = [
-  { path: '/Dashboard/notice', label: '📢 공지사항', roles: ['super_admin', 'manager'] },
   { path: '/Dashboard', label: '📊 대시보드', roles: ['super_admin', 'doctor', 'consultant'] },
   { path: '/Dashboard/waiting', label: '⏳ 대기현황', roles: ['super_admin', 'doctor'] },
   { path: '/Dashboard/reservations', label: '📅 예약 관리', roles: ['super_admin', 'consultant'] },
   { path: '/Dashboard/schedule', label: '📆 의료진 일정', roles: ['super_admin', 'doctor'] },
   { path: '/Dashboard/patients', label: '📋 환자 목록', roles: ['super_admin', 'doctor'] },
-   { path: '/Dashboard/feedback', label: '📝 후기', roles: ['super_admin', 'doctor'] },
-   { path: '/Dashboard/sms', label: '📱 단체 문자 발송', roles:['super_admin', 'doctor'] },
+  { path: '/Dashboard/feedback', label: '📝 후기', roles: ['super_admin', 'doctor'] },
+  { path: '/Dashboard/sms', label: '📱 단체 문자 발송', roles: ['super_admin', 'doctor'] },
   { path: '/Dashboard/chat', label: '💬 AI 채팅/상담', roles: ['super_admin', 'consultant'] },
   { path: '/Dashboard/chat-settings', label: '⚙️ 챗봇 설정', roles: ['super_admin'] },
   { path: '/Dashboard/settings', label: '⚙️ 설정', roles: ['super_admin'] },
 ];
 
-const Sidebar = ({ role = 'super_admin', name = '홍길동' }) => {
+const Sidebar = ({ role = 'super_admin', name = '홍길동', onOpenNotice }) => {
   const location = useLocation();
 
   return (
     <Wrapper>
       <UserInfo>👤 {name}</UserInfo>
+
+      {/* 공지사항 버튼 별도 추가 */}
+      {(role === 'super_admin' || role === 'manager') && (
+        <ButtonItem onClick={onOpenNotice}>📢 직원 공지사항</ButtonItem>
+      )}
+
       {menuItems
         .filter(item => item.roles.includes(role))
         .map(item => (

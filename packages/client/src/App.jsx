@@ -34,8 +34,6 @@ import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
 import { HospitalProvider } from './contexts/HospitalContext.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
-import Sms from './components/Sms/SmsBroadcast';
-import Feedback from './components/Feedback/FeedbackList';
 function App() {
   return (
     <>
@@ -63,7 +61,6 @@ function App() {
         </Route>
         <Route path="/Dashboard" element={<DashboardFrame />}>
           <Route index element={<Dashboard />} />
-          <Route path="/Dashboard/notice" element={<Notice />} />
           <Route path="/Dashboard/waiting" element={<WaitingStatus />} />
           <Route path="/Dashboard/schedule" element={<StaffSchedule />} />
           <Route path="/Dashboard/patients" element={<PatientList />} />
