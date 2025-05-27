@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
+import { fetchProceduresByName, addProcedure } from '../../api/patients'; // ✅
 
 const ModalOverlay = styled.div`
   display: ${({ open }) => (open ? 'flex' : 'none')};
@@ -43,7 +44,6 @@ const Entry = styled.div`
     background: #007bff;
     border-radius: 50%;
   }
-
   h4 {
     margin: 0;
     font-size: 16px;
@@ -97,23 +97,33 @@ const Form = styled.div`
 `;
 
 const ProcedureModal = ({ open, onClose, patientName }) => {
-  const [procedures, setProcedures] = useState([
-    { title: '라미네이트', date: '2025-04-02', doctor: '김치과', note: '앞니 6개 시술, 밝기 톤 조정' },
-    { title: '스케일링', date: '2025-01-20', doctor: '홍의사', note: '치석 제거, 잇몸 출혈 있음' },
-  ]);
-
+  const [procedures, setProcedures] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({ title: '', date: '', doctor: '', note: '' });
 
-  const handleAdd = () => {
-    const { title, date, doctor, note } = formData;
-    if (!title || !date || !doctor || !note) {
-      alert('모든 항목을 입력해주세요.');
-      return;
+  useEffect(() => {
+    if (!open || !patientName) return;
+    const loadData = async () => {
+      try {
+        const data = await fetchProceduresByName(patientName);
+        setProcedures(data);
+      } catch (err) {
+        console.error("시술 이력 로딩 실패", err);
+      }
+    };
+    loadData();
+  }, [open, patientName]);
+
+  const handleAdd = async () => {
+    try {
+      const newEntry = { ...formData, name: patientName };
+      await addProcedure(newEntry);
+      setProcedures([newEntry, ...procedures]);
+      setFormData({ title: '', date: '', doctor: '', note: '' });
+      setShowForm(false);
+    } catch (err) {
+      console.error("시술 추가 실패", err);
     }
-    setProcedures([{ title, date, doctor, note }, ...procedures]);
-    setFormData({ title: '', date: '', doctor: '', note: '' });
-    setShowForm(false);
   };
 
   return (
@@ -125,7 +135,7 @@ const ProcedureModal = ({ open, onClose, patientName }) => {
           {procedures.map((p, i) => (
             <Entry key={i}>
               <h4>{p.title}</h4>
-              <div className="date">{p.date} / {p.doctor}</div>
+              <div className="date">{new Date(p.date).toLocaleString('ko-KR')} / {p.doctor}</div>
               <div className="note">{p.note}</div>
             </Entry>
           ))}
@@ -136,7 +146,11 @@ const ProcedureModal = ({ open, onClose, patientName }) => {
         {showForm && (
           <Form>
             <input placeholder="시술명 예: 라미네이트" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-            <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
+            <input
+              type="datetime-local"
+              value={formData.date}
+              onChange={e => setFormData({ ...formData, date: e.target.value })}
+            />
             <input placeholder="담당의 예: 김치과" value={formData.doctor} onChange={e => setFormData({ ...formData, doctor: e.target.value })} />
             <textarea placeholder="시술 메모 또는 설명" value={formData.note} onChange={e => setFormData({ ...formData, note: e.target.value })}></textarea>
             <button className="submit" onClick={handleAdd}>추가</button>

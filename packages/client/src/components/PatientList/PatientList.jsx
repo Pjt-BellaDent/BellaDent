@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import PatientTable from './PatientTable';
 import ProcedureModal from './ProcedureModal';
 import SurveyModal from './SurveyModal';
 import Charts from './Charts';
 import EditPatientModal from './EditPatientModal';
+import { fetchAllPatients, fetchProceduresByName } from '../../api/patients';
 
 const Container = styled.div`
   padding: 30px;
@@ -31,36 +32,34 @@ const Filters = styled.div`
 `;
 
 const PatientList = () => {
-  const [patients] = useState([
-    {
-      name: '홍길동', gender: '남', age: 35, phone: '010-1234-5678',
-      dept: '내과', lastVisit: '2025-05-10', status: '진료 완료'
-    },
-    {
-      name: '김하나', gender: '여', age: 29, phone: '010-5678-1234',
-      dept: '소아과', lastVisit: '2025-05-12', status: '예약'
-    }
-  ]);
-
-  const [proceduresData] = useState({
-    "홍길동": [
-      { title: "라미네이트", date: "2025-04-02", doctor: "김치과", note: "앞니 6개 시술, 밝기 톤 조정" },
-      { title: "스케일링", date: "2025-01-20", doctor: "홍의사", note: "치석 제거, 잇몸 출혈 있음" }
-    ],
-    "김하나": [
-      { title: "잇몸 성형", date: "2025-02-15", doctor: "이치과", note: "미세 잇몸 커팅" }
-    ]
-  });
-
+  const [patients, setPatients] = useState([]);
+  const [proceduresData, setProceduresData] = useState({});
   const [filter, setFilter] = useState({ name: '', date: '', dept: '', status: '' });
   const [procedureModalOpen, setProcedureModalOpen] = useState(false);
   const [surveyModalOpen, setSurveyModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-
-  // ✅ 수정용 상태
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editProcedures, setEditProcedures] = useState([]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const res = await fetchAllPatients();
+        setPatients(res);
+
+        const procData = {};
+        for (let p of res) {
+          const history = await fetchProceduresByName(p.name);
+          procData[p.name] = history;
+        }
+        setProceduresData(procData);
+      } catch (err) {
+        console.error("데이터 불러오기 실패", err);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   const openProcedureModal = (name) => {
     setSelectedPatient(name);
@@ -72,7 +71,6 @@ const PatientList = () => {
     setSurveyModalOpen(true);
   };
 
-  // ✅ 수정 모달 열기
   const openEditModal = (name) => {
     const patient = patients.find(p => p.name === name);
     const history = proceduresData[name] || [];
@@ -80,7 +78,6 @@ const PatientList = () => {
     setEditProcedures(history);
     setEditModalOpen(true);
   };
-
   return (
     <Container>
       <h2>📋 환자 리스트</h2>
@@ -110,7 +107,6 @@ const PatientList = () => {
         onEditClick={openEditModal}
       />
 
-      {/* ✅ 수정 모달 */}
       <EditPatientModal
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
