@@ -151,8 +151,11 @@ const ScheduleCalendar = ({
           <select value={filterRank} onChange={onFilterChange}>
             <option value="전체">전체</option>
             <option value="원장">원장</option>
-            <option value="스탭">스탭</option>
-            <option value="위생사">위생사</option>
+            <option value="부원장">부원장</option>
+            <option value="과장">과장</option>
+            <option value="상담사">상담사</option>
+            <option value="수납">수납</option>
+            <option value="치위생사">치위생사</option>
           </select>
 
         </div>

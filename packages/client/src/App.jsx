@@ -41,6 +41,7 @@ import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
 import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+import StaffScheduleList from './components/StaffSchedule/StaffScheduleList';
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
             <Route path="notice" element={<NoticeModal />} />
             <Route path="waiting" element={<WaitingStatus />} />{' '}
             <Route path="schedule" element={<StaffSchedule />} />
+            <Route path="staff-schedules" element={<StaffScheduleList />} />
             <Route path="patients" element={<PatientList />} />
             <Route path="reservations" element={<ReservationManager />} />
             <Route path="reservations/list" element={<ReservationList />} />
