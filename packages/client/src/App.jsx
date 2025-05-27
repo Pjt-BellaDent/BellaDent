@@ -19,6 +19,7 @@ import Notice from './routes/Notice.jsx';
 import Review from './routes/Review.jsx';
 import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
+import './App.css';
 
 function App() {
   return (

@@ -6,17 +6,17 @@ import siml from '../assets/siml.png';
 import sm from '../assets/sm.png';
 import smi from '../assets/smi.png';
 import laugh from '../assets/laugh.png';
-import laug from '../assets/laug.png';
-import "./TreatmentInfo_1.css"
+import laug from '../assets/laug.png'
+
 function TreatmentInfo_1_3() {
   return (
     <div>
     
-    <header className='mt-3'><b>하얀치아 예쁜미소</b></header>
+    <header className='mt-3 mx-5'><b>하얀치아 예쁜미소</b></header>
    
      
-      <p className='text-center mt-6 mb-3'>하얀 치아 교정</p>
-         <div className="review d-flex gap-2">
+      <p className='text-center mt-6 mb-3'mx-5>하얀 치아 교정</p>
+         <div className="flex justify-center gap-2 ">
            <img src={ch1} alt="ch1" />;
            <img src={ch} alt="ch"  />;
            <img src={sim} alt="sim"  />;
@@ -25,7 +25,7 @@ function TreatmentInfo_1_3() {
         
          <p className='text-center mt-6 mb-3'>하얀 치아 미소</p>
        
-         <div className="review d-flex gap-2 mb-10">
+         <div className="flex justify-center gap-2 mb-10 ">
            <img src={sm} alt="sm" />;
            <img src={smi} alt="smi" />;
            <img src={laugh} alt="laugh" />;
