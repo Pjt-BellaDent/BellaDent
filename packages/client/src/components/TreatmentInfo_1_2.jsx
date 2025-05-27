@@ -1,6 +1,6 @@
 import React from 'react'
 
-import smile from '../assets/smile.png';
+import smile from '../assets/smile.png'
 function TreatmentInfo_1_1() {
   return (
      <div>

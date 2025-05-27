@@ -1,5 +1,5 @@
 import React from 'react';
-import './TreatmentInfo_1.css';
+
 
 import TreatmentInfo_1_1 from './TreatmentInfo_1_1';
 import TreatmentInfo_1_2 from './TreatmentInfo_1_2';
