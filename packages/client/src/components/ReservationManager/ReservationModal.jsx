@@ -22,7 +22,6 @@ const ModalBox = styled.div`
 
 const Field = styled.div`
   margin-bottom: 16px;
-
   label {
     display: block;
     font-size: 14px;
@@ -66,24 +65,31 @@ const ButtonRow = styled.div`
   }
 `;
 
-const ReservationModal = ({ open, onClose, onSave, initialData }) => {
+const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate }) => {
   const [form, setForm] = useState({
+    userId: '',
+    reservationDate: '',
     time: '',
-    type: '',
-    name: '',
-    memo: ''
+    department: '',
+    notes: ''
   });
 
   useEffect(() => {
     if (initialData) {
       setForm({
+        userId: initialData.userId || '',
+        reservationDate: initialData.reservationDate || '',
         time: initialData.time || '',
-        type: initialData.type || '',
-        name: initialData.name || '',
-        memo: initialData.memo || ''
+        department: initialData.department || '',
+        notes: initialData.notes || ''
       });
+    } else if (selectedDate) {
+      setForm(prev => ({ ...prev, reservationDate: selectedDate }));
+    } else {
+      const today = new Date().toISOString().slice(0, 10);
+      setForm(prev => ({ ...prev, reservationDate: today }));
     }
-  }, [initialData]);
+  }, [initialData, selectedDate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -91,20 +97,13 @@ const ReservationModal = ({ open, onClose, onSave, initialData }) => {
   };
 
   const handleSubmit = () => {
-    const { time, type, name, memo } = form;
-    if (!time || !type || !name) {
-      alert('시간, 진료과, 환자 이름을 모두 입력해주세요.');
+    const { userId, reservationDate, time, department } = form;
+    if (!userId || !reservationDate || !time || !department) {
+      alert('이름, 예약일, 시간, 진료과는 필수입니다.');
       return;
     }
 
-    const payload = {
-      time,
-      department: type, // ✅ 서버 필드에 맞게 변환
-      name,
-      memo
-    };
-
-    onSave(payload);
+    onSave(form);
     onClose();
   };
 
@@ -112,6 +111,26 @@ const ReservationModal = ({ open, onClose, onSave, initialData }) => {
     <ModalBackground open={open}>
       <ModalBox>
         <h3>예약 {initialData ? '수정' : '등록'}</h3>
+
+        <Field>
+          <label>이름</label>
+          <input
+            type="email"
+            name="userId"
+            value={form.userId}
+            onChange={handleChange}
+          />
+        </Field>
+
+        <Field>
+          <label>예약일</label>
+          <input
+            type="date"
+            name="reservationDate"
+            value={form.reservationDate}
+            onChange={handleChange}
+          />
+        </Field>
 
         <Field>
           <label>시간</label>
@@ -126,8 +145,8 @@ const ReservationModal = ({ open, onClose, onSave, initialData }) => {
         <Field>
           <label>진료과</label>
           <select
-            name="type"
-            value={form.type}
+            name="department"
+            value={form.department}
             onChange={handleChange}
           >
             <option value="">선택</option>
@@ -138,20 +157,10 @@ const ReservationModal = ({ open, onClose, onSave, initialData }) => {
         </Field>
 
         <Field>
-          <label>환자 이름</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-          />
-        </Field>
-
-        <Field>
           <label>메모</label>
           <textarea
-            name="memo"
-            value={form.memo}
+            name="notes"
+            value={form.notes}
             onChange={handleChange}
           />
         </Field>

@@ -68,12 +68,9 @@ const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
   const [reservations, setReservations] = useState([]);
 
   useEffect(() => {
-    console.log("Fetching with dateKey:", dateKey); // 추가
     if (!dateKey || dateKey.length !== 10) return;
 
     const fetchData = async () => {
-      if (!dateKey || dateKey.length !== 10) return;
-    
       try {
         const res = await fetch(`http://localhost:3000/test/appointments?reservationDate=${dateKey}`);
         const data = await res.json();
@@ -83,8 +80,6 @@ const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
         setReservations([]);
       }
     };
-    
-    
 
     fetchData();
   }, [dateKey]);
@@ -97,11 +92,13 @@ const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
         reservations.map((resv, i) => (
           <Card key={i}>
             <MetaRow>
-              <strong>{resv.time} | {resv.name}</strong>
+              <strong>{resv.userId}</strong>
               <Badge>{resv.department}</Badge>
             </MetaRow>
-            <div style={{ marginBottom: '4px' }}>{resv.doctor} 원장</div>
-            <div style={{ color: '#666' }}>{resv.memo}</div>
+            <div style={{ marginBottom: '4px' }}>
+              시간: {resv.time || '-'} | 상태: {resv.status}
+            </div>
+            <div style={{ color: '#666' }}>{resv.notes}</div>
             <ButtonGroup>
               <button className="edit" onClick={() => onEdit(resv)}>수정</button>
               <button className="delete" onClick={() => onDelete(resv.id)}>삭제</button>

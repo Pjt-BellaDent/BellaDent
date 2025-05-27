@@ -22,9 +22,6 @@ const ReservationManager = () => {
     return `${y}-${m.toString().padStart(2, '0')}`;
   };
 
-  const formatDateKey = (date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
   const changeMonth = (delta) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(currentDate.getMonth() + delta);
@@ -39,14 +36,13 @@ const ReservationManager = () => {
       const data = await res.json();
       const grouped = {};
       data.forEach(item => {
-        const { id, reservationDate, time, name, department, memo } = item;
+        const { id, reservationDate, userId, department, notes } = item;
         if (!grouped[reservationDate]) grouped[reservationDate] = [];
         grouped[reservationDate].push({
           id,
-          time,
-          name,
-          type: department,
-          memo
+          userId,
+          department,
+          notes
         });
       });
       setEvents(grouped);
@@ -62,7 +58,19 @@ const ReservationManager = () => {
   const handleDayClick = (year, month, day) => {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(key);
+    setEditData(null);
+    setModalOpen(true); // ⬅️ 무조건 등록 폼 열기
+
+    const isEmpty = !Array.isArray(events[key]) || events[key].length === 0;
+    if (isEmpty) {
+      setEditData(null);
+      setModalOpen(true);
+    }
   };
+  
+  
+  
+
 
   const handleAddEvent = async (data) => {
     if (!selectedDate) return;
@@ -71,11 +79,11 @@ const ReservationManager = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: data.userId,
           reservationDate: selectedDate,
           time: data.time,
-          name: data.name,
-          department: data.type, // type을 department로 변경
-          memo: data.memo
+          department: data.department,
+          notes: data.notes
         })
       });
       fetchAppointments();
@@ -92,7 +100,13 @@ const ReservationManager = () => {
       await fetch(`http://localhost:3000/test/appointments/${target.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData)
+        body: JSON.stringify({
+          userId: newData.userId,
+          reservationDate: newData.reservationDate,
+          time: newData.time,
+          department: newData.department,
+          notes: newData.notes
+        })
       });
       fetchAppointments();
     } catch (err) {
@@ -101,11 +115,10 @@ const ReservationManager = () => {
     setModalOpen(false);
   };
 
-  const handleDeleteEvent = async (dateKey, index) => {
-    const target = events[dateKey]?.[index];
-    if (!target || !target.id) return;
+
+  const handleDeleteEvent = async (id) => {
     try {
-      await fetch(`http://localhost:3000/test/appointments/${target.id}`, {
+      await fetch(`http://localhost:3000/test/appointments/${id}`, {
         method: 'DELETE'
       });
       fetchAppointments();
@@ -117,6 +130,10 @@ const ReservationManager = () => {
   const handleEditClick = (eventData) => {
     setEditData(eventData);
     setModalOpen(true);
+  };
+  const handleEventClick = (dateKey) => {
+    setSelectedDate(dateKey);     // 하단 예약 목록 표시용
+    setModalOpen(false);          // 등록 폼 닫힘 (중복 방지)
   };
 
   return (
@@ -145,6 +162,7 @@ const ReservationManager = () => {
         onFilterChange={e => setSelectedDept(e.target.value)}
         onPrevMonth={() => changeMonth(-1)}
         onNextMonth={() => changeMonth(1)}
+        onEventClick={handleEventClick}
       />
 
       <ReservationDetail
@@ -166,7 +184,7 @@ const ReservationManager = () => {
         onSave={(data) => {
           if (editData) {
             const idx = events[selectedDate]?.findIndex(e =>
-              e.name === editData.name && e.time === editData.time
+              e.userId === editData.userId
             );
             if (idx > -1) handleEditEvent(selectedDate, idx, data);
           } else {
@@ -174,6 +192,7 @@ const ReservationManager = () => {
           }
         }}
         initialData={editData}
+        selectedDate={selectedDate}
       />
     </Container>
   );
