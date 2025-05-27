@@ -45,7 +45,7 @@ const Table = styled.table`
     background: #f1f3f5;
   }
 
-  td.memo {
+  td.notes {
     text-align: left;
   }
 
@@ -55,11 +55,14 @@ const Table = styled.table`
       font-size: 12px;
     }
   }
-`;
+  `;
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
   const [search, setSearch] = useState('');
+  const [searchDate, setSearchDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -93,10 +96,16 @@ const ReservationList = () => {
     fetchReservations();
   }, []);
 
-  const filtered = reservations.filter(r =>
-    (r.name && r.name.toLowerCase().includes(search.toLowerCase())) ||
-    (r.department && r.department.includes(search))
-  );
+  const filtered = reservations.filter(r => {
+    const matchText =
+      (r.userId && r.userId.toLowerCase().includes(search.toLowerCase())) ||
+      (r.department && r.department.includes(search));
+
+    const matchDateRange = (!startDate || r.reservationDate >= startDate) &&
+      (!endDate || r.reservationDate <= endDate);
+
+    return matchText && matchDateRange;
+  });
 
   const handleDelete = async (id) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
@@ -112,12 +121,42 @@ const ReservationList = () => {
       <h2>📋 전체 예약 목록</h2>
 
       <Header>
-        <input
-          type="text"
-          placeholder="이름 또는 진료과 검색"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label>기간:</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{
+              height: '39px',
+              fontSize: '13px',
+              padding: '4px 6px',
+              width: '105px'
+            }}
+          />
+
+          <span>~</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{
+              height: '39px',
+              fontSize: '13px',
+              padding: '4px 6px',
+              width: '105px'
+            }}
+          />
+
+          <input
+            type="text"
+            placeholder="이메일 또는 진료과 검색"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+
         <button onClick={() => {
           setEditData(null);
           setModalOpen(true);
@@ -138,25 +177,24 @@ const ReservationList = () => {
               <th>시간</th>
               <th>이름</th>
               <th>진료과</th>
-              <th>의사</th>
-              <th>메모</th>
               <th>상태</th>
+              <th>메모</th>
               <th>관리</th>
+
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan="8">일치하는 예약이 없습니다.</td></tr>
+              <tr><td colSpan="6">일치하는 예약이 없습니다.</td></tr>
             ) : (
               filtered.map((r, i) => (
                 <tr key={r.id || i}>
                   <td>{r.reservationDate || '-'}</td>
                   <td>{r.time || '-'}</td>
-                  <td>{r.name || '-'}</td>
+                  <td>{r.userId || '-'}</td>
                   <td>{r.department || '-'}</td>
-                  <td>{r.doctor || '-'}</td>
-                  <td className="memo">{r.memo || ''}</td>
                   <td>{r.status || '-'}</td>
+                  <td className="notes">{r.notes || ''}</td>
                   <td className="actions">
                     <button onClick={() => {
                       setEditData(r);

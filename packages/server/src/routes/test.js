@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   getAppointmentsByDate,
-  insertSampleAppointments,
+  createAppointment,
   deleteAppointment,
   updateAppointment
 } from '../controllers/testController.js';
@@ -9,7 +9,7 @@ import {
 const router = express.Router();
 
 router.get('/appointments', getAppointmentsByDate);
-router.post('/appointments/sample', insertSampleAppointments);
+router.post('/appointments', createAppointment); // sample 제거
 router.delete('/appointments/:id', deleteAppointment);
 router.patch('/appointments/:id', updateAppointment);
 

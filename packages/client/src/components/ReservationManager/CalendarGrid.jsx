@@ -94,6 +94,7 @@ const CalendarGrid = ({
   onDayClick,
   filterDept = '전체',
   selectedDept,
+  onEventClick,
   onFilterChange,
   onPrevMonth,
   onNextMonth
@@ -126,8 +127,18 @@ const CalendarGrid = ({
         <DayNumber>{day}</DayNumber>
         <EventWrapper>
           {sortedEvents.map((e, i) => (
-            <Event key={i}>• {`${e.name || '-'} (${e.type || '진료과'})`}</Event>
+            <Event
+              key={i}
+              onClick={(event) => {
+                event.stopPropagation();        // 셀 클릭 막기
+                onEventClick(key);              // key = 날짜
+              }}
+            >
+              • {`${e.time || ''} ${e.userId || '-'} (${e.department || '진료과'})`}
+            </Event>
           ))}
+
+
         </EventWrapper>
       </Cell>
     );
