@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
+import { updatePatient } from '../../api/patients';
 
 const ModalBackground = styled.div`
   display: ${({ open }) => open ? 'flex' : 'none'};
@@ -30,7 +31,6 @@ const ModalBox = styled.div`
     border: 1px solid #ccc;
   }
 `;
-
 const ButtonRow = styled.div`
   text-align: right;
   button {
@@ -54,19 +54,23 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
     setEditedProcedures(newList);
   };
 
-  const handleSave = () => {
-    console.log('✔️ 저장된 정보:', form, editedProcedures);
-    onClose(); // 실제 저장 로직은 서버 연동 시 구현
+  const handleSave = async () => {
+    try {
+      await updatePatient(form.id, form);
+      alert('환자 정보가 저장되었습니다.');
+      onClose();
+    } catch (err) {
+      console.error("저장 실패:", err);
+      alert('저장에 실패했습니다.');
+    }
   };
 
   return (
     <ModalBackground open={open}>
       <ModalBox>
         <h3>환자 정보 수정</h3>
-
         <label>이름</label>
         <input value={form.name} disabled />
-
         <label>성별</label>
         <input value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} />
 
@@ -85,7 +89,11 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
             <label>시술명</label>
             <input value={proc.title} onChange={e => updateProcedure(i, 'title', e.target.value)} />
             <label>날짜</label>
-            <input type="date" value={proc.date} onChange={e => updateProcedure(i, 'date', e.target.value)} />
+            <input
+              type="datetime-local"
+              value={proc.date}
+              onChange={e => updateProcedure(i, 'date', e.target.value)}
+            />
             <label>의료진</label>
             <input value={proc.doctor} onChange={e => updateProcedure(i, 'doctor', e.target.value)} />
             <label>비고</label>

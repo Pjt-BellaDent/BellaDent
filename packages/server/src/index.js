@@ -10,6 +10,8 @@ import statRouter from "./routes/stats.js";
 import waitingRouter from "./routes/waiting.js";
 import testRouter from "./routes/test.js";
 import staffScheduleRoutes from './routes/staffScheduleRoutes.js';
+import patientRouter from "./routes/patients.js";
+
 
 dotenv.config();
 
@@ -33,6 +35,7 @@ app.use("/stats", statRouter);
 app.use("/waiting", waitingRouter);
 app.use("/test", testRouter);
 app.use('/staff-schedules', staffScheduleRoutes);
+app.use("/patients", patientRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
