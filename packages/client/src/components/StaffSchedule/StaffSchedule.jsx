@@ -1,52 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import ScheduleCalendar from './ScheduleCalendar';
 import ScheduleList from './ScheduleList';
 import SchedulePopup from './SchedulePopup';
+import { useNavigate } from 'react-router-dom'; // 추가
+import {
+  fetchSchedulesByMonth,
+  createSchedule,
+  updateSchedule,
+  deleteSchedule,
+} from '../../api/scheduleApi';
 
 const Container = styled.div`
   padding: 30px;
 `;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-
-  .nav-group {
-    display: flex;
-    gap: 8px;
-  }
-
-  .nav-button {
-    background: transparent;
-    color: #007bff;
-    border: none;
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-
-  .month-label {
-    font-weight: bold;
-    font-size: 16px;
-  }
-
-  .filter {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    select {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-  }
-`;
-
-
 
 const StaffSchedule = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -55,6 +22,7 @@ const StaffSchedule = () => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filterRank, setFilterRank] = useState('전체');
+  const navigate = useNavigate(); // 추가
 
   const formatKey = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -65,44 +33,79 @@ const StaffSchedule = () => {
     setCurrentDate(newDate);
   };
 
+  const loadSchedules = async () => {
+    const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    const data = await fetchSchedulesByMonth(month);
+    const grouped = {};
+    data.forEach((d) => {
+      if (!grouped[d.scheduleDate]) grouped[d.scheduleDate] = [];
+      grouped[d.scheduleDate].push(d);
+    });
+    setScheduleData(grouped);
+  };
+
+  useEffect(() => {
+    loadSchedules();
+  }, [currentDate]);
   const handleDateClick = (year, month, day) => {
     const selected = new Date(year, month, day);
     setSelectedDate(selected);
   };
 
-  const handleAddSchedule = (item) => {
+  const handleAddSchedule = async (item) => {
     const key = formatKey(selectedDate);
-    const updated = { ...scheduleData };
-    if (!updated[key]) updated[key] = [];
-    if (editData) {
-      const index = updated[key].findIndex(e =>
-        e.name === editData.name && e.time === editData.time
-      );
-      if (index > -1) updated[key][index] = item;
+    item.scheduleDate = key;
+
+    if (editData?.id) {
+      await updateSchedule(editData.id, item);
     } else {
-      updated[key].push(item);
+      await createSchedule(item);
     }
-    setScheduleData(updated);
+
     setPopupOpen(false);
     setEditData(null);
+    loadSchedules();
   };
 
-  const handleDeleteSchedule = (index) => {
-    const key = formatKey(selectedDate);
-    const updated = { ...scheduleData };
-    updated[key].splice(index, 1);
-    if (updated[key].length === 0) delete updated[key];
-    setScheduleData(updated);
+  const handleDeleteSchedule = async (itemId) => {
+    + console.log('[삭제 실행] 전달된 ID:', itemId);
+
+    await deleteSchedule(itemId);
+    loadSchedules();
   };
 
+  const handleEdit = (item) => {
+    setEditData(item);
+    setPopupOpen(true);
+  };
+
+  const handleOpenPopup = () => {
+    setEditData(null);
+    setPopupOpen(true);
+  };
   return (
     <Container>
-      <h2>📆 의료진 근무 스케줄</h2>
+     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>📆 의료진 근무 스케줄</h2>
+        <button onClick={() => navigate('/Dashboard/reservations/list')} style={{
+          padding: '6px 12px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '14px',
+          cursor: 'pointer'
+        }}>
+          전체 목록
+        </button>
+      </div>
       <ScheduleCalendar
         currentDate={currentDate}
         scheduleData={scheduleData}
         onDateClick={handleDateClick}
         filterRank={filterRank}
+        onPrevMonth={() => changeMonth(-1)}
+        onNextMonth={() => changeMonth(1)}
         onFilterChange={(e) => setFilterRank(e.target.value)}
       />
 
@@ -110,14 +113,8 @@ const StaffSchedule = () => {
         selectedDate={selectedDate}
         scheduleData={scheduleData}
         onDelete={handleDeleteSchedule}
-        onOpenPopup={() => {
-          setPopupOpen(true);
-          setEditData(null);
-        }}
-        onEdit={(item) => {
-          setPopupOpen(true);
-          setEditData(item);
-        }}
+        onOpenPopup={handleOpenPopup}
+        onEdit={handleEdit}
       />
 
       <SchedulePopup

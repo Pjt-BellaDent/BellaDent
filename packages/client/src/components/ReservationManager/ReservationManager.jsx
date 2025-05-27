@@ -149,7 +149,7 @@ const ReservationManager = () => {
           fontSize: '14px',
           cursor: 'pointer'
         }}>
-          전체 목록 보기
+          전체 목록
         </button>
       </div>
 
