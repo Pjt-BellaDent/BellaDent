@@ -98,33 +98,12 @@ const StaffSchedule = () => {
   return (
     <Container>
       <h2>📆 의료진 근무 스케줄</h2>
-
-      <Header>
-        <div className="nav-group">
-          <button className="nav-button" onClick={() => changeMonth(-1)}>⬅ 이전</button>
-          <button className="nav-button" onClick={() => changeMonth(1)}>다음 ➡</button>
-        </div>
-
-        <div className="month-label">{currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월</div>
-
-        <div className="filter">
-          <select value={filterRank} onChange={(e) => setFilterRank(e.target.value)}>
-            <option value="전체">전체</option>
-            <option value="원장">원장</option>
-            <option value="부원장">부원장</option>
-            <option value="과장">과장</option>
-            <option value="상담사">상담사</option>
-            <option value="수납">수납</option>
-            <option value="치위생사">치위생사</option>
-          </select>
-        </div>
-      </Header>
-
       <ScheduleCalendar
         currentDate={currentDate}
         scheduleData={scheduleData}
         onDateClick={handleDateClick}
         filterRank={filterRank}
+        onFilterChange={(e) => setFilterRank(e.target.value)}
       />
 
       <ScheduleList
