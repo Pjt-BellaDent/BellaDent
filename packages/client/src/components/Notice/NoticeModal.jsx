@@ -1,3 +1,4 @@
+// NoticeModal.jsx
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
 
@@ -75,28 +76,27 @@ const NoticeModal = ({ show, onClose, notices, onAdd, onDelete, onSkipToday }) =
     const trimmedTitle = title.trim();
     const trimmedBody = body.trim();
 
-      if (!trimmedTitle) {
-        alert('제목을 입력하세요.');
-        return;
-      }
+    if (!trimmedTitle) {
+      alert('제목을 입력하세요.');
+      return;
+    }
+    if (!trimmedBody) {
+      alert('내용도 작성해 주세요.');
+      return;
+    }
 
-      if (!trimmedBody) {
-        alert('내용도 작성해 주세요.');
-        return;
-      }
+    const newItem = { title: trimmedTitle, body: trimmedBody };
 
-  const newItem = { title: trimmedTitle, body: trimmedBody };
+    if (editIndex !== null) {
+      const updated = [...notices];
+      updated[editIndex] = newItem;
+      onAdd(updated);
+    } else {
+      onAdd([...notices, newItem]);
+    }
+    resetForm();
+  };
 
-  if (editIndex !== null) {
-    const updated = [...notices];
-    updated[editIndex] = newItem;
-    onAdd(updated);
-  } else {
-    onAdd([...notices, newItem]);
-  }
-
-  resetForm();
-};
   const handleStartEdit = (i) => {
     setEditIndex(i);
     setTitle(notices[i].title);
@@ -111,48 +111,22 @@ const NoticeModal = ({ show, onClose, notices, onAdd, onDelete, onSkipToday }) =
         <Title>📢 직원 공지사항</Title>
 
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          {notices
-            .filter((n) => n.title?.trim())
-            .map((n, i) => (
-              <NoticeItem key={i}>
-                <div onClick={() => setSelectedIndex(selectedIndex === i ? null : i)}>
-                  <strong>{n.title}</strong>
-                  {selectedIndex === i && (
-                    <>
-                      <div style={{ marginTop: 5, color: '#555' }}>{n.body}</div>
-                      <ButtonRow>
-                        <button
-                          onClick={() => handleStartEdit(i)}
-                          style={{ background: '#ffc107', color: 'black', padding: '5px 10px', borderRadius: '5px' }}
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => onDelete(i)}
-                          style={{ background: 'red', color: 'white', padding: '5px 10px', borderRadius: '5px' }}
-                        >
-                          삭제
-                        </button>
-                      </ButtonRow>
-                    </>
-                  )}
-                <div style={{ marginTop: '10px', textAlign: 'right' }}>
-  <label style={{ fontSize: '14px', cursor: 'pointer' }}>
-    <input
-      type="checkbox"
-      onChange={(e) => {
-        if (e.target.checked && onSkipToday) {
-          onSkipToday();
-        }
-      }}
-      style={{ marginRight: '5px' }}
-    />
-    오늘은 다시 보지 않기
-  </label>
-</div>
-                </div>
-              </NoticeItem>
-            ))}
+          {notices.filter((n) => n.title?.trim()).map((n, i) => (
+            <NoticeItem key={i}>
+              <div onClick={() => setSelectedIndex(selectedIndex === i ? null : i)}>
+                <strong>{n.title}</strong>
+                {selectedIndex === i && (
+                  <>
+                    <div style={{ marginTop: 5, color: '#555' }}>{n.body}</div>
+                    <ButtonRow>
+                      <button onClick={() => handleStartEdit(i)} style={{ background: '#ffc107', color: 'black', padding: '5px 10px', borderRadius: '5px' }}>수정</button>
+                      <button onClick={() => onDelete(i)} style={{ background: 'red', color: 'white', padding: '5px 10px', borderRadius: '5px' }}>삭제</button>
+                    </ButtonRow>
+                  </>
+                )}
+              </div>
+            </NoticeItem>
+          ))}
 
           {showForm && (
             <NoticeItem>
@@ -173,63 +147,52 @@ const NoticeModal = ({ show, onClose, notices, onAdd, onDelete, onSkipToday }) =
                 onChange={(e) => setBody(e.target.value)}
               />
               <ButtonRow>
-                <button
-                  onClick={handleSubmit}
-                  style={{ background: '#28a745', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
-                >
-                  등록
-                </button>
-                <button
-                  onClick={resetForm}
-                  style={{ background: '#6c757d', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
-                >
-                  취소
-                </button>
+                <button onClick={handleSubmit} style={{ background: '#28a745', color: 'white', padding: '6px 12px', borderRadius: '5px' }}>등록</button>
+                <button onClick={resetForm} style={{ background: '#6c757d', color: 'white', padding: '6px 12px', borderRadius: '5px' }}>취소</button>
               </ButtonRow>
             </NoticeItem>
           )}
         </ul>
 
         {!showForm && (
-  <>
-    <ButtonRow>
-      <button
-        onClick={() => {
-          setShowForm(true);
-          setEditIndex(null);
-          setTitle('');
-          setBody('');
-          setSelectedIndex(null);
-        }}
-        style={{ background: '#007bff', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
-      >
-        추가
-      </button>
-      <button
-        onClick={onClose}
-        style={{ background: '#343a40', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
-      >
-        닫기
-      </button>
-    </ButtonRow>
+          <>
+            <ButtonRow>
+              <button
+                onClick={() => {
+                  setShowForm(true);
+                  setEditIndex(null);
+                  setTitle('');
+                  setBody('');
+                  setSelectedIndex(null);
+                }}
+                style={{ background: '#007bff', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
+              >
+                추가
+              </button>
+              <button
+                onClick={onClose}
+                style={{ background: '#343a40', color: 'white', padding: '6px 12px', borderRadius: '5px' }}
+              >
+                닫기
+              </button>
+            </ButtonRow>
 
-    {/* ✅ 오늘 다시 보지 않기 체크박스 추가 */}
-    <div style={{ marginTop: '6px', fontSize: '13px', textAlign: 'right', color: '#555' }}>
-      <label style={{ cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          onChange={(e) => {
-            if (e.target.checked && onSkipToday) {
-              onSkipToday();
-            }
-          }}
-          style={{ marginRight: '6px' }}
-        />
-        오늘은 다시 보지 않기
-      </label>
-    </div>
-  </>
-)}
+            <div style={{ marginTop: '6px', fontSize: '13px', textAlign: 'right', color: '#555' }}>
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  onChange={(e) => {
+                    if (e.target.checked && onSkipToday) {
+                      onSkipToday();
+                    }
+                  }}
+                  style={{ marginRight: '6px' }}
+                />
+                오늘은 다시 보지 않기
+              </label>
+            </div>
+          </>
+        )}
       </Container>
     </Overlay>
   );
