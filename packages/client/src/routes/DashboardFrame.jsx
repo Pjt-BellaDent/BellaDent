@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import NoticeModal from '../components/Notice/NoticeModal';
@@ -12,27 +12,24 @@ function DashboardFrame() {
 
   const [showNotice, setShowNotice] = useState(false);
   const [notices, setNotices] = useState([]);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editIndex, setEditIndex] = useState(null);
 
-  const handleAdd = () => {
-    if (!title.trim()) return alert('제목을 입력하세요.');
-    const newNotice = { title: title.trim(), body: body.trim() };
+  const todayKey = new Date().toISOString().split('T')[0];
 
-    if (editIndex !== null) {
-      const updated = [...notices];
-      updated[editIndex] = newNotice;
-      setNotices(updated);
-    } else {
-      setNotices([...notices, newNotice]);
+  useEffect(() => {
+    const skipDate = sessionStorage.getItem('noticeSkipDate');
+    if (skipDate !== todayKey) {
+      setShowNotice(true);
     }
+  }, []);
 
-    setTitle('');
-    setBody('');
-    setEditIndex(null);
-    setShowForm(false);
+  const handleDoNotShowToday = () => {
+    sessionStorage.setItem('noticeSkipDate', todayKey);
+    setShowNotice(false);
+  };
+
+
+  const handleAdd = (newList) => {
+    setNotices(newList); // NoticeModal에서 새 목록 전체를 전달받음
   };
 
   const handleDelete = (idx) => {
@@ -47,41 +44,27 @@ function DashboardFrame() {
     setShowForm(true);
   };
 
-  return (
-    <>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar
-          role={currentUser.role}
-          name={currentUser.name}
-          onOpenNotice={() => setShowNotice(true)}
+ return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar
+        role={currentUser.role}
+        name={currentUser.name}
+        onOpenNotice={() => setShowNotice(true)}
+      />
+      <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
+        <Outlet />
+      </main>
+      {showNotice && (
+        <NoticeModal
+          show={showNotice}
+          onClose={() => setShowNotice(false)}
+          notices={notices}
+          onAdd={(newList) => setNotices(newList)}
+          onDelete={(idx) => setNotices(notices.filter((_, i) => i !== idx))}
+          onSkipToday={handleDoNotShowToday}
         />
-        <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
-          <Outlet />
-        </main>
-        {showNotice && (
-          <NoticeModal
-            show={showNotice}
-            onClose={() => {
-              setShowNotice(false);
-              setShowForm(false);
-              setTitle('');
-              setBody('');
-              setEditIndex(null);
-            }}
-            notices={notices}
-            onAdd={handleAdd}
-            onDelete={handleDelete}
-            onEdit={handleEdit}
-            title={title}
-            setTitle={setTitle}
-            body={body}
-            setBody={setBody}
-            showForm={showForm}
-            setShowForm={setShowForm}
-          />
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 }
 
