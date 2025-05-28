@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRouter from "./routes/users.js";
+import noticeRouter from './routes/notice.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(
 app.use(logger('dev'))
 
 app.use("/users", userRouter);
+app.use("/api/notices", noticeRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
