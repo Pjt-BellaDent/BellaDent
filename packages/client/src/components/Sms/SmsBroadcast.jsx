@@ -5,6 +5,9 @@ const Container = styled.div`
   padding: 30px;
   background-color: #f8f9fc;
   font-family: 'Noto Sans KR', sans-serif;
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 120px;
 `;
 
 const Title = styled.h2`
@@ -62,15 +65,42 @@ const Button = styled.button`
   }
 `;
 
-const MessageInput = styled.textarea`
-  width: 100%;
-  height: 100px;
-  padding: 12px;
+const FixedInputBar = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f8f9fc;
+  padding: 16px 30px;
+  border-top: 1px solid #ccc;
+  display: flex;
+  gap: 10px;
+`;
+
+const AutoTextarea = styled.textarea`
+  flex: 1;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 20px;
+  padding: 12px 18px;
   resize: none;
-  margin-bottom: 20px;
+  overflow: hidden;
+  line-height: 1.4;
+  max-height: 120px;
+`;
+
+const SendButton = styled.button`
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const patientsMock = [
@@ -101,6 +131,13 @@ const SmsBroadcast = () => {
     if (selected.length === 0) return alert('수신 대상을 선택하세요.');
     alert(`총 ${selected.length}명에게 문자 발송 완료.`);
     setMessage('');
+  };
+
+  const handleChange = (e) => {
+    const el = e.target;
+    setMessage(el.value.slice(0, 200)); // 최대 200자 제한
+    el.style.height = 'auto'; // 초기화
+    el.style.height = el.scrollHeight + 'px'; // 현재 내용만큼 높이 조정
   };
 
   return (
@@ -155,16 +192,15 @@ const SmsBroadcast = () => {
         </tbody>
       </Table>
 
-      <MessageInput
-        placeholder="메시지를 입력하세요 (최대 80자)"
-        value={message}
-        onChange={(e) => setMessage(e.target.value.slice(0, 80))}
-      />
-
-      <div>
-        <Button onClick={sendSms}>발송</Button>
-        <Button color="#dc3545" onClick={() => setMessage('')}>초기화</Button>
-      </div>
+      <FixedInputBar>
+        <AutoTextarea
+          placeholder="답변을 입력하세요..."
+          value={message}
+          onChange={handleChange}
+          rows={1}
+        />
+        <SendButton onClick={sendSms}>전송</SendButton>
+      </FixedInputBar>
     </Container>
   );
 };
