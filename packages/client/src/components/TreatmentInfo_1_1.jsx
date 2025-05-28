@@ -7,7 +7,7 @@ function TreatmentInfo_1_1() {
      <div className='max-w-300 mx-auto'>
          <header className='mt-16 mb-3 mx-5'><b>진료과목소개</b></header>
           <div className="flex gap-7 mx-5">
-            <img src={teeth} alt="teeth" className="w-72 h-96" />
+            <img src={teeth} alt="teeth" className="w-72 mb-15" />
             <div>
               <h2 className='mt-16 mb-3'>
                 <b>충치치료</b>
@@ -26,7 +26,7 @@ function TreatmentInfo_1_1() {
           <div>
             <div className="flex gap-20 mx-5">
            
-              <img src={cavities} alt="cavities" className='W-70 mb-7'/>
+              <img src={cavities} alt="cavities" className='mt-4 W-70 mb-7'/>
               
               <div>
                 <p className='mt-16 mb-3'>
@@ -44,7 +44,7 @@ function TreatmentInfo_1_1() {
             </div>
           <hr className='my-2'/>
             <div className="flex gap-7 flex-row-reverse mx-5">
-              <img src={cavi} alt="cavi mt-6" />
+              <img src={cavi} alt="cavi" className='mt-4 mb-7'  />
               <div className='mt-16 mb-3'>
                 <p className='mt-16 mb-3'><b>신경 조직</b></p>
                 <p>신경 조직 제거: 치아 내부의 신경 조직을 제거합니다. </p>
