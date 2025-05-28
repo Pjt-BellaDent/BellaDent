@@ -1,16 +1,17 @@
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Cookies from 'js-cookie';
-import { UserInfoContext } from '../context/UserInfoContext.jsx';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
+import { useMenuList } from '../contexts/MenuListContext.jsx';
 import logo from '../assets/logo.png';
 
 function Header() {
   const Header = styled.header`
-  width: 100%;
-  height: 80px;
-  flex-grow: 0;
-  flex-shrink: 0;
+    width: 100%;
+    height: 80px;
+    flex-grow: 0;
+    flex-shrink: 0;
   `;
   const Container = styled.div`
     width: 1440px;
@@ -36,59 +37,11 @@ function Header() {
     padding: 10px 0;
   `;
 
-  const { userInfo, isLogin, setIsLogin } = useContext(UserInfoContext);
+  const { menuList } = useMenuList();
+  const { userInfo, isLogin, setIsLogin } = useUserInfo();
   const [onMenu, setOnMenu] = useState(null);
   const navRef = useRef();
   const navigate = useNavigate();
-
-  const menuList = [
-    {
-      label: '병원소개',
-      sub: [
-        { menu: '인사말 / 병원 철학', link: '/greeting' },
-        { menu: '의료진 소개', link: '/doctors' },
-        { menu: '내부 둘러보기', link: '/tour' },
-        { menu: '오시는 길', link: '/location' },
-      ],
-    },
-    {
-      label: '진료 안내',
-      sub: [
-        { menu: '진료 과목 안내', link: '/services' },
-        { menu: '비급여 진료 과목 안내', link: '/non-covered' },
-        { menu: '장비 소개', link: '/equipment' },
-      ],
-    },
-    {
-      label: '교정 / 미용 치료',
-      sub: [
-        {
-          menu: '교정 치료 안내',
-          link: '/orthodontics',
-        },
-        { menu: '미백 / 라미네이트', link: '/whitening' },
-        { menu: '전후 사진 갤러리', link: '/gallery' },
-      ],
-    },
-    {
-      label: '상담 / 예약',
-      sub: [
-        { menu: '온라인 예약', link: '/reservation' },
-        { menu: '실시간 상담', link: '/live-chat' },
-      ],
-    },
-    {
-      label: '커뮤니티 / 고객지원',
-      sub: [
-        {
-          menu: '자주 묻는 질문 (FAQ)',
-          link: '/faq',
-        },
-        { menu: '공지사항', link: '/clinic-news' },
-        { menu: '치료 후기 게시판', link: '/reviews' },
-      ],
-    },
-  ];
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -121,26 +74,27 @@ function Header() {
             <li className="menu">
               <Link to={'/'}>홈</Link>
             </li>
-            {menuList.map((menu, i) => (
-              <li
-                key={i}
-                className="menu cursor-pointer relative"
-                onClick={() => setOnMenu(onMenu === i ? null : i)}
-              >
-                <p>{menu.label}</p>
-                <SubMenu visible={onMenu === i}>
-                  {menu.sub.map((sub, i) => (
-                    <li
-                      className="sub_menu"
-                      key={i}
-                      onClick={() => setOnMenu(null)}
-                    >
-                      <Link to={sub.link}>{sub.menu}</Link>
-                    </li>
-                  ))}
-                </SubMenu>
-              </li>
-            ))}
+            {Array.isArray(menuList) &&
+              menuList.map((menu, i) => (
+                <li
+                  key={i}
+                  className="menu cursor-pointer relative"
+                  onClick={() => setOnMenu(onMenu === i ? null : i)}
+                >
+                  <p>{menu.label}</p>
+                  <SubMenu visible={onMenu === i}>
+                    {menu.sub.map((sub, i) => (
+                      <li
+                        className="sub_menu"
+                        key={i}
+                        onClick={() => setOnMenu(null)}
+                      >
+                        <Link to={`/${sub.link}`}>{sub.menu}</Link>
+                      </li>
+                    ))}
+                  </SubMenu>
+                </li>
+              ))}
           </ul>
         </nav>
         <div>
