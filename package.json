@@ -14,5 +14,8 @@
   "scripts": {
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7"
   }
 }
