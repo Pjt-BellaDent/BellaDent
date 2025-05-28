@@ -1,11 +1,11 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserInfoContext } from '../context/UserInfoContext.jsx';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 import axios from 'axios';
 
 function UserUpdateFrom() {
   const navigate = useNavigate();
-  const { userInfo } = useContext(UserInfoContext);
+  const { userInfo } = useUserInfo();
   const [formData, setFormData] = useState({
     id: '',
     email: '',

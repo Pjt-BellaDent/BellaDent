@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { HospitalProvider } from './contexts/HospitalContext.jsx';
 
 import Frame from './routes/web/Frame';
 
@@ -44,49 +43,47 @@ import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 function App() {
   return (
     <>
-      <HospitalProvider>
-        <Routes>
-          <Route path="/" element={<Frame />}>
-            <Route index element={<Home />} />
-            <Route path="SignIn" element={<SignIn />} />
-            <Route path="signup" element={<SignUp />} />
-            <Route path="userinfo" element={<UserInfo />} />
+      <Routes>
+        <Route path="/" element={<Frame />}>
+          <Route index element={<Home />} />
+          <Route path="SignIn" element={<SignIn />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="userinfo" element={<UserInfo />} />
 
-            <Route path="user-update" element={<UserUpdate />} />
-            <Route path="greeting" element={<Greeting />} />
-            <Route path="tour" element={<Tour />} />
-            <Route path="doctors" element={<Doctors />} />
-            <Route path="location" element={<Location />} />
-            <Route path="services" element={<Services />} />
-            <Route path="non-covered" element={<NonCovered />} />
-            <Route path="equipment" element={<Equipment />} />
-            <Route path="orthodontics" element={<Orthodontics />} />
-            <Route path="whitening" element={<Whitening />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="reservation" element={<Reservation />} />
-            <Route path="live-chat" element={<LiveChat />} />
-            <Route path="clinic-news" element={<ClinicNews />} />
-            <Route path="faq" element={<Faq />} />
-            <Route path="reviews" element={<Reviews />} />
-          </Route>
+          <Route path="user-update" element={<UserUpdate />} />
+          <Route path="greeting" element={<Greeting />} />
+          <Route path="tour" element={<Tour />} />
+          <Route path="doctors" element={<Doctors />} />
+          <Route path="location" element={<Location />} />
+          <Route path="services" element={<Services />} />
+          <Route path="non-covered" element={<NonCovered />} />
+          <Route path="equipment" element={<Equipment />} />
+          <Route path="orthodontics" element={<Orthodontics />} />
+          <Route path="whitening" element={<Whitening />} />
+          <Route path="gallery" element={<Gallery />} />
+          <Route path="reservation" element={<Reservation />} />
+          <Route path="live-chat" element={<LiveChat />} />
+          <Route path="clinic-news" element={<ClinicNews />} />
+          <Route path="faq" element={<Faq />} />
+          <Route path="reviews" element={<Reviews />} />
+        </Route>
 
-          <Route path="/Dashboard" element={<DashboardFrame />}>
-            <Route index element={<Dashboard />} />
-            <Route path="notice" element={<NoticeModal />} />
-            <Route path="waiting" element={<WaitingStatus />} />{' '}
-            <Route path="schedule" element={<StaffSchedule />} />
-            <Route path="patients" element={<PatientList />} />
-            <Route path="reservations" element={<ReservationManager />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="chat-settings" element={<ChatbotSettings />} />
-            <Route path="settings" element={<GeneralSettings />} />
-            <Route path="sms" element={<Sms />} />
-            <Route path="feedback" element={<Feedback />} />
-            <Route path="user-permissions" element={<UserPermission />} />
-            <Route path="hospital-info" element={<HospitalInfo />} />
-          </Route>
-        </Routes>
-      </HospitalProvider>
+        <Route path="/Dashboard" element={<DashboardFrame />}>
+          <Route index element={<Dashboard />} />
+          <Route path="notice" element={<NoticeModal />} />
+          <Route path="waiting" element={<WaitingStatus />} />{' '}
+          <Route path="schedule" element={<StaffSchedule />} />
+          <Route path="patients" element={<PatientList />} />
+          <Route path="reservations" element={<ReservationManager />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="chat-settings" element={<ChatbotSettings />} />
+          <Route path="settings" element={<GeneralSettings />} />
+          <Route path="sms" element={<Sms />} />
+          <Route path="feedback" element={<Feedback />} />
+          <Route path="user-permissions" element={<UserPermission />} />
+          <Route path="hospital-info" element={<HospitalInfo />} />
+        </Route>
+      </Routes>
     </>
   );
 }

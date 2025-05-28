@@ -1,12 +1,12 @@
-import { useContext } from 'react';
+import react from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserInfoContext } from '../../../context/UserInfoContext.jsx';
+import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 
 function UserInfo() {
   const navigate = useNavigate();
-  const { userInfo, isLogin, setIsLogin } = useContext(UserInfoContext);
+  const { userInfo, isLogin, setIsLogin } = useUserInfo;
 
   const handleDelete = async () => {
     try {
