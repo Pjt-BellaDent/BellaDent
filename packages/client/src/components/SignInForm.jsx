@@ -1,11 +1,11 @@
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserInfoContext } from '../context/UserInfoContext.jsx';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 import axios from 'axios';
 
 function SignInForm() {
   const navigate = useNavigate();
-  const { roleLocation, isLogin, setIsLogin } = useContext(UserInfoContext);
+  const { roleLocation, isLogin, setIsLogin } = useUserInfo();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
