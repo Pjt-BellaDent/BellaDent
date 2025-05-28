@@ -26,7 +26,7 @@ function TreatmentInfo_3() {
             <p className="mt-6 mb-3 ">
               <b>3D-CT EXO-X</b>
             </p>
-            <p className='text-justify'>저선량CT</p>
+            <p className="text-justify">저선량CT</p>
             <p className="text-justify main-text">
               파노라마 보다 적은 방사선량 으로 부터 Dital Dentistry 에 <br />
               활용하는데 있어서도 매우 정확한
@@ -51,12 +51,16 @@ function TreatmentInfo_3() {
             <p className="mt-6 mb-3">
               <b>턱관절물리치료 PHL레이저</b>
             </p>
-            <p>저주파 물리치료와 열치료로 턱관절통증를 개선할 수 있으며 생체 치료의 파장을 갖고 있어 턱관절을 치료 할 수 있습니다. </p>
-            <p>턱관절 물리치료는 어떻게 하나요? 턱관절 물리치료를 위해 사용되는 장비로는 PHL-15 레이저가 있습니다.<br/> 
-            이것은 Perfect Healing Laser를 줄인 말로써 저출력 레이저를 이용해 턱관절 주변의 근육을 자극하고 통증을 완화시켜 주는 역할을 합니다.
-              
-             
-              
+            <p>
+              저주파 물리치료와 열치료로 턱관절통증를 개선할 수 있으며 생체
+              치료의 파장을 갖고 있어 턱관절을 치료 할 수 있습니다.{' '}
+            </p>
+            <p>
+              턱관절 물리치료는 어떻게 하나요? 턱관절 물리치료를 위해 사용되는
+              장비로는 PHL-15 레이저가 있습니다.
+              <br />
+              이것은 Perfect Healing Laser를 줄인 말로써 저출력 레이저를 이용해
+              턱관절 주변의 근육을 자극하고 통증을 완화시켜 주는 역할을 합니다.
             </p>
           </div>
         </div>
