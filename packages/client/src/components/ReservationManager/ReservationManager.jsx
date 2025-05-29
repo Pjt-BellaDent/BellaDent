@@ -1,3 +1,4 @@
+// 수정된 DELETE 유효성 검사 포함 ReservationManager
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import CalendarGrid from './CalendarGrid';
@@ -5,7 +6,9 @@ import ReservationDetail from './ReservationDetail';
 import ReservationModal from './ReservationModal';
 import { useNavigate } from 'react-router-dom';
 
-const Container = styled.div` padding: 30px; `;
+const Container = styled.div`
+  padding: 30px;
+`;
 
 const ReservationManager = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -16,34 +19,22 @@ const ReservationManager = () => {
   const [events, setEvents] = useState({});
   const navigate = useNavigate();
 
-  const getMonthStr = (date) => {
-    const y = date.getFullYear();
-    const m = date.getMonth() + 1;
-    return `${y}-${m.toString().padStart(2, '0')}`;
-  };
+  const getMonthStr = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-  const changeMonth = (delta) => {
+  const changeMonth = (offset) => {
     const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + delta);
+    newDate.setMonth(currentDate.getMonth() + offset);
     setCurrentDate(newDate);
-    setSelectedDate(null);
   };
 
-  const fetchAppointments = async () => {
-    const month = getMonthStr(currentDate);
+  const fetchEvents = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/test/appointments?month=${month}`);
+      const res = await fetch(`http://localhost:3000/appointments?month=${getMonthStr(currentDate)}`);
       const data = await res.json();
       const grouped = {};
       data.forEach(item => {
-        const { id, reservationDate, userId, department, notes } = item;
-        if (!grouped[reservationDate]) grouped[reservationDate] = [];
-        grouped[reservationDate].push({
-          id,
-          userId,
-          department,
-          notes
-        });
+        if (!grouped[item.reservationDate]) grouped[item.reservationDate] = [];
+        grouped[item.reservationDate].push(item);
       });
       setEvents(grouped);
     } catch (err) {
@@ -52,78 +43,25 @@ const ReservationManager = () => {
   };
 
   useEffect(() => {
-    fetchAppointments();
+    fetchEvents();
   }, [currentDate]);
 
-  const handleDayClick = (year, month, day) => {
-    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setSelectedDate(key);
-    setEditData(null);
-    setModalOpen(true); // ⬅️ 무조건 등록 폼 열기
+  const handleSave = async (formData) => {
+    try {
+      const method = editData?.id ? 'PUT' : 'POST';
+      const url = editData?.id ? `http://localhost:3000/appointments/${editData.id}` : `http://localhost:3000/appointments`;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-    const isEmpty = !Array.isArray(events[key]) || events[key].length === 0;
-    if (isEmpty) {
+      if (!res.ok) throw new Error(await res.text());
+      setModalOpen(false);
       setEditData(null);
-      setModalOpen(true);
-    }
-  };
-  
-  
-  
-
-
-  const handleAddEvent = async (data) => {
-    if (!selectedDate) return;
-    try {
-      await fetch('http://localhost:3000/test/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: data.userId,
-          reservationDate: selectedDate,
-          time: data.time,
-          department: data.department,
-          notes: data.notes
-        })
-      });
-      fetchAppointments();
+      fetchEvents();
     } catch (err) {
-      console.error("추가 실패:", err);
-    }
-    setModalOpen(false);
-  };
-
-  const handleEditEvent = async (dateKey, index, newData) => {
-    const target = events[dateKey]?.[index];
-    if (!target || !target.id) return;
-    try {
-      await fetch(`http://localhost:3000/test/appointments/${target.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: newData.userId,
-          reservationDate: newData.reservationDate,
-          time: newData.time,
-          department: newData.department,
-          notes: newData.notes
-        })
-      });
-      fetchAppointments();
-    } catch (err) {
-      console.error("수정 실패:", err);
-    }
-    setModalOpen(false);
-  };
-
-
-  const handleDeleteEvent = async (id) => {
-    try {
-      await fetch(`http://localhost:3000/test/appointments/${id}`, {
-        method: 'DELETE'
-      });
-      fetchAppointments();
-    } catch (err) {
-      console.error("삭제 실패:", err);
+      console.error("저장 실패:", err);
     }
   };
 
@@ -131,48 +69,51 @@ const ReservationManager = () => {
     setEditData(eventData);
     setModalOpen(true);
   };
-  const handleEventClick = (dateKey) => {
-    setSelectedDate(dateKey);     // 하단 예약 목록 표시용
-    setModalOpen(false);          // 등록 폼 닫힘 (중복 방지)
+
+  const handleDelete = async (id) => {
+    if (!id || typeof id !== 'string' || id.length < 8) {
+      alert('유효하지 않은 예약 ID입니다. 삭제할 수 없습니다.');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:3000/appointments/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) throw new Error(await res.text());
+      fetchEvents();
+    } catch (err) {
+      console.error("삭제 실패:", err);
+      alert("삭제 실패: " + err.message);
+    }
   };
 
   return (
     <Container>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>📅 예약 관리</h2>
-        <button onClick={() => navigate('/Dashboard/reservations/list')} style={{
-          padding: '6px 12px',
-          backgroundColor: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          fontSize: '14px',
-          cursor: 'pointer'
-        }}>
+        <button
+          onClick={() => navigate('/Dashboard/reservations/list')}
+          style={{ padding: '6px 12px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
+        >
           전체 목록
         </button>
       </div>
 
       <CalendarGrid
-        date={currentDate}
+        currentDate={currentDate}
         events={events}
-        onDayClick={handleDayClick}
-        filterDept={selectedDept}
-        selectedDept={selectedDept}
-        onFilterChange={e => setSelectedDept(e.target.value)}
-        onPrevMonth={() => changeMonth(-1)}
-        onNextMonth={() => changeMonth(1)}
-        onEventClick={handleEventClick}
+        onChangeMonth={changeMonth}
+        onSelectDate={setSelectedDate}
+        onAdd={() => setModalOpen(true)}
+        onEdit={handleEditClick}
+        onDelete={handleDelete}
       />
 
       <ReservationDetail
-        dateKey={selectedDate}
-        onAdd={() => {
-          setEditData(null);
-          setModalOpen(true);
-        }}
+        date={selectedDate}
+        events={events}
         onEdit={handleEditClick}
-        onDelete={handleDeleteEvent}
+        onDelete={handleDelete}
       />
 
       <ReservationModal
@@ -181,16 +122,7 @@ const ReservationManager = () => {
           setModalOpen(false);
           setEditData(null);
         }}
-        onSave={(data) => {
-          if (editData) {
-            const idx = events[selectedDate]?.findIndex(e =>
-              e.userId === editData.userId
-            );
-            if (idx > -1) handleEditEvent(selectedDate, idx, data);
-          } else {
-            handleAddEvent(data);
-          }
-        }}
+        onSave={handleSave}
         initialData={editData}
         selectedDate={selectedDate}
       />

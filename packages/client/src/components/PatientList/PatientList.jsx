@@ -61,6 +61,15 @@ const PatientList = () => {
     fetchPatients();
   }, []);
 
+  const applyFilter = (list) => {
+    return list.filter(p =>
+      (!filter.name || p.name.includes(filter.name)) &&
+      (!filter.date || p.lastVisit?.includes(filter.date)) &&
+      (!filter.dept || p.dept === filter.dept) &&
+      (!filter.status || p.status === filter.status)
+    );
+  };
+
   const openProcedureModal = (name) => {
     setSelectedPatient(name);
     setProcedureModalOpen(true);
@@ -78,6 +87,7 @@ const PatientList = () => {
     setEditProcedures(history);
     setEditModalOpen(true);
   };
+
   return (
     <Container>
       <h2>📋 환자 리스트</h2>
@@ -86,22 +96,22 @@ const PatientList = () => {
         <input placeholder="이름" value={filter.name} onChange={e => setFilter({ ...filter, name: e.target.value })} />
         <input type="date" value={filter.date} onChange={e => setFilter({ ...filter, date: e.target.value })} />
         <select value={filter.dept} onChange={e => setFilter({ ...filter, dept: e.target.value })}>
-          <option>진료과 선택</option>
-          <option>내과</option>
-          <option>소아과</option>
-          <option>정형외과</option>
+          <option value="">진료과 선택</option>
+          <option>보철과</option>
+          <option>교정과</option>
+          <option>치주과</option>
         </select>
         <select value={filter.status} onChange={e => setFilter({ ...filter, status: e.target.value })}>
-          <option>상태</option>
-          <option>예약</option>
-          <option>진료 중</option>
-          <option>완료</option>
+          <option value="">상태</option>
+          <option value="예약">예약</option>
+          <option value="대기">대기</option>
+          <option value="진료완료">진료완료</option>
         </select>
-        <button>검색</button>
+        <button onClick={() => setPatients(applyFilter(patients))}>검색</button>
       </Filters>
 
       <PatientTable
-        data={patients}
+        data={applyFilter(patients)}
         onProcedureClick={openProcedureModal}
         onSurveyClick={openSurveyModal}
         onEditClick={openEditModal}

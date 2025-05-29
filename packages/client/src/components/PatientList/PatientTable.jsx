@@ -60,8 +60,8 @@ const PatientTable = ({ data, onProcedureClick, onSurveyClick, onEditClick }) =>
           </tr>
         </thead>
         <tbody>
-          {data.map(p => (
-            <tr key={p.name}>
+          {data && data.length > 0 ? data.map(p => (
+            <tr key={p.id || p.name}>
               <td data-label="이름" onClick={() => onProcedureClick(p.name)}>{p.name}</td>
               <td>{p.gender}</td>
               <td>{p.age}</td>
@@ -74,7 +74,11 @@ const PatientTable = ({ data, onProcedureClick, onSurveyClick, onEditClick }) =>
                 <button className="survey" onClick={() => onSurveyClick(p.name)}>설문</button>
               </td>
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td colSpan="8">환자 정보가 없습니다.</td>
+            </tr>
+          )}
         </tbody>
       </Table>
     </TableWrapper>

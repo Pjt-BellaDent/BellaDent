@@ -58,7 +58,7 @@ const menuItems = [
     roles: ['super_admin', 'doctor', 'consultant'],
   },
   {
-    path: '/Dashboard/waiting',
+    path: '/Dashboard/waiting-manage', // 수정된 경로
     label: '⏳ 대기현황',
     roles: ['super_admin', 'doctor'],
   },
@@ -107,7 +107,6 @@ const Sidebar = ({ role = 'super_admin', name = '홍길동', onOpenNotice }) => 
     <Wrapper>
       <UserInfo>👤 {name}</UserInfo>
 
-      {/* 공지사항 버튼 별도 추가 */}
       {(role === 'super_admin' || role === 'manager') && (
         <ButtonItem onClick={onOpenNotice}>📢 직원 공지사항</ButtonItem>
       )}
