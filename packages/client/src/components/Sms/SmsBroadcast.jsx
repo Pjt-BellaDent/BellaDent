@@ -5,9 +5,6 @@ const Container = styled.div`
   padding: 30px;
   background-color: #f8f9fc;
   font-family: 'Noto Sans KR', sans-serif;
-  position: relative;
-  min-height: 100vh;
-  padding-bottom: 120px;
 `;
 
 const Title = styled.h2`
@@ -56,7 +53,6 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   margin-bottom: 4px;
-  margin-right: 10px;
   cursor: pointer;
   font-size: 14px;
 
@@ -65,42 +61,22 @@ const Button = styled.button`
   }
 `;
 
-const FixedInputBar = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #f8f9fc;
-  padding: 16px 30px;
-  border-top: 1px solid #ccc;
-  display: flex;
-  gap: 10px;
-`;
-
-const AutoTextarea = styled.textarea`
-  flex: 1;
+const MessageInput = styled.textarea`
+  width: 100%;
+  height: 100px;
+  padding: 12px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 12px 18px;
+  border-radius: 5px;
   resize: none;
-  overflow: hidden;
-  line-height: 1.4;
-  max-height: 120px;
+  margin-bottom: 20px;
 `;
 
-const SendButton = styled.button`
-  padding: 12px 24px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
+const SearchInput = styled.input`
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
   font-size: 14px;
-
-  &:hover {
-    background-color: #0056b3;
-  }
 `;
 
 const patientsMock = [
@@ -113,6 +89,7 @@ const SmsBroadcast = () => {
   const [patients, setPatients] = useState(patientsMock);
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toggleSelect = (id) => {
     setSelected(
@@ -123,7 +100,11 @@ const SmsBroadcast = () => {
   };
 
   const toggleAll = () => {
-    setSelected(selected.length === patients.length ? [] : patients.map(p => p.id));
+    setSelected(
+      selected.length === filteredPatients.length
+        ? []
+        : filteredPatients.map((p) => p.id)
+    );
   };
 
   const sendSms = () => {
@@ -133,12 +114,11 @@ const SmsBroadcast = () => {
     setMessage('');
   };
 
-  const handleChange = (e) => {
-    const el = e.target;
-    setMessage(el.value.slice(0, 200)); // 최대 200자 제한
-    el.style.height = 'auto'; // 초기화
-    el.style.height = el.scrollHeight + 'px'; // 현재 내용만큼 높이 조정
-  };
+  const filteredPatients = patients.filter(
+    (p) =>
+      p.name.includes(searchTerm) ||
+      p.phone.includes(searchTerm.replace(/-/g, ''))
+  );
 
   return (
     <Container>
@@ -165,7 +145,15 @@ const SmsBroadcast = () => {
         </Select>
       </FilterRow>
 
-      <Button onClick={toggleAll}>전체 선택</Button>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <Button onClick={toggleAll}>전체 선택</Button>
+        <SearchInput
+          type="text"
+          placeholder="이름 또는 전화번호 검색"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
       <Table>
         <thead>
@@ -176,7 +164,7 @@ const SmsBroadcast = () => {
           </tr>
         </thead>
         <tbody>
-          {patients.map((p) => (
+          {filteredPatients.map((p) => (
             <tr key={p.id}>
               <Td>
                 <input
@@ -192,15 +180,16 @@ const SmsBroadcast = () => {
         </tbody>
       </Table>
 
-      <FixedInputBar>
-        <AutoTextarea
-          placeholder="답변을 입력하세요..."
-          value={message}
-          onChange={handleChange}
-          rows={1}
-        />
-        <SendButton onClick={sendSms}>전송</SendButton>
-      </FixedInputBar>
+      <MessageInput
+        placeholder="메시지를 입력하세요 (최대 80자)"
+        value={message}
+        onChange={(e) => setMessage(e.target.value.slice(0, 80))}
+      />
+
+      <div>
+        <Button onClick={sendSms}>발송</Button>
+        <Button color="#dc3545" onClick={() => setMessage('')}>초기화</Button>
+      </div>
     </Container>
   );
 };
