@@ -1,3 +1,4 @@
+// ✅ ReservationList.jsx 수정본 (Invalid or missing month param 해결 포함)
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import ReservationModal from './ReservationModal';
@@ -55,12 +56,11 @@ const Table = styled.table`
       font-size: 12px;
     }
   }
-  `;
+`;
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
   const [search, setSearch] = useState('');
-  const [searchDate, setSearchDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,13 +68,16 @@ const ReservationList = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getCurrentMonth = () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  };
+
   const fetchReservations = async () => {
     try {
       setLoading(true);
-      const today = new Date();
-      const monthParam = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-      const res = await fetch(`http://localhost:3000/test/appointments?month=${monthParam}`);
+      const month = getCurrentMonth();
+      const res = await fetch(`http://localhost:3000/appointments?month=${month}`);
       const data = await res.json();
 
       if (Array.isArray(data)) {
@@ -108,11 +111,48 @@ const ReservationList = () => {
   });
 
   const handleDelete = async (id) => {
+    if (!id || typeof id !== 'string') {
+      alert('유효하지 않은 예약 ID입니다.');
+      return;
+    }
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      await fetch(`http://localhost:3000/test/appointments/${id}`, {
-        method: 'DELETE'
-      });
+      try {
+        const res = await fetch(`http://localhost:3000/appointments/${id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text);
+        }
+        fetchReservations();
+      } catch (err) {
+        console.error('삭제 실패:', err);
+        alert('삭제 실패: ' + err.message);
+      }
+    }
+  };
+
+  const handleSave = async (formData) => {
+    try {
+      if (editData?.id) {
+        await fetch(`http://localhost:3000/appointments/${editData.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+      } else {
+        await fetch(`http://localhost:3000/appointments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+      }
       fetchReservations();
+    } catch (err) {
+      console.error('저장 실패:', err);
+    } finally {
+      setModalOpen(false);
+      setEditData(null);
     }
   };
 
@@ -127,12 +167,6 @@ const ReservationList = () => {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            style={{
-              height: '39px',
-              fontSize: '13px',
-              padding: '4px 6px',
-              width: '105px'
-            }}
           />
 
           <span>~</span>
@@ -140,12 +174,6 @@ const ReservationList = () => {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            style={{
-              height: '39px',
-              fontSize: '13px',
-              padding: '4px 6px',
-              width: '105px'
-            }}
           />
 
           <input
@@ -155,7 +183,6 @@ const ReservationList = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-
 
         <button onClick={() => {
           setEditData(null);
@@ -180,21 +207,20 @@ const ReservationList = () => {
               <th>상태</th>
               <th>메모</th>
               <th>관리</th>
-
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan="6">일치하는 예약이 없습니다.</td></tr>
+              <tr><td colSpan="7">일치하는 예약이 없습니다.</td></tr>
             ) : (
               filtered.map((r, i) => (
                 <tr key={r.id || i}>
                   <td>{r.reservationDate || '-'}</td>
                   <td>{r.time || '-'}</td>
-                  <td>{r.userId || '-'}</td>
+                  <td>{r.name || '-'}</td>
                   <td>{r.department || '-'}</td>
                   <td>{r.status || '-'}</td>
-                  <td className="notes">{r.notes || ''}</td>
+                  <td className="notes">{r.notes || r.memo || '-'}</td>
                   <td className="actions">
                     <button onClick={() => {
                       setEditData(r);
@@ -209,21 +235,15 @@ const ReservationList = () => {
         </Table>
       )}
 
-      {modalOpen && (
-        <ReservationModal
-          open={modalOpen}
-          onClose={() => {
-            setModalOpen(false);
-            setEditData(null);
-          }}
-          onSave={() => {
-            setModalOpen(false);
-            setEditData(null);
-            fetchReservations();
-          }}
-          initialData={editData}
-        />
-      )}
+      <ReservationModal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditData(null);
+        }}
+        onSave={handleSave}
+        initialData={editData}
+      />
     </Wrapper>
   );
 };

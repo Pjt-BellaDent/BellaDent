@@ -23,7 +23,7 @@ const ModalBox = styled.div`
 
   h3 { margin-top: 0; }
   label { display: block; margin: 10px 0 5px; }
-  input, textarea {
+  input, select, textarea {
     width: 100%;
     padding: 8px;
     margin-bottom: 12px;
@@ -56,7 +56,11 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
 
   const handleSave = async () => {
     try {
-      await updatePatient(form.id, form);
+      await updatePatient(form.id, {
+        ...form,
+        procedures: editedProcedures,
+        lastVisit: form.lastVisit || new Date().toISOString().slice(0, 10)
+      });
       alert('환자 정보가 저장되었습니다.');
       onClose();
     } catch (err) {
@@ -71,17 +75,30 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
         <h3>환자 정보 수정</h3>
         <label>이름</label>
         <input value={form.name} disabled />
+
         <label>성별</label>
-        <input value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} />
+        <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
+          <option value="">선택</option>
+          <option value="남">남</option>
+          <option value="여">여</option>
+        </select>
 
         <label>나이</label>
-        <input value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} />
+        <input value={form.age || ''} onChange={e => setForm({ ...form, age: e.target.value })} />
 
         <label>전화번호</label>
-        <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+        <input value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
 
         <label>진료과</label>
-        <input value={form.dept} onChange={e => setForm({ ...form, dept: e.target.value })} />
+        <input value={form.dept || ''} onChange={e => setForm({ ...form, dept: e.target.value })} />
+
+        <label>상태</label>
+        <select value={form.status || ''} onChange={e => setForm({ ...form, status: e.target.value })}>
+          <option value="">선택</option>
+          <option value="예약">예약</option>
+          <option value="대기">대기</option>
+          <option value="진료완료">진료완료</option>
+        </select>
 
         <h4>과거 시술 이력</h4>
         {editedProcedures.map((proc, i) => (

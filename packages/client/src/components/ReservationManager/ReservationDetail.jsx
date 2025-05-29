@@ -59,30 +59,13 @@ const EmptyBox = styled.div`
   gap: 6px;
 
   &::before {
-    content: "📭";
+    content: "\ud83d\udc6d";
     font-size: 20px;
   }
 `;
 
-const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
-  const [reservations, setReservations] = useState([]);
-
-  useEffect(() => {
-    if (!dateKey || dateKey.length !== 10) return;
-
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`http://localhost:3000/test/appointments?reservationDate=${dateKey}`);
-        const data = await res.json();
-        setReservations(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('예약 불러오기 실패:', err);
-        setReservations([]);
-      }
-    };
-
-    fetchData();
-  }, [dateKey]);
+const ReservationDetail = ({ date, events, onEdit, onDelete }) => {
+  const reservations = events[date] || [];
 
   return (
     <Panel>
@@ -90,15 +73,17 @@ const ReservationDetail = ({ dateKey, onAdd, onEdit, onDelete }) => {
         <EmptyBox>예약이 없습니다.</EmptyBox>
       ) : (
         reservations.map((resv, i) => (
-          <Card key={i}>
+          <Card key={resv.id || i}>
             <MetaRow>
-              <strong>{resv.userId}</strong>
+              <strong>{resv.name}</strong>
               <Badge>{resv.department}</Badge>
             </MetaRow>
             <div style={{ marginBottom: '4px' }}>
-              시간: {resv.time || '-'} | 상태: {resv.status}
+              시간: {resv.time || '-'} | 상태: {resv.status || '대기'}
             </div>
-            <div style={{ color: '#666' }}>{resv.notes}</div>
+            <div>연락처: {resv.phone || '-'}</div>
+            <div>성별: {resv.gender || '-'}</div>
+            <div>메모: {resv.memo || resv.notes || '-'}</div>
             <ButtonGroup>
               <button className="edit" onClick={() => onEdit(resv)}>수정</button>
               <button className="delete" onClick={() => onDelete(resv.id)}>삭제</button>

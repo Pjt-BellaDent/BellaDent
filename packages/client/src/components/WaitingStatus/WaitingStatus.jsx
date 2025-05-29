@@ -7,45 +7,63 @@ const Container = styled.div`
   text-align: center;
 `;
 
-const FooterMessage = styled.div`
-  background: #ffc107;
-  color: #333;
-  padding: 14px;
-  border-radius: 6px;
-  font-size: 16px;
-  max-width: 800px;
-  margin: 0 auto;
+const Header = styled.div`
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: bold;
+`;
+
+const Message = styled.div`
   margin-top: 30px;
+  padding: 16px;
+  background: #ffeeba;
+  color: #856404;
+  border-radius: 8px;
+`;
+
+const List = styled.div`
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const WaitingStatus = () => {
   const [doctorData, setDoctorData] = useState([]);
 
   useEffect(() => {
-    const fetchWaitingStatus = async () => {
+    const fetchWaiting = async () => {
       try {
         const res = await fetch('http://localhost:3000/waiting/status');
         const data = await res.json();
-        setDoctorData(data);
+        const waiting = data.filter(d => d.status === '대기');
+        setDoctorData(waiting);
       } catch (err) {
         console.error('대기 현황 불러오기 실패:', err);
       }
     };
 
-    fetchWaitingStatus();
+    fetchWaiting();
   }, []);
 
   return (
     <Container>
-      <h2>⏳ 진료 대기 현황</h2>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxWidth: '800px', margin: '0 auto' }}>
-        {doctorData.map((item, idx) => (
-          <DoctorCard key={idx} data={item} />
-        ))}
-      </div>
-      <FooterMessage>
+      <Header>⏳ 진료 대기 현황</Header>
+
+      <List>
+        {doctorData.length === 0 ? (
+          <p>현재 대기 중인 환자가 없습니다.</p>
+        ) : (
+          doctorData.map((item, i) => (
+            <DoctorCard key={i} data={item} />
+          ))
+        )}
+      </List>
+
+      <Message>
         진료실 대기자 순번의 환자분은 지정 대기석에 잠시만 기다려주세요. 진료 순서가 되시면 음성으로 안내해드립니다.
-      </FooterMessage>
+      </Message>
     </Container>
   );
 };

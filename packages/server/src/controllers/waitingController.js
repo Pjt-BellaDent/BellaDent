@@ -8,30 +8,20 @@ export const getWaitingStatus = async (req, res) => {
       .where("reservationDate", "==", today)
       .get();
 
-    const rooms = {};
-
-    snapshot.docs.forEach(doc => {
-      const appt = doc.data();
-      const { department, doctor, room = `진료실 ${department}`, status, name } = appt;
-
-      if (!rooms[department]) {
-        rooms[department] = {
-          room: room,
-          department,
-          doctor,
-          current: null,
-          waiting: []
+    const list = snapshot.docs
+      .map(doc => {
+        const appt = doc.data();
+        return {
+          id: doc.id,
+          name: appt.name || '이름 정보 없음',
+          department: appt.department || '진료과 정보 없음',
+          status: appt.status || '상태 정보 없음',
+          memo: appt.memo || '',
         };
-      }
+      })
+      .filter(item => item.status === '대기' || item.status === '진료중');
 
-      if (status === "진료중") {
-        rooms[department].current = name;
-      } else if (status === "대기") {
-        rooms[department].waiting.push(name);
-      }
-    });
-
-    res.json(Object.values(rooms));
+    res.json(list);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

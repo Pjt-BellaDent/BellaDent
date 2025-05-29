@@ -67,27 +67,36 @@ const ButtonRow = styled.div`
 
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate }) => {
   const [form, setForm] = useState({
+    name: '',
     userId: '',
     reservationDate: '',
     time: '',
     department: '',
-    notes: ''
+    memo: '', // notes -> memo로 변경
+    phone: '',
+    gender: '',
+    status: '대기'
   });
 
   useEffect(() => {
     if (initialData) {
       setForm({
+        name: initialData.name || '',
         userId: initialData.userId || '',
         reservationDate: initialData.reservationDate || '',
         time: initialData.time || '',
         department: initialData.department || '',
-        notes: initialData.notes || ''
+        memo: initialData.memo || initialData.notes || '',
+        phone: initialData.phone || '',
+        gender: initialData.gender || '',
+        status: initialData.status || '대기'
       });
-    } else if (selectedDate) {
-      setForm(prev => ({ ...prev, reservationDate: selectedDate }));
     } else {
       const today = new Date().toISOString().slice(0, 10);
-      setForm(prev => ({ ...prev, reservationDate: today }));
+      setForm(prev => ({
+        ...prev,
+        reservationDate: selectedDate || today
+      }));
     }
   }, [initialData, selectedDate]);
 
@@ -97,74 +106,58 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate }) 
   };
 
   const handleSubmit = () => {
-    const { userId, reservationDate, time, department } = form;
-    if (!userId || !reservationDate || !time || !department) {
-      alert('이름, 예약일, 시간, 진료과는 필수입니다.');
+    if (!form.name || !form.reservationDate || !form.time || !form.department) {
+      alert('모든 필수 항목을 입력해주세요.');
       return;
     }
-
-    onSave(form);
-    onClose();
+    const filledForm = {
+      ...form,
+      userId: form.userId || `${form.name}-${Date.now()}`
+    };
+    onSave(filledForm);
   };
 
   return (
-    <ModalBackground open={open}>
+    <ModalBackground open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <ModalBox>
         <h3>예약 {initialData ? '수정' : '등록'}</h3>
-
         <Field>
           <label>이름</label>
-          <input
-            type="email"
-            name="userId"
-            value={form.userId}
-            onChange={handleChange}
-          />
+          <input type="text" name="name" value={form.name} onChange={handleChange} required />
         </Field>
-
+        <Field>
+          <label>연락처</label>
+          <input type="text" name="phone" value={form.phone} onChange={handleChange} />
+        </Field>
+        <Field>
+          <label>성별</label>
+          <select name="gender" value={form.gender} onChange={handleChange}>
+            <option value="">선택</option>
+            <option value="남">남</option>
+            <option value="여">여</option>
+          </select>
+        </Field>
         <Field>
           <label>예약일</label>
-          <input
-            type="date"
-            name="reservationDate"
-            value={form.reservationDate}
-            onChange={handleChange}
-          />
+          <input type="date" name="reservationDate" value={form.reservationDate} onChange={handleChange} />
         </Field>
-
         <Field>
           <label>시간</label>
-          <input
-            type="time"
-            name="time"
-            value={form.time}
-            onChange={handleChange}
-          />
+          <input type="time" name="time" value={form.time} onChange={handleChange} />
         </Field>
-
         <Field>
           <label>진료과</label>
-          <select
-            name="department"
-            value={form.department}
-            onChange={handleChange}
-          >
+          <select name="department" value={form.department} onChange={handleChange}>
             <option value="">선택</option>
             <option value="보철과">보철과</option>
             <option value="교정과">교정과</option>
-            <option value="잇몸클리닉">잇몸클리닉</option>
+            <option value="치주과">치주과</option>
           </select>
         </Field>
-
         <Field>
           <label>메모</label>
-          <textarea
-            name="notes"
-            value={form.notes}
-            onChange={handleChange}
-          />
+          <textarea name="memo" value={form.memo} onChange={handleChange} />
         </Field>
-
         <ButtonRow>
           <button className="cancel" onClick={onClose}>취소</button>
           <button className="save" onClick={handleSubmit}>저장</button>

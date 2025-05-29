@@ -89,18 +89,16 @@ const Event = styled.div`
 `;
 
 const CalendarGrid = ({
-  date,
+  currentDate,
   events = {},
-  onDayClick,
-  filterDept = '전체',
-  selectedDept,
-  onEventClick,
-  onFilterChange,
-  onPrevMonth,
-  onNextMonth
+  onChangeMonth,
+  onSelectDate,
+  onAdd,
+  onEdit,
+  onDelete
 }) => {
-  const year = date.getFullYear();
-  const month = date.getMonth();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -112,33 +110,29 @@ const CalendarGrid = ({
 
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    let dayEvents = Array.isArray(events[key]) ? events[key] : [];
+    const dayEvents = Array.isArray(events[key]) ? events[key] : [];
 
-    if (filterDept !== '전체') {
-      dayEvents = dayEvents.filter(e => e.type === filterDept);
-    }
-
-    const sortedEvents = [...dayEvents].sort((a, b) =>
-      (a.time ?? '').localeCompare(b.time ?? '')
-    );
+    const sortedEvents = [...dayEvents].sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
 
     cells.push(
-      <Cell key={key} onClick={() => onDayClick(year, month, day)}>
+      <Cell key={key} onClick={() => {
+        onSelectDate(key);
+        onAdd();
+      }}>
         <DayNumber>{day}</DayNumber>
         <EventWrapper>
           {sortedEvents.map((e, i) => (
             <Event
               key={i}
               onClick={(event) => {
-                event.stopPropagation();        // 셀 클릭 막기
-                onEventClick(key);              // key = 날짜
+                event.stopPropagation();
+                onSelectDate(key);
+                onEdit(e);
               }}
             >
-              • {`${e.time || ''} ${e.userId || '-'} (${e.department || '진료과'})`}
+              • {`${e.time || ''} ${e.name || '-'} (${e.department || '진료과'})`}
             </Event>
           ))}
-
-
         </EventWrapper>
       </Cell>
     );
@@ -148,19 +142,14 @@ const CalendarGrid = ({
     <CalendarWrapper>
       <Header>
         <div className="left">
-          <button onClick={onPrevMonth}>⬅ 이전</button>
-          <button onClick={onNextMonth}>다음 ➡</button>
+          <button onClick={() => onChangeMonth(-1)}>⬅ 이전</button>
+          <button onClick={() => onChangeMonth(1)}>다음 ➡</button>
         </div>
         <div className="month">
           {year}년 {month + 1}월
         </div>
         <div className="right">
-          <select value={selectedDept} onChange={onFilterChange}>
-            <option value="전체">전체</option>
-            <option value="보철과">보철과</option>
-            <option value="교정과">교정과</option>
-            <option value="잇몸클리닉">잇몸클리닉</option>
-          </select>
+          {/* 부서 필터가 필요하면 여기에 삽입 */}
         </div>
       </Header>
 
