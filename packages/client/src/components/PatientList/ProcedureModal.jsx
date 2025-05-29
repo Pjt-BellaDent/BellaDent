@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { fetchProceduresByName, addProcedure } from '../../api/patients'; // ✅
+import { fetchProceduresByName, addProcedure } from '../../api/patients';
 
 const ModalOverlay = styled.div`
   display: ${({ open }) => (open ? 'flex' : 'none')};
@@ -115,6 +115,10 @@ const ProcedureModal = ({ open, onClose, patientName }) => {
   }, [open, patientName]);
 
   const handleAdd = async () => {
+    if (!formData.title || !formData.date || !formData.doctor) {
+      alert("시술명, 날짜, 의료진을 모두 입력해주세요.");
+      return;
+    }
     try {
       const newEntry = { ...formData, name: patientName };
       await addProcedure(newEntry);
@@ -123,6 +127,7 @@ const ProcedureModal = ({ open, onClose, patientName }) => {
       setShowForm(false);
     } catch (err) {
       console.error("시술 추가 실패", err);
+      alert("시술 추가에 실패했습니다.");
     }
   };
 
@@ -132,16 +137,22 @@ const ProcedureModal = ({ open, onClose, patientName }) => {
         <h3>{patientName} 시술 이력</h3>
 
         <Timeline>
-          {procedures.map((p, i) => (
-            <Entry key={i}>
-              <h4>{p.title}</h4>
-              <div className="date">{new Date(p.date).toLocaleString('ko-KR')} / {p.doctor}</div>
-              <div className="note">{p.note}</div>
-            </Entry>
-          ))}
+          {procedures.length === 0 ? (
+            <p>등록된 시술 이력이 없습니다.</p>
+          ) : (
+            procedures.map((p, i) => (
+              <Entry key={i}>
+                <h4>{p.title}</h4>
+                <div className="date">{new Date(p.date).toLocaleString('ko-KR')} / {p.doctor}</div>
+                <div className="note">{p.note}</div>
+              </Entry>
+            ))
+          )}
         </Timeline>
 
-        <AddButton onClick={() => setShowForm(!showForm)}>+ 시술 추가</AddButton>
+        <AddButton onClick={() => setShowForm(!showForm)}>
+          {showForm ? '입력 취소' : '+ 시술 추가'}
+        </AddButton>
 
         {showForm && (
           <Form>

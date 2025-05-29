@@ -52,6 +52,11 @@ const SurveyModal = ({ open, onClose, patientName }) => {
   });
 
   const handleSubmit = () => {
+    if (!patientName) {
+      alert("환자 이름이 없습니다.");
+      return;
+    }
+
     const data = {
       name: patientName,
       ...form,
@@ -69,7 +74,7 @@ const SurveyModal = ({ open, onClose, patientName }) => {
   return (
     <ModalOverlay open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <ModalContent>
-        <h3>📝 진료 만족도 조사 - {patientName}</h3>
+        <h3>📝 진료 만족도 조사 - {patientName || '환자명 없음'}</h3>
 
         <p>1. 의료진의 설명이 충분했나요?</p>
         {[1,2,3,4,5].map(val => (

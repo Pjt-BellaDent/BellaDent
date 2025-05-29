@@ -30,7 +30,9 @@ import DashboardFrame from './routes/DashboardFrame';
 import Dashboard from './components/Dashboard';
 import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
+import WaitingManager from './components/WaitingStatus/WaitingManager';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
+import StaffScheduleList from './components/StaffSchedule/StaffScheduleList';
 import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import ReservationList from './components/ReservationManager/ReservationList.jsx';
@@ -41,57 +43,58 @@ import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
 import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
-import StaffScheduleList from './components/StaffSchedule/StaffScheduleList';
 
 function App() {
   return (
-    <>
-      <HospitalProvider>
-        <Routes>
-          <Route path="/" element={<Frame />}>
-            <Route index element={<Home />} />
-            <Route path="SignIn" element={<SignIn />} />
-            <Route path="signup" element={<SignUp />} />
-            <Route path="userinfo" element={<UserInfo />} />
+    <HospitalProvider>
+      <Routes>
+        {/* 웹 프레임 내 라우트 */}
+        <Route path="/" element={<Frame />}>
+          <Route index element={<Home />} />
+          <Route path="SignIn" element={<SignIn />} />
+          <Route path="signup" element={<SignUp />} />
+          <Route path="userinfo" element={<UserInfo />} />
+          <Route path="user-update" element={<UserUpdate />} />
+          <Route path="greeting" element={<Greeting />} />
+          <Route path="tour" element={<Tour />} />
+          <Route path="doctors" element={<Doctors />} />
+          <Route path="location" element={<Location />} />
+          <Route path="services" element={<Services />} />
+          <Route path="non-covered" element={<NonCovered />} />
+          <Route path="equipment" element={<Equipment />} />
+          <Route path="orthodontics" element={<Orthodontics />} />
+          <Route path="whitening" element={<Whitening />} />
+          <Route path="gallery" element={<Gallery />} />
+          <Route path="reservation" element={<Reservation />} />
+          <Route path="live-chat" element={<LiveChat />} />
+          <Route path="clinic-news" element={<ClinicNews />} />
+          <Route path="faq" element={<Faq />} />
+          <Route path="reviews" element={<Reviews />} />
+        </Route>
 
-            <Route path="user-update" element={<UserUpdate />} />
-            <Route path="greeting" element={<Greeting />} />
-            <Route path="tour" element={<Tour />} />
-            <Route path="doctors" element={<Doctors />} />
-            <Route path="location" element={<Location />} />
-            <Route path="services" element={<Services />} />
-            <Route path="non-covered" element={<NonCovered />} />
-            <Route path="equipment" element={<Equipment />} />
-            <Route path="orthodontics" element={<Orthodontics />} />
-            <Route path="whitening" element={<Whitening />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="reservation" element={<Reservation />} />
-            <Route path="live-chat" element={<LiveChat />} />
-            <Route path="clinic-news" element={<ClinicNews />} />
-            <Route path="faq" element={<Faq />} />
-            <Route path="reviews" element={<Reviews />} />
-          </Route>
-
-          <Route path="/Dashboard" element={<DashboardFrame />}>
-            <Route index element={<Dashboard />} />
-            <Route path="notice" element={<NoticeModal />} />
-            <Route path="waiting" element={<WaitingStatus />} />{' '}
-            <Route path="schedule" element={<StaffSchedule />} />
-            <Route path="staff-schedules" element={<StaffScheduleList />} />
-            <Route path="patients" element={<PatientList />} />
-            <Route path="reservations" element={<ReservationManager />} />
-            <Route path="reservations/list" element={<ReservationList />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="chat-settings" element={<ChatbotSettings />} />
-            <Route path="settings" element={<GeneralSettings />} />
-            <Route path="sms" element={<Sms />} />
-            <Route path="feedback" element={<Feedback />} />
-            <Route path="user-permissions" element={<UserPermission />} />
-            <Route path="hospital-info" element={<HospitalInfo />} />
-          </Route>
-        </Routes>
-      </HospitalProvider>
-    </>
+        {/* 관리자 페이지 라우트 */}
+        <Route path="/Dashboard" element={<DashboardFrame />}>
+          <Route index element={<Dashboard />} />
+          <Route path="notice" element={<NoticeModal />} />
+          <Route path="waiting-manage/WaitingStatus" element={<WaitingStatus />} />
+          <Route path="waiting-manage" element={<WaitingManager />} />
+          <Route path="schedule" element={<StaffSchedule />} />
+          <Route path="staff-schedules" element={<StaffScheduleList />} />
+          <Route path="patients" element={<PatientList />} />
+          <Route path="reservations" element={<ReservationManager />} />
+          <Route path="reservations/list" element={<ReservationList />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="chat-settings" element={<ChatbotSettings />} />
+          <Route path="settings" element={<GeneralSettings />} />
+          <Route path="sms" element={<Sms />} />
+          <Route path="feedback" element={<Feedback />} />
+          <Route path="user-permissions" element={<UserPermission />} />
+          <Route path="hospital-info" element={<HospitalInfo />} />
+        </Route>
+        <Route path="/waiting-status" element={<WaitingStatus />} />
+      </Routes>
+      
+    </HospitalProvider>
   );
 }
 

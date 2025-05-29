@@ -39,18 +39,19 @@ const List = styled.ul`
 `;
 
 const DoctorCard = ({ data }) => {
+  const waitingList = Array.isArray(data.waiting) ? data.waiting : [];
+
   return (
     <Card>
-      <RoomTitle>{data.room}</RoomTitle>
-      <p><strong>담당의사:</strong> {data.doctor}</p>
-      <p><strong>진료과:</strong> {data.department}</p>
+      <RoomTitle>{data.room || '진료실 정보 없음'}</RoomTitle>
+      <p><strong>진료과:</strong> {data.department || '정보 없음'}</p>
 
       <StatusBox>진료 중</StatusBox>
-      <p>{data.current}</p>
+      <p>{data.current || '없음'}</p>
 
-      <StatusBox>대기자 ({data.waiting.length}명)</StatusBox>
+      <StatusBox>대기자 ({waitingList.length}명)</StatusBox>
       <List>
-        {data.waiting.map((name, idx) => (
+        {waitingList.map((name, idx) => (
           <li key={idx}>{idx + 1}. {name}</li>
         ))}
       </List>
