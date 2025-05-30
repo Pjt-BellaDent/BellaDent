@@ -88,6 +88,11 @@ const menuItems = [
     roles: ['super_admin', 'doctor'],
   },
   {
+  path: '/Dashboard/onsite-register',
+  label: '🧾 현장 접수',
+  roles: ['super_admin', 'consultant'],
+  },
+  {
     path: '/Dashboard/chat',
     label: '💬 AI 채팅/상담',
     roles: ['super_admin', 'consultant'],

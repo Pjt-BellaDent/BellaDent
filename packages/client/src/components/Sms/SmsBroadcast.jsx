@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 
 const Container = styled.div`
@@ -13,16 +13,20 @@ const Title = styled.h2`
   color: #333;
 `;
 
-const FilterRow = styled.div`
-  display: flex;
-  gap: 15px;
-  margin-bottom: 20px;
-`;
-
-const Select = styled.select`
-  padding: 8px;
+const Button = styled.button`
+  padding: 8px 16px;
+  background-color: ${({ color }) => color || '#007bff'};
+  color: white;
+  border: none;
   border-radius: 5px;
-  border: 1px solid #ccc;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:hover {
+    background-color: ${({ color }) =>
+      color === '#dc3545' ? '#c82333' : '#0056b3'};
+  }
 `;
 
 const Table = styled.table`
@@ -30,35 +34,21 @@ const Table = styled.table`
   border-collapse: collapse;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 `;
 
 const Th = styled.th`
-  background-color: #6699CC;
+  background-color: #6699cc;
   color: white;
   padding: 12px;
   font-size: 14px;
+  text-align: center;
 `;
 
 const Td = styled.td`
   border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  background-color: ${({ color }) => color || '#AAAAAA'};
-  color: white;
-  border: none;
-  border-radius: 5px;
-  margin-bottom: 4px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background-color: ${({ color }) => color === '#dc3545' ? '#c82333' : '#0056b3'};
-  }
 `;
 
 const MessageInput = styled.textarea`
@@ -72,88 +62,169 @@ const MessageInput = styled.textarea`
   margin-bottom: 20px;
 `;
 
-const SearchInput = styled.input`
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 14px;
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
 `;
 
-const patientsMock = [
-  { id: 1, name: '홍길동', phone: '010-1234-5678' },
-  { id: 2, name: '김하나', phone: '010-5678-1234' },
-  { id: 3, name: '이몽룡', phone: '010-2345-6789' },
-];
+const PageButton = styled.button`
+  padding: 6px 12px;
+  background-color: ${({ active }) => (active ? '#007bff' : '#fff')};
+  color: ${({ active }) => (active ? '#fff' : '#333')};
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #007bff;
+    color: white;
+  }
+`;
+
+const SearchInput = styled.input`
+  padding: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+`;
+
+const DateInput = styled.input`
+  padding: 8px;
+  font-size: 14px;
+  margin-left: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
+const patientsMock = Array.from({ length: 42 }, (_, i) => ({
+  id: i + 1,
+  name: `환자${i + 1}`,
+  phone: `010-${String(1000 + i).slice(0, 4)}-${String(5678 + i).slice(0, 4)}`
+}));
+
+const getKoreanDay = (dateStr) => {
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  const date = new Date(dateStr);
+  return days[date.getDay()];
+};
 
 const SmsBroadcast = () => {
-  const [patients, setPatients] = useState(patientsMock);
+  const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [revisitDate, setRevisitDate] = useState('');
+
+  const pageSize = 10;
+
+  useEffect(() => {
+    setPatients(patientsMock);
+  }, []);
+
+  const filteredPatients = patients.filter((p) =>
+    p.name.includes(searchTerm.trim()) || p.phone.includes(searchTerm.trim())
+  );
+
+  const totalPages = Math.ceil(filteredPatients.length / pageSize);
+
+  const paginatedPatients = filteredPatients.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const toggleSelect = (id) => {
-    setSelected(
-      selected.includes(id)
-        ? selected.filter((v) => v !== id)
-        : [...selected, id]
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
     );
   };
 
   const toggleAll = () => {
-    setSelected(
-      selected.length === filteredPatients.length
-        ? []
-        : filteredPatients.map((p) => p.id)
-    );
+    const currentIds = paginatedPatients.map((p) => p.id);
+    const allSelected = currentIds.every((id) => selected.includes(id));
+
+    if (allSelected) {
+      setSelected((prev) => prev.filter((id) => !currentIds.includes(id)));
+    } else {
+      setSelected((prev) => [...new Set([...prev, ...currentIds])]);
+    }
   };
 
   const sendSms = () => {
     if (!message.trim()) return alert('메시지를 입력하세요.');
     if (selected.length === 0) return alert('수신 대상을 선택하세요.');
-    alert(`총 ${selected.length}명에게 문자 발송 완료.`);
+    alert(`총 ${selected.length}명에게 문자 발송 완료.\n내용: ${message}`);
     setMessage('');
   };
 
-  const filteredPatients = patients.filter(
-    (p) =>
-      p.name.includes(searchTerm) ||
-      p.phone.includes(searchTerm.replace(/-/g, ''))
-  );
+  const insertAd = () => {
+    setMessage('(광고) 안녕하세요 BellaDent 치과입니다!');
+  };
+
+  const insertRevisit = () => {
+    if (!revisitDate) return alert('재진 날짜를 선택하세요.');
+    if (selected.length === 0) return alert('환자를 선택하세요.');
+
+    const day = getKoreanDay(revisitDate);
+    const names = patients
+      .filter((p) => selected.includes(p.id))
+      .map((p) => p.name)
+      .join(', ');
+
+    const content = `안녕하세요! BellaDent 치과입니다!\n${revisitDate} (${day})은 ${names}님의 재진일입니다!`;
+    setMessage(content);
+  };
+
+  const renderPageButtons = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(
+        <PageButton
+          key={i}
+          active={i === currentPage}
+          onClick={() => setCurrentPage(i)}
+        >
+          {i}
+        </PageButton>
+      );
+    }
+    return (
+      <>
+        {pages}
+        {currentPage < totalPages && (
+          <PageButton onClick={() => setCurrentPage(currentPage + 1)}>
+            다음
+          </PageButton>
+        )}
+      </>
+    );
+  };
 
   return (
     <Container>
       <Title>📱 단체 문자 발송</Title>
 
-      <FilterRow>
-        <Select>
-          <option>진료일자 선택</option>
-          <option>오늘</option>
-          <option>이번주</option>
-          <option>이번달</option>
-        </Select>
-        <Select>
-          <option>진료과 선택</option>
-          <option>치과</option>
-          <option>소아과</option>
-          <option>내과</option>
-        </Select>
-        <Select>
-          <option>문자 유형</option>
-          <option>진료 안내</option>
-          <option>예약 알림</option>
-          <option>프로모션</option>
-        </Select>
-      </FilterRow>
-
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        <Button onClick={toggleAll}>전체 선택</Button>
-        <SearchInput
-          type="text"
-          placeholder="이름 또는 전화번호 검색"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+      <div style={{ marginBottom: '20px' }}>
+        <Button onClick={insertAd}>📢 광고 보내기</Button>
+        <Button onClick={toggleAll} color="#6c757d">전체 선택</Button>
+        <Button onClick={insertRevisit} color="#17a2b8">재진 안내</Button>
+        <DateInput
+          type="date"
+          value={revisitDate}
+          onChange={(e) => setRevisitDate(e.target.value)}
         />
       </div>
+
+      <SearchInput
+        type="text"
+        placeholder="이름 또는 전화번호 검색"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
 
       <Table>
         <thead>
@@ -164,7 +235,7 @@ const SmsBroadcast = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredPatients.map((p) => (
+          {paginatedPatients.map((p) => (
             <tr key={p.id}>
               <Td>
                 <input
@@ -179,6 +250,8 @@ const SmsBroadcast = () => {
           ))}
         </tbody>
       </Table>
+
+      <Pagination>{renderPageButtons()}</Pagination>
 
       <MessageInput
         placeholder="메시지를 입력하세요 (최대 80자)"
