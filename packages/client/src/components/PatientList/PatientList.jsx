@@ -1,11 +1,12 @@
+// PatientList.jsx — 삭제 기능 id만 전달/최종본
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import PatientTable from './PatientTable';
 import ProcedureModal from './ProcedureModal';
-import SurveyModal from './SurveyModal';
 import Charts from './Charts';
 import EditPatientModal from './EditPatientModal';
-import { fetchAllPatients, fetchProceduresByName } from '../../api/patients';
+import SurveyModal from './SurveyModal';
+import { fetchAllPatients, fetchProceduresByName, deletePatient } from '../../api/patients';
 
 const Container = styled.div`
   padding: 30px;
@@ -16,13 +17,11 @@ const Filters = styled.div`
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
-
   input, select, button {
     padding: 8px 12px;
     border: 1px solid #ccc;
     border-radius: 4px;
   }
-
   button {
     background-color: #007bff;
     color: white;
@@ -75,17 +74,25 @@ const PatientList = () => {
     setProcedureModalOpen(true);
   };
 
-  const openSurveyModal = (name) => {
-    setSelectedPatient(name);
-    setSurveyModalOpen(true);
-  };
-
   const openEditModal = (name) => {
     const patient = patients.find(p => p.name === name);
     const history = proceduresData[name] || [];
     setEditTarget(patient);
     setEditProcedures(history);
     setEditModalOpen(true);
+  };
+
+  // id만 받도록!
+  const handleDelete = async (id) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      console.log("삭제 시도 중인 환자 ID:", id); // ✅ id string만
+      await deletePatient(id);
+      setPatients(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error("삭제 실패", err);
+      alert("삭제 중 오류 발생");
+    }
   };
 
   return (
@@ -113,8 +120,8 @@ const PatientList = () => {
       <PatientTable
         data={applyFilter(patients)}
         onProcedureClick={openProcedureModal}
-        onSurveyClick={openSurveyModal}
         onEditClick={openEditModal}
+        onDeleteClick={handleDelete} // 반드시 id만 전달받음
       />
 
       <EditPatientModal
