@@ -1,4 +1,4 @@
-// 수정된 DELETE 유효성 검사 포함 ReservationManager
+// ReservationManager.jsx — 예약 시간 UX 개선, ReservationModal과 연동
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import CalendarGrid from './CalendarGrid';
@@ -68,6 +68,7 @@ const ReservationManager = () => {
   const handleEditClick = (eventData) => {
     setEditData(eventData);
     setModalOpen(true);
+    setSelectedDate(eventData.reservationDate); // 수정 시 해당 날짜로 고정
   };
 
   const handleDelete = async (id) => {
@@ -125,6 +126,7 @@ const ReservationManager = () => {
         onSave={handleSave}
         initialData={editData}
         selectedDate={selectedDate}
+        eventsForDate={events[selectedDate] || []} // 예약 시간 중복 체크용
       />
     </Container>
   );

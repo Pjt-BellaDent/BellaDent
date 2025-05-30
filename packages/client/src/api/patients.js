@@ -1,3 +1,5 @@
+// ✅ /src/api/patients.js — deletePatient 함수 추가 및 전체 export 구성
+
 const BASE = "http://localhost:3000";
 
 export const fetchAllPatients = async () => {
@@ -30,4 +32,13 @@ export const updatePatient = async (id, data) => {
   });
   if (!res.ok) throw new Error("환자 정보 수정 실패");
   return await res.json();
+};
+
+// ✅ 추가: 환자 삭제 API
+export const deletePatient = async (id) => {
+  const res = await fetch(`${BASE}/patients/${id}`, {
+    method: "DELETE"
+  });
+  if (!res.ok) throw new Error("환자 삭제 실패");
+  return true;
 };
