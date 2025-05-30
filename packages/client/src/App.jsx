@@ -40,6 +40,7 @@ import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
 import UserPermission from './components/GeneralSettings/UserPermission.jsx';
 import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+import Register from './components/OnsiteRegister.jsx';
 
 function App() {
   return (
@@ -82,6 +83,7 @@ function App() {
             <Route path="settings" element={<GeneralSettings />} />
             <Route path="sms" element={<Sms />} />
             <Route path="feedback" element={<Feedback />} />
+            <Route path="onsite-register" element={<Register />}/>
             <Route path="user-permissions" element={<UserPermission />} />
             <Route path="hospital-info" element={<HospitalInfo />} />
           </Route>
