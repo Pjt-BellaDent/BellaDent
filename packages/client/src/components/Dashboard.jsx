@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import styled from '@emotion/styled';
+import NoticeWrapper from '../components/Notice/NoticeWrapper';
 
 const Wrapper = styled.div`
   padding: 24px;

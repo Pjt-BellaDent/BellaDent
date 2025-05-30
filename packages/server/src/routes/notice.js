@@ -1,16 +1,11 @@
+// src/routes/notice.js
+
 import express from 'express';
-import {
-  getNotices,
-  addNotice,
-  deleteNotice,
-  updateNotice
-} from '../controllers/noticeController.js';
+import { getNotices, saveNotices } from '../controllers/noticeController.js';
 
 const router = express.Router();
 
-router.get('/', getNotices);
-router.post('/', addNotice);
-router.delete('/:id', deleteNotice);
-router.put('/:id', updateNotice);
+router.get('/', getNotices);      // GET /api/notice
+router.post('/', saveNotices);    // POST /api/notice
 
 export default router;
