@@ -173,3 +173,4 @@ export const deleteAppointment = async (req, res) => {
     res.status(500).json({ error: "삭제 중 오류가 발생했습니다." });
   }
 };
+
