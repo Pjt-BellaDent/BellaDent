@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRouter from "./routes/users.js";
 import aiChatRouter from "./routes/aiChat.js";
+import reviewsRouter from "./routes/reviews.js";
+import messagesRouter from "./routes/messages.js";
 
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.use(logger('dev'))
 
 app.use("/users", userRouter);
 app.use("/chat", aiChatRouter);
+app.use("/reviews", reviewsRouter);
+app.use("/messages", messagesRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
