@@ -1,46 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styled from '@emotion/styled';
 import Cookies from 'js-cookie';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 import { useMenuList } from '../contexts/MenuListContext.jsx';
 import logo from '../assets/logo.png';
 
 function Header() {
-  const Header = styled.header`
-    width: 100%;
-    height: 80px;
-    flex-grow: 0;
-    flex-shrink: 0;
-  `;
-  const Container = styled.div`
-    width: 1440px;
-    margin: 0 auto;
-  `;
-  const ImageBox = styled.div`
-    width: 200px;
-    height: 80px;
-    background-color: #f0f0f0;
-  `;
-  const SubMenu = styled.ul`
-    display: ${({ visible }) => (visible ? 'flex' : 'none')};
-    left: 50%;
-    flex-direction: column;
-    gap: 10px;
-    position: absolute;
-    transform: translateX(-50%);
-    background-color: #fff;
-    z-index: 1;
-    transition: all 0.5s ease;
-    min-width: 200px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 10px 0;
-  `;
-
   const { menuList } = useMenuList();
   const { userInfo, isLogin, setIsLogin } = useUserInfo();
   const [onMenu, setOnMenu] = useState(null);
   const navRef = useRef();
+  const submenuRefs = useRef([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,11 +34,11 @@ function Header() {
   };
 
   return (
-    <Header>
-      <Container className="flex justify-between items-center">
-        <ImageBox>
+    <header className="max-w-full bg-white grow-0 shrink-0">
+      <div className="flex justify-between items-center max-w-360 h-20 mx-auto">
+        <div>
           <img src={logo} alt="logo" />
-        </ImageBox>
+        </div>
         <nav className="text-center" ref={navRef}>
           <ul className="list flex gap-10">
             <li className="menu">
@@ -82,7 +52,19 @@ function Header() {
                   onClick={() => setOnMenu(onMenu === i ? null : i)}
                 >
                   <p>{menu.label}</p>
-                  <SubMenu visible={onMenu === i}>
+                  <ul
+                    ref={(el) => (submenuRefs.current[i] = el)}
+                    className="flex flex-col absolute left-1/2 -translate-x-1/2 min-w-50 bg-white shadow-lg  py-2 transition-all duration-800 gap-2 z-10"
+                    style={{
+                      maxHeight:
+                        onMenu === i && submenuRefs.current[i]
+                          ? submenuRefs.current[i].scrollHeight + 'px'
+                          : '0',
+                      opacity: onMenu === i ? 1 : 0,
+                      overflow: 'hidden',
+                      pointerEvents: onMenu === i ? 'auto' : 'none',
+                    }}
+                  >
                     {menu.sub.map((sub, i) => (
                       <li
                         className="sub_menu"
@@ -92,7 +74,7 @@ function Header() {
                         <Link to={`/${sub.link}`}>{sub.menu}</Link>
                       </li>
                     ))}
-                  </SubMenu>
+                  </ul>
                 </li>
               ))}
           </ul>
@@ -125,8 +107,8 @@ function Header() {
             </li>
           </ul>
         </div>
-      </Container>
-    </Header>
+      </div>
+    </header>
   );
 }
 
