@@ -1,4 +1,3 @@
-// ReservationModal.jsx — 생년월일 드롭다운 UI 적용, 나머지 카카오 예약 시간/중복방지 동일
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from '@emotion/styled';
 
@@ -88,12 +87,7 @@ const ButtonRow = styled.div`
   }
 `;
 
-const HOUR_MAP = {
-  '보철과': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'],
-  '교정과': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
-  '치주과': ['09:00', '10:00', '14:00', '15:00', '16:00'],
-  '': []
-};
+const HOUR_MAP = ['10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
 const splitAmPm = (list) => ({
   am: list.filter(h => +h.split(':')[0] < 12),
   pm: list.filter(h => +h.split(':')[0] >= 12)
@@ -130,12 +124,24 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
 
+  // ✅ 시간 복수 선택
+  const [selectedTimes, setSelectedTimes] = useState([]);
+
   // 예약 중복된 시간 목록 구하기
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.reservationDate || !Array.isArray(eventsForDate)) return [];
     return eventsForDate
       .filter(e => e.department === form.department && e.reservationDate === form.reservationDate && (!initialData || initialData.time !== e.time))
-      .map(e => e.time);
+      .flatMap(e => {
+        // e.time이 구간(10:00~11:00)인 경우 모두 포함
+        if (e.time && e.time.includes('~')) {
+          const [start, end] = e.time.split('~');
+          const idxStart = HOUR_MAP.indexOf(start);
+          const idxEnd = HOUR_MAP.indexOf(end);
+          return HOUR_MAP.slice(idxStart, idxEnd + 1);
+        }
+        return [e.time];
+      });
   }, [form.department, form.reservationDate, eventsForDate, initialData]);
 
   useEffect(() => {
@@ -153,6 +159,19 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         gender: initialData.gender || '',
         status: initialData.status || '대기'
       });
+
+      // 수정시 구간 시간 선택 초기화
+      if (initialData.time && initialData.time.includes('~')) {
+        const [start, end] = initialData.time.split('~');
+        const idxStart = HOUR_MAP.indexOf(start);
+        const idxEnd = HOUR_MAP.indexOf(end);
+        setSelectedTimes(HOUR_MAP.slice(idxStart, idxEnd + 1));
+      } else if (initialData.time) {
+        setSelectedTimes([initialData.time]);
+      } else {
+        setSelectedTimes([]);
+      }
+
       setBirthYear(yy || ''); setBirthMonth(mm || ''); setBirthDay(dd || '');
     } else {
       const today = new Date().toISOString().slice(0, 10);
@@ -162,6 +181,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         time: '',
         department: '',
       }));
+      setSelectedTimes([]);
       setBirthYear(''); setBirthMonth(''); setBirthDay('');
     }
   }, [initialData, selectedDate]);
@@ -178,33 +198,41 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value, ...(name === 'department' ? { time: '' } : {}) }));
+    if (name === 'department') setSelectedTimes([]);
   };
 
-  // 예약 시간 선택
+  // 시간 버튼 클릭
   const handleTimeClick = (t) => {
-    if (!reservedTimes.includes(t)) {
-      setForm(prev => ({ ...prev, time: t }));
+    if (reservedTimes.includes(t)) return;
+    if (selectedTimes.includes(t)) {
+      setSelectedTimes(selectedTimes.filter(x => x !== t));
+    } else {
+      setSelectedTimes([...selectedTimes, t].sort());
     }
+  };
+
+  const isContinuous = (arr) => {
+    // 연속 구간인지 체크
+    const idx = arr.map(t => HOUR_MAP.indexOf(t)).sort((a,b) => a-b);
+    for (let i=1; i<idx.length; ++i) if (idx[i] !== idx[i-1]+1) return false;
+    return true;
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.reservationDate || !form.time || !form.department) {
+    if (!form.name || !form.reservationDate || selectedTimes.length === 0 || !form.department) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
-    if (reservedTimes.includes(form.time)) {
-      alert('이미 예약된 시간입니다. 다른 시간을 선택해주세요.');
-      return;
-    }
-    const filledForm = {
-      ...form,
-      status: '대기',   // ← 항상 '대기'로
-      userId: form.userId || `${form.name}-${Date.now()}`
-    };
-    onSave(filledForm);
+    // 연속 구간이면 10:00~11:00 식으로, 비연속은 콤마로
+    const sorted = [...selectedTimes].sort((a,b)=>HOUR_MAP.indexOf(a)-HOUR_MAP.indexOf(b));
+    let timeLabel;
+    if (sorted.length === 1) timeLabel = sorted[0];
+    else if (isContinuous(sorted)) timeLabel = `${sorted[0]}~${sorted[sorted.length-1]}`;
+    else timeLabel = sorted.join(',');
+    onSave({ ...form, time: timeLabel });
   };
 
-  const departmentHours = HOUR_MAP[form.department] || [];
+  const departmentHours = HOUR_MAP;
   const { am, pm } = splitAmPm(departmentHours);
 
   return (
@@ -265,7 +293,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
                 <TimeButton
                   key={t}
                   type="button"
-                  selected={form.time === t}
+                  selected={selectedTimes.includes(t)}
                   disabled={reservedTimes.includes(t)}
                   onClick={() => handleTimeClick(t)}
                 >
@@ -279,7 +307,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
                 <TimeButton
                   key={t}
                   type="button"
-                  selected={form.time === t}
+                  selected={selectedTimes.includes(t)}
                   disabled={reservedTimes.includes(t)}
                   onClick={() => handleTimeClick(t)}
                 >

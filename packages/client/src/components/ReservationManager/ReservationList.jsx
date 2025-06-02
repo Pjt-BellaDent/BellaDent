@@ -101,8 +101,8 @@ const ReservationList = () => {
 
   const filtered = reservations.filter(r => {
     const matchText =
-      (r.userId && r.userId.toLowerCase().includes(search.toLowerCase())) ||
-      (r.department && r.department.includes(search));
+      (r.name && r.name.includes(search));  // ← 이름도 포함!
+    (r.department && r.department.includes(search));
 
     const matchDateRange = (!startDate || r.reservationDate >= startDate) &&
       (!endDate || r.reservationDate <= endDate);
@@ -178,7 +178,7 @@ const ReservationList = () => {
 
           <input
             type="text"
-            placeholder="이메일 또는 진료과 검색"
+            placeholder="이름 또는 진료과 검색"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
