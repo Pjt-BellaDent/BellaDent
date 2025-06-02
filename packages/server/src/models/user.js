@@ -16,3 +16,14 @@ export const userSchema = Joi.object({
   createdAt: Joi.date().required(),
   updatedAt: Joi.date().default(() => new Date()),
 });
+
+export const updateUserSchema = Joi.object({
+  id: Joi.string().required(),
+  email: Joi.string().email().required(),
+  name: Joi.string().required(),
+  phone: Joi.string()
+    .pattern(/^01[016789]-\d{3,4}-\d{4}$/)
+    .required(),
+  address: Joi.string().required(),
+  updatedAt: Joi.date().required(),
+});
