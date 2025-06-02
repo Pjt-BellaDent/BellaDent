@@ -11,7 +11,7 @@ import laug from '../assets/laug.png'
 function TreatmentInfo_1_3() {
   return (
     <div>
-    
+ 
     <header className='mt-3 mx-30'><b>하얀치아 예쁜미소</b></header>
    <hr className='max-w-300 mx-auto mt-12'/>
    

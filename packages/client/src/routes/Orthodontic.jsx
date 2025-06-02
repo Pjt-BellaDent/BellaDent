@@ -1,9 +1,12 @@
-import React from 'react'
+import React from 'react';
+import TreatmentInfo_4 from '../components/TreatmentInfo_4';
 
 function orthodontic() {
   return (
-    <div>orthodontic</div>
-  )
+    <>
+      <TreatmentInfo_4 />
+    </>
+  );
 }
 
-export default orthodontic
+export default orthodontic;
