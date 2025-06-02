@@ -11,6 +11,13 @@ export const getNotices = (req, res) => {
 
 // POST 공지사항 전체 저장 (add/edit/delete 후 전체 반영)
 export const saveNotices = (req, res) => {
-  notices = req.body;
+  notices = req.body.map(n => ({
+    title: n.title,
+    body: n.body,
+    isPublic: !!n.showOnMain,
+    createdAt: n.createdAt || new Date().toISOString(), // ✅ 없으면 자동 추가
+    updatedAt: new Date().toISOString(),
+    author: n.author || '관리자',
+  }));
   res.json({ success: true });
 };
