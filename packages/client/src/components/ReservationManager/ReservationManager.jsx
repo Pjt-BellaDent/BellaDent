@@ -1,35 +1,44 @@
-// ReservationManager.jsx — 예약 시간 UX 개선, ReservationModal과 연동
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import CalendarGrid from './CalendarGrid';
-import ReservationDetail from './ReservationDetail';
+import CalendarPanel from './CalendarPanel';
+import ReservationTimeTable from './ReservationTimeTable';
 import ReservationModal from './ReservationModal';
-import { useNavigate } from 'react-router-dom';
 
-const Container = styled.div`
-  padding: 30px;
+const FlexWrap = styled.div`
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+`;
+const RightContent = styled.div`
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  min-height: 550px;
+  box-shadow: 0 2px 8px rgba(34,43,77,0.07);
+  padding: 34px 36px 26px 36px;
 `;
 
 const ReservationManager = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDept, setSelectedDept] = useState('전체');
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [events, setEvents] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [events, setEvents] = useState({});
-  const navigate = useNavigate();
 
-  const getMonthStr = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  // 날짜 YYYY-MM-DD
+  const getDateStr = (date) =>
+    date
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : '';
 
-  const changeMonth = (offset) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + offset);
-    setCurrentDate(newDate);
-  };
+  // 월 YYYY-MM
+  const getMonthStr = (date) =>
+    date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '';
 
+  // 예약 데이터 불러오기
   const fetchEvents = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/appointments?month=${getMonthStr(currentDate)}`);
+      const month = getMonthStr(selectedDate);
+      const res = await fetch(`http://localhost:3000/appointments?month=${month}`);
       const data = await res.json();
       const grouped = {};
       data.forEach(item => {
@@ -38,97 +47,83 @@ const ReservationManager = () => {
       });
       setEvents(grouped);
     } catch (err) {
-      console.error("예약 로딩 실패:", err);
+      console.error('예약 불러오기 실패', err);
     }
   };
+  useEffect(() => { fetchEvents(); }, [selectedDate]);
 
-  useEffect(() => {
-    fetchEvents();
-  }, [currentDate]);
-
+  // 예약 저장
   const handleSave = async (formData) => {
     try {
       const method = editData?.id ? 'PUT' : 'POST';
-      const url = editData?.id ? `http://localhost:3000/appointments/${editData.id}` : `http://localhost:3000/appointments`;
+      const url = editData?.id
+        ? `http://localhost:3000/appointments/${editData.id}`
+        : `http://localhost:3000/appointments`;
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
       if (!res.ok) throw new Error(await res.text());
       setModalOpen(false);
       setEditData(null);
       fetchEvents();
-    } catch (err) {
-      console.error("저장 실패:", err);
-    }
+    } catch (err) { console.error('저장 실패', err); }
   };
 
+  // 예약 수정
   const handleEditClick = (eventData) => {
     setEditData(eventData);
     setModalOpen(true);
-    setSelectedDate(eventData.reservationDate); // 수정 시 해당 날짜로 고정
   };
-
+  // 예약 삭제
   const handleDelete = async (id) => {
-    if (!id || typeof id !== 'string' || id.length < 8) {
-      alert('유효하지 않은 예약 ID입니다. 삭제할 수 없습니다.');
-      return;
-    }
+    if (!id) return;
     try {
-      const res = await fetch(`http://localhost:3000/appointments/${id}`, {
-        method: 'DELETE'
-      });
+      const res = await fetch(`http://localhost:3000/appointments/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(await res.text());
       fetchEvents();
-    } catch (err) {
-      console.error("삭제 실패:", err);
-      alert("삭제 실패: " + err.message);
-    }
+    } catch (err) { alert('삭제 실패'); }
   };
 
+  // ✅ 예약 등록(빠른등록 포함)
+  // - prefill(과/시간)이 있으면 해당 값으로 등록 폼 열기
+  const handleAdd = (prefill = {}) => {
+    setEditData({
+      department: prefill.department || '',
+      time: prefill.time || '',
+      reservationDate: getDateStr(selectedDate)
+    });
+    setModalOpen(true);
+  };
+
+  const dateStr = getDateStr(selectedDate);
+
   return (
-    <Container>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>📅 예약 관리</h2>
-        <button
-          onClick={() => navigate('/Dashboard/reservations/list')}
-          style={{ padding: '6px 12px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', cursor: 'pointer' }}
-        >
-          전체 목록
-        </button>
-      </div>
-
-      <CalendarGrid
-        currentDate={currentDate}
+    <FlexWrap>
+      <CalendarPanel
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
         events={events}
-        onChangeMonth={changeMonth}
-        onSelectDate={setSelectedDate}
-        onAdd={() => setModalOpen(true)}
-        onEdit={handleEditClick}
-        onDelete={handleDelete}
       />
-
-      <ReservationDetail
-        date={selectedDate}
-        events={events}
-        onEdit={handleEditClick}
-        onDelete={handleDelete}
-      />
-
+      <RightContent>
+        <ReservationTimeTable
+          date={dateStr}
+          events={events}
+          onEdit={handleEditClick}
+          onDelete={handleDelete}
+          onAdd={handleAdd} // ✅ onAdd(빠른등록 지원)
+        />
+      </RightContent>
       <ReservationModal
         open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditData(null);
-        }}
+        onClose={() => { setModalOpen(false); setEditData(null); }}
         onSave={handleSave}
         initialData={editData}
-        selectedDate={selectedDate}
-        eventsForDate={events[selectedDate] || []} // 예약 시간 중복 체크용
+        selectedDate={dateStr}
+        eventsForDate={events[dateStr] || []}
       />
-    </Container>
+    </FlexWrap>
   );
 };
 
