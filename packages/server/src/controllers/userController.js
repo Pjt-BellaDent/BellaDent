@@ -1,5 +1,4 @@
-import { userSchema } from "../models/user.js";
-import { updateUserSchema } from "../models/updateUser.js";
+import { userSchema, updateUserSchema } from "../models/user.js";
 import { db } from "../config/firebase.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -95,9 +94,9 @@ export const getUserById = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  console.log("updateUser", req.body);
-  
-  const { value, error } = updateUserSchema.validate(req.body, { abortEarly: false });
+  const { value, error } = updateUserSchema.validate(req.body, {
+    abortEarly: false,
+  });
 
   if (error) {
     return res
@@ -106,7 +105,7 @@ export const updateUser = async (req, res) => {
   }
 
   try {
-    const docRef = db.collection("users").doc(value.id);
+    const docRef = db.collection("users").doc(req.params.id);
     await docRef.update(value);
     res.status(201).json({ message: "회원 정보 수정 성공" });
   } catch (err) {
@@ -116,12 +115,9 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   try {
-    const user = await db
-      .collection("users")
-      .doc(req.params.id)
-      .delete();
-
-    res.status(201).json({ message: "회원탈퇴 성공" });
+    const docRef = db.collection("users").doc(req.params.id);
+    await docRef.delete();
+    res.status(201).json({ message: "회원 탈퇴 성공" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
