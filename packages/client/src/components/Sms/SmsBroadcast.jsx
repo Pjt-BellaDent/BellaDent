@@ -144,15 +144,15 @@ const SmsBroadcast = () => {
   };
 
   const toggleAll = () => {
-    const currentIds = paginatedPatients.map((p) => p.id);
-    const allSelected = currentIds.every((id) => selected.includes(id));
+  const allIds = patients.map((p) => p.id); // 전체 목록 ID
+  const allSelected = allIds.every((id) => selected.includes(id));
 
-    if (allSelected) {
-      setSelected((prev) => prev.filter((id) => !currentIds.includes(id)));
-    } else {
-      setSelected((prev) => [...new Set([...prev, ...currentIds])]);
-    }
-  };
+  if (allSelected) {
+    setSelected([]); // 전체 해제
+  } else {
+    setSelected(allIds); // 전체 선택
+  }
+};
 
   const sendSms = () => {
     if (!message.trim()) return alert('메시지를 입력하세요.');
