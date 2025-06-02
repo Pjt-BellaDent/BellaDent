@@ -27,24 +27,29 @@ router.post("/", async (req, res) => {
   try {
     // 진료실/진료과로 검색 후 진료중으로 업데이트
     const snapshot = await db
-      .collection('appointments')
-      .where('name', '==', name)
-      .where('department', '==', department)
-      .where('reservationDate', '==', today)
-      .where('status', '==', '대기')
+      .collection("appointments")
+      .where("name", "==", name)
+      .where("department", "==", department)
+      .where("reservationDate", "==", today)
+      .where("status", "in", ["대기"])
       .get();
-
+    console.log(`[call.js] 호출 요청: ${name}, ${room}`);
+    console.log(`[call.js] DB조회결과(대기):`, snapshot.size);
     if (!snapshot.empty) {
-      await snapshot.docs[0].ref.update({ status: '진료중' });
-      // 🔥 상태 DB에 저장 후 0.2초 대기!
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await snapshot.docs[0].ref.update({ status: "진료중" });
+      console.log(`[call.js] status -> 진료중 반영됨: ${name}`);
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     callState = { name, room, calledAt: Date.now() };
+    console.log(`[call.js] callState set:`, callState);
     res.json({ ok: true });
-    setTimeout(() => { callState = null; }, 3000);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to call patient", details: err.message });
+    setTimeout(() => {
+      callState = null;
+      console.log(`[call.js] callState cleared`);
+    }, 2000);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
 });
 

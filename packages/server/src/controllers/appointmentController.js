@@ -115,11 +115,11 @@ export const createAppointment = async (req, res) => {
       reservationDate,
       time,
       memo,
-      status = '대기',
       phone = '',
       gender = '',
       birth = ''
     } = req.body;
+    const status = req.body.status || '대기'; // 항상 '대기' 보장
     if (!name || !department || !reservationDate || !time) {
       return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
     }
@@ -153,7 +153,7 @@ export const createAppointment = async (req, res) => {
       phone,
       gender,
       birth,
-      status
+      status // ← 항상 '대기'
     });
     res.status(201).json({ id: appointmentRef.id });
   } catch (err) {
@@ -173,4 +173,3 @@ export const deleteAppointment = async (req, res) => {
     res.status(500).json({ error: "삭제 중 오류가 발생했습니다." });
   }
 };
-

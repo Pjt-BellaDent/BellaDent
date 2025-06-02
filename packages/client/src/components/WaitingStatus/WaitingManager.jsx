@@ -77,17 +77,19 @@ const WaitingManager = () => {
     }
   };
 
-  const markComplete = async (idOrName, department) => {
-    if (!idOrName || !department) return;
+  const markComplete = async (name, department) => {
+    if (!name || !department) return;
     try {
-      await fetch(`http://localhost:3000/appointments/complete`, {
+      // 기존 /appointments/complete → /appointments/complete-by-name로 변경!
+      const res = await fetch('http://localhost:3000/appointments/complete-by-name', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: idOrName, department })
+        body: JSON.stringify({ name, department })
       });
+      if (!res.ok) throw new Error('진료 완료 실패');
       fetchWaitingList();
     } catch (error) {
-      console.error('진료 완료 처리 실패:', error);
+      alert('진료 완료 처리 실패: ' + error.message);
     }
   };
 
@@ -100,11 +102,12 @@ const WaitingManager = () => {
     }
     if (status !== '대기') return; // 진료중/진료완료는 호출 버튼 미노출
     try {
-      await fetch('http://localhost:3000/api/call', {
+      const res = await fetch('http://localhost:3000/api/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, room })
       });
+      if (!res.ok) throw new Error('환자 호출 실패');
     } catch (error) {
       alert('환자 호출에 실패했습니다.');
     }
