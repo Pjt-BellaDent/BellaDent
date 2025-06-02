@@ -198,6 +198,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
     const filledForm = {
       ...form,
+      status: '대기',   // ← 항상 '대기'로
       userId: form.userId || `${form.name}-${Date.now()}`
     };
     onSave(filledForm);
