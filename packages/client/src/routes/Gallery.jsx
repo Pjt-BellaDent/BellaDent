@@ -1,8 +1,11 @@
 import React from 'react'
+import TreatmentInfo_6 from "../components/TreatmentInfo_6"
 
 function gallery() {
   return (
-    <div>gallery</div>
+    <>
+      <TreatmentInfo_6/>
+    </>
   )
 }
 
