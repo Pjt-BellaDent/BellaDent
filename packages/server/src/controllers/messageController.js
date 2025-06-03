@@ -8,26 +8,31 @@ dotenv.config();
 
 export const GetSendNumber = async (req, res) => {
   try {
-    const response = await axios.post(
-      process.env.SMS_SERVICE_GET_NUMBER_URL,
-      {
-        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
+    const url = process.env.SMS_SERVICE_GET_NUMBER_URL;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": process.env.SMS_SERVICE_CONTENT_TYPE,
+        "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
       },
-      {
-        headers: {
-          "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
-          "Content-Type": process.env.SMS_SERVICE_CONTENT - TYPE,
-        },
-      }
-    );
-    const sendPhones = response.data.content.sendphones[0].number;
-    res.status(200).json({
-      number: sendPhones,
-      message: "발신번호 조회 성공",
+      body: JSON.stringify({
+        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
+      }),
     });
+    const data = await response.json();
+    if (response.ok) {
+      res.status(200).json({
+        message: "발신번호 조회 성공",
+        data: data,
+      });
+    } else {
+      res.status(response.status).json({
+        message: "발신번호 조회 실패",
+        error: data,
+      });
+    }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
   }
 };
 
