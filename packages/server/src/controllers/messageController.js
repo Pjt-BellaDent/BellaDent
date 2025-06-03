@@ -1,6 +1,5 @@
 import { messageSchema } from "../models/message.js";
 import { db } from "../config/firebase.js";
-import axios from "axios";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,7 +15,7 @@ export const GetSendNumber = async (req, res) => {
         "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
       },
       body: JSON.stringify({
-        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
+        "token_key": process.env.SMS_SERVICE_TOKEN_KEY,
       }),
     });
     const data = await response.json();
@@ -48,37 +47,28 @@ export const SendMessage = async (req, res) => {
   }
 
   try {
-    let destPhone = "";
-    value.dest_phone.map((phone) => {
-      if (destPhone === "") {
-        destPhone = phone;
-      } else {
-        destPhone += `|${phone}`;
-      }
-    });
-    const response = await axios.post(
-      process.env.SMS_SERVICE_SEND_URL,
-      {
-        ...value,
-        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
-        dest_phone: destPhone,
+    const destPhone = Array.isArray(value.dest_phone)
+      ? value.dest_phone.join("|")
+      : value.dest_phone;
+    const response = await fetch(process.env.SMS_SERVICE_SEND_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": process.env.SMS_SERVICE_CONTENT_TYPE,
+        "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
       },
-      {
-        headers: {
-          "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
-          "Content-Type": process.env.SMS_SERVICE_CONTENT - TYPE,
-        },
-      }
-    );
-    res.status(200).json({
-      message: "SMS 발신 성공",
+      body: JSON.stringify({
+        ...value,
+        "token_key": process.env.SMS_SERVICE_TOKEN_KEY,
+        "dest_phone": destPhone,
+      }),
     });
+    // const data = await response.json();
 
     let messageData = {
       id: uuidv4(),
       createdAt: new Date(),
     };
-    if (res.statusCode === 200) {
+    if (response.ok) {
       messageData = { messageStatus: "success", ...value, ...messageData };
     } else {
       messageData = { messageStatus: "fail", ...value, ...messageData };
