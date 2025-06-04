@@ -36,7 +36,7 @@ const PatientList = ({ events }) => {
   const [filter, setFilter] = useState({ name: '', date: '', dept: '', status: '' });
   const [procedureModalOpen, setProcedureModalOpen] = useState(false);
   const [surveyModalOpen, setSurveyModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState(null); // { name, birth }
+  const [selectedPatient, setSelectedPatient] = useState(null); // 전체 환자 객체!
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editProcedures, setEditProcedures] = useState([]);
@@ -72,9 +72,12 @@ const PatientList = ({ events }) => {
     );
   };
 
-  // 반드시 { name, birth } 객체로 열기
+  // 전체 환자 객체를 넘겨야 연락처/성별 등 누락 없음!
   const openProcedureModal = (patientObj) => {
-    setSelectedPatient(patientObj);
+    const patient = patients.find(
+      p => p.name === patientObj.name && p.birth === patientObj.birth
+    );
+    setSelectedPatient(patient); // 전체 객체 저장!
     setProcedureModalOpen(true);
   };
 
@@ -138,7 +141,6 @@ const PatientList = ({ events }) => {
 
       <PatientTable
         data={applyFilter(patients)}
-        // 반드시 {name, birth} 넘김
         onProcedureClick={(name, birth) => openProcedureModal({ name, birth })}
         onEditClick={(name, birth) => openEditModal({ name, birth })}
         onDeleteClick={handleDelete}
@@ -153,11 +155,10 @@ const PatientList = ({ events }) => {
 
       <Charts proceduresData={proceduresData} />
 
-      {/* ✔️ 객체 바로 출력 X, 개별 필드만 사용 */}
       <ProcedureModal
         open={procedureModalOpen}
         onClose={() => setProcedureModalOpen(false)}
-        patient={selectedPatient}   // 반드시 {name, birth} 객체
+        patient={selectedPatient}   // 전체 환자 객체 전달!
         events={events}
       />
 
