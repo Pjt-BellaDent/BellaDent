@@ -1,4 +1,3 @@
-// PatientList.jsx — 삭제 기능 id만 전달/최종본
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import PatientTable from './PatientTable';
@@ -30,33 +29,37 @@ const Filters = styled.div`
   }
 `;
 
-const PatientList = () => {
+// 👇 events를 props로 받는 부분이 중요!
+const PatientList = ({ events }) => {
   const [patients, setPatients] = useState([]);
   const [proceduresData, setProceduresData] = useState({});
   const [filter, setFilter] = useState({ name: '', date: '', dept: '', status: '' });
   const [procedureModalOpen, setProcedureModalOpen] = useState(false);
   const [surveyModalOpen, setSurveyModalOpen] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null); // { name, birth }
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editProcedures, setEditProcedures] = useState([]);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const res = await fetchAllPatients();
-        setPatients(res);
+  // 환자 데이터 및 시술이력 불러오기 (이름+생년월일로 조회)
+  const fetchPatients = async () => {
+    try {
+      const res = await fetchAllPatients();
+      setPatients(res);
 
-        const procData = {};
-        for (let p of res) {
-          const history = await fetchProceduresByName(p.name);
-          procData[p.name] = history;
-        }
-        setProceduresData(procData);
-      } catch (err) {
-        console.error("데이터 불러오기 실패", err);
-      }
-    };
+      const procData = {};
+      for (let p of res) {
+        if (!p.name || !p.birth) continue; // name과 birth 모두 있을 때만 시술 이력 조회
+        const history = await fetchProceduresByName(p.name, p.birth);
+        procData[`${p.name}_${p.birth}`] = history;
+      }      
+      setProceduresData(procData);
+    } catch (err) {
+      console.error("데이터 불러오기 실패", err);
+    }
+  };
+
+  useEffect(() => {
     fetchPatients();
   }, []);
 
@@ -69,24 +72,26 @@ const PatientList = () => {
     );
   };
 
-  const openProcedureModal = (name) => {
-    setSelectedPatient(name);
+  // 반드시 { name, birth } 객체로 열기
+  const openProcedureModal = (patientObj) => {
+    setSelectedPatient(patientObj);
     setProcedureModalOpen(true);
   };
 
-  const openEditModal = (name) => {
-    const patient = patients.find(p => p.name === name);
-    const history = proceduresData[name] || [];
+  const openEditModal = (patientObj) => {
+    const patient = patients.find(
+      p => p.name === patientObj.name && p.birth === patientObj.birth
+    );
+    const key = `${patientObj.name}_${patientObj.birth}`;
+    const history = proceduresData[key] || [];
     setEditTarget(patient);
     setEditProcedures(history);
     setEditModalOpen(true);
   };
 
-  // id만 받도록!
   const handleDelete = async (id) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
-      console.log("삭제 시도 중인 환자 ID:", id); // ✅ id string만
       await deletePatient(id);
       setPatients(prev => prev.filter(p => p.id !== id));
     } catch (err) {
@@ -98,30 +103,45 @@ const PatientList = () => {
   return (
     <Container>
       <h2>📋 환자 리스트</h2>
-
       <Filters>
-        <input placeholder="이름" value={filter.name} onChange={e => setFilter({ ...filter, name: e.target.value })} />
-        <input type="date" value={filter.date} onChange={e => setFilter({ ...filter, date: e.target.value })} />
-        <select value={filter.dept} onChange={e => setFilter({ ...filter, dept: e.target.value })}>
+        <input
+          placeholder="이름"
+          value={filter.name}
+          onChange={e => setFilter({ ...filter, name: e.target.value })}
+        />
+        <input
+          type="date"
+          value={filter.date}
+          onChange={e => setFilter({ ...filter, date: e.target.value })}
+        />
+        <select
+          value={filter.dept}
+          onChange={e => setFilter({ ...filter, dept: e.target.value })}
+        >
           <option value="">진료과 선택</option>
           <option>보철과</option>
           <option>교정과</option>
           <option>치주과</option>
         </select>
-        <select value={filter.status} onChange={e => setFilter({ ...filter, status: e.target.value })}>
+        <select
+          value={filter.status}
+          onChange={e => setFilter({ ...filter, status: e.target.value })}
+        >
           <option value="">상태</option>
           <option value="예약">예약</option>
           <option value="대기">대기</option>
           <option value="진료완료">진료완료</option>
         </select>
         <button onClick={() => setPatients(applyFilter(patients))}>검색</button>
+        <button style={{ marginLeft: 10, background: "#6c757d" }} onClick={fetchPatients}>새로고침</button>
       </Filters>
 
       <PatientTable
         data={applyFilter(patients)}
-        onProcedureClick={openProcedureModal}
-        onEditClick={openEditModal}
-        onDeleteClick={handleDelete} // 반드시 id만 전달받음
+        // 반드시 {name, birth} 넘김
+        onProcedureClick={(name, birth) => openProcedureModal({ name, birth })}
+        onEditClick={(name, birth) => openEditModal({ name, birth })}
+        onDeleteClick={handleDelete}
       />
 
       <EditPatientModal
@@ -133,16 +153,18 @@ const PatientList = () => {
 
       <Charts proceduresData={proceduresData} />
 
+      {/* ✔️ 객체 바로 출력 X, 개별 필드만 사용 */}
       <ProcedureModal
         open={procedureModalOpen}
         onClose={() => setProcedureModalOpen(false)}
-        patientName={selectedPatient}
+        patient={selectedPatient}   // 반드시 {name, birth} 객체
+        events={events}
       />
 
       <SurveyModal
         open={surveyModalOpen}
         onClose={() => setSurveyModalOpen(false)}
-        patientName={selectedPatient}
+        patientName={selectedPatient ? selectedPatient.name : ''}
       />
     </Container>
   );

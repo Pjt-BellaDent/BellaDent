@@ -22,9 +22,22 @@ export const updatePatient = async (req, res) => {
   }
 };
 
-// 환자 등록
+// 환자 등록 (이름+생년월일 중복 방지)
 export const createPatient = async (req, res) => {
   try {
+    const { name, birth } = req.body;
+    if (!name || !birth) {
+      return res.status(400).json({ error: "이름과 생년월일이 필요합니다." });
+    }
+    // 이름+생년월일로 중복 체크
+    const snapshot = await db.collection("users")
+      .where("name", "==", name)
+      .where("birth", "==", birth)
+      .get();
+
+    if (!snapshot.empty) {
+      return res.status(409).json({ error: "이미 동일한 이름과 생년월일의 환자가 존재합니다." });
+    }
     const doc = await db.collection("users").add(req.body);
     res.status(201).json({ id: doc.id });
   } catch (err) {
@@ -32,7 +45,7 @@ export const createPatient = async (req, res) => {
   }
 };
 
-// ✅ [수정된 부분] 환자 삭제 (Express 서버용 컨트롤러)
+// 환자 삭제
 export const deletePatient = async (req, res) => {
   try {
     const { id } = req.params;
