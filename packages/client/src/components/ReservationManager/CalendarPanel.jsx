@@ -158,11 +158,22 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
       <EventList>
         {todayEvents.length === 0 ? (
           <li style={{color:'#aaa'}}>예약 없음</li>
-        ) : todayEvents.sort((a,b)=>a.time.localeCompare(b.time)).map(e => (
-          <EventItem key={e.id || e.name+e.time}>
-            <span className="dot" />
-            {e.time} {e.name} <span style={{fontSize:13, color:'#47a3ef'}}>{e.department}</span>
-          </EventItem>
+        ) : todayEvents
+          .sort((a,b)=>a.time.localeCompare(b.time))
+          .map(e => (
+            <EventItem key={e.id || (e.name + e.birth + e.time)}>
+              <span className="dot" />
+              {e.time} 
+              <span style={{ marginLeft: 5 }}>
+                {e.name}
+                {e.birth && (
+                  <span style={{ fontSize: 13, color: '#888', marginLeft: 3 }}>
+                    ({e.birth})
+                  </span>
+                )}
+              </span>
+              <span style={{fontSize:13, color:'#47a3ef'}}>{e.department}</span>
+            </EventItem>
         ))}
       </EventList>
     </Wrapper>

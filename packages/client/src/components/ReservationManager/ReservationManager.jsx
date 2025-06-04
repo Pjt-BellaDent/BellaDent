@@ -52,9 +52,13 @@ const ReservationManager = () => {
   };
   useEffect(() => { fetchEvents(); }, [selectedDate]);
 
-  // 예약 저장
+  // 예약 저장 (이름+생년월일 필수)
   const handleSave = async (formData) => {
     try {
+      if (!formData.name || !formData.birth) {
+        alert('이름과 생년월일은 필수 입력입니다.');
+        return;
+      }
       const method = editData?.id ? 'PUT' : 'POST';
       const url = editData?.id
         ? `http://localhost:3000/appointments/${editData.id}`
@@ -86,8 +90,7 @@ const ReservationManager = () => {
     } catch (err) { alert('삭제 실패'); }
   };
 
-  // ✅ 예약 등록(빠른등록 포함)
-  // - prefill(과/시간)이 있으면 해당 값으로 등록 폼 열기
+  // 예약 등록(빠른등록 포함)
   const handleAdd = (prefill = {}) => {
     setEditData({
       department: prefill.department || '',
@@ -112,8 +115,9 @@ const ReservationManager = () => {
           events={events}
           onEdit={handleEditClick}
           onDelete={handleDelete}
-          onAdd={handleAdd} // ✅ onAdd(빠른등록 지원)
+          onAdd={handleAdd}
         />
+        {/* 👇 환자목록에서 시술이력 추가 등 예약현황을 반영하고 싶을 때 events 전달 */}
       </RightContent>
       <ReservationModal
         open={modalOpen}

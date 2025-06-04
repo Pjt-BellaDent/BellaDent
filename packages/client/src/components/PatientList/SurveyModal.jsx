@@ -46,19 +46,21 @@ const ModalContent = styled.div`
   }
 `;
 
-const SurveyModal = ({ open, onClose, patientName }) => {
+// patientName → patient 객체({ name, birth })로 받는 게 안전!
+const SurveyModal = ({ open, onClose, patient }) => {
   const [form, setForm] = useState({
     q1: '3', q2: '3', q3: '3', comment: ''
   });
 
   const handleSubmit = () => {
-    if (!patientName) {
-      alert("환자 이름이 없습니다.");
+    if (!patient || !patient.name || !patient.birth) {
+      alert("환자 정보(이름, 생년월일)가 없습니다.");
       return;
     }
 
     const data = {
-      name: patientName,
+      name: patient.name,
+      birth: patient.birth,
       ...form,
       date: new Date().toISOString().slice(0, 10)
     };
@@ -74,7 +76,11 @@ const SurveyModal = ({ open, onClose, patientName }) => {
   return (
     <ModalOverlay open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <ModalContent>
-        <h3>📝 진료 만족도 조사 - {patientName || '환자명 없음'}</h3>
+        <h3>
+          📝 진료 만족도 조사 - {patient
+            ? `${patient.name} (${patient.birth})`
+            : '환자 정보 없음'}
+        </h3>
 
         <p>1. 의료진의 설명이 충분했나요?</p>
         {[1,2,3,4,5].map(val => (

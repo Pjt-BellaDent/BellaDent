@@ -76,33 +76,35 @@ export const updateAppointment = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
   try {
-    console.log('PUT /appointments/:id', { id, updateData });
     const apptRef = db.collection("appointments").doc(id);
     await apptRef.update(updateData);
-    // 진료완료 처리 동기화 시도 (에러시 로그)
+
+    // 진료완료 처리 시 lastVisit도 자동 동기화
     if (updateData.status === '진료완료') {
       const apptDoc = await apptRef.get();
       const appt = apptDoc.data();
-      console.log('동기화용 appt:', appt);
       if (appt.userId) {
-        // userId 기준 동기화 (존재하면만 update, 아니면 name fallback)
         const userRef = db.collection('users').doc(appt.userId);
         const userDoc = await userRef.get();
         if (userDoc.exists) {
           await userRef.update({ lastVisit: appt.reservationDate });
-        } else if (appt.name) {
-          // userId 없으면 name 기준 fallback
-          const qs = await db.collection('users').where('name', '==', appt.name).get();
+        } else if (appt.name && appt.birth) {
+          const qs = await db.collection('users')
+            .where('name', '==', appt.name)
+            .where('birth', '==', appt.birth)
+            .get();
           qs.forEach(doc => doc.ref.update({ lastVisit: appt.reservationDate }));
         }
-      } else if (appt.name) {
-        const qs = await db.collection('users').where('name', '==', appt.name).get();
+      } else if (appt.name && appt.birth) {
+        const qs = await db.collection('users')
+          .where('name', '==', appt.name)
+          .where('birth', '==', appt.birth)
+          .get();
         qs.forEach(doc => doc.ref.update({ lastVisit: appt.reservationDate }));
       }
     }
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error("진료완료 상태변경 서버에러:", err);
     res.status(500).json({ error: "예약 수정 중 오류가 발생했습니다.", detail: err.message });
   }
 };
@@ -123,14 +125,14 @@ export const createAppointment = async (req, res) => {
     if (!name || !department || !reservationDate || !time) {
       return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
     }
-    // 1. users에서 name 기준 검색
+    // name + birth로 환자 식별 (추후 확장)
     const patientSnap = await db
       .collection("users")
       .where("name", "==", name)
+      .where("birth", "==", birth)
       .get();
     let actualUserId = '';
     if (patientSnap.empty) {
-      // 2. 신규 환자 등록 (doc id를 userId로)
       const ref = await db.collection("users").add({
         name,
         phone,
@@ -142,9 +144,9 @@ export const createAppointment = async (req, res) => {
     } else {
       actualUserId = patientSnap.docs[0].id;
     }
-    // 3. appointments 등록 시 userId: actualUserId
     const appointmentRef = await db.collection("appointments").add({
       name,
+      birth,
       userId: actualUserId,
       department,
       reservationDate,
@@ -152,12 +154,10 @@ export const createAppointment = async (req, res) => {
       memo: memo || '',
       phone,
       gender,
-      birth,
-      status // ← 항상 '대기'
+      status
     });
     res.status(201).json({ id: appointmentRef.id });
   } catch (err) {
-    console.error("예약 등록 실패:", err);
     res.status(500).json({ error: "예약 생성 중 오류가 발생했습니다." });
   }
 };
@@ -171,5 +171,24 @@ export const deleteAppointment = async (req, res) => {
   } catch (error) {
     console.error("삭제 실패:", error);
     res.status(500).json({ error: "삭제 중 오류가 발생했습니다." });
+  }
+};
+export const getAvailableTimes = async (req, res) => {
+  try {
+    const { date, department } = req.query;
+    if (!date || !department) {
+      return res.status(400).json({ error: "날짜와 진료과가 필요합니다." });
+    }
+    // 이미 예약된 시간 조회
+    const snapshot = await db.collection("appointments")
+      .where("reservationDate", "==", date)
+      .where("department", "==", department)
+      .get();
+    const reservedTimes = snapshot.docs.map(doc => doc.data().time);
+    const allTimes = [10, 11, 13, 14, 15, 16, 17, 18];
+    const availableTimes = allTimes.filter(t => !reservedTimes.includes(t));
+    res.json({ availableTimes, reservedTimes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

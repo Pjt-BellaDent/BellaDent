@@ -119,10 +119,20 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
                     {res ? (
                       <RowFlex>
                         <span
-                          style={{ fontWeight: "bold", textDecoration: "underline", color: "#2071e5", cursor: "pointer" }}
+                          style={{
+                            fontWeight: "bold",
+                            textDecoration: "underline",
+                            color: "#2071e5",
+                            cursor: "pointer"
+                          }}
                           onClick={() => setDetailData(res)}
                         >
                           {res.name}
+                          {res.birth && (
+                            <span style={{ fontSize: 13, color: "#888", marginLeft: 5 }}>
+                              ({res.birth})
+                            </span>
+                          )}
                         </span>
                         <span>({res.status})</span>
                         <EditBtn onClick={() => onEdit(res)}>수정</EditBtn>
@@ -130,12 +140,18 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
                       </RowFlex>
                     ) : (
                       <span
-                      style={{color:'#aaa',fontSize:13, cursor: "pointer", textDecoration: "underline"}}
-                      onClick={() => onAdd({ department: dept, time })}
-                      title="이 시간에 예약 등록"
-                    >
-                      예약 없음
-                    </span>                    )}
+                        style={{
+                          color:'#aaa',
+                          fontSize:13,
+                          cursor: "pointer",
+                          textDecoration: "underline"
+                        }}
+                        onClick={() => onAdd({ department: dept, time })}
+                        title="이 시간에 예약 등록"
+                      >
+                        예약 없음
+                      </span>
+                    )}
                   </td>
                 );
               })}

@@ -1,4 +1,3 @@
-// PatientTable.jsx — 나이 대신 생년월일(birth) 컬럼 출력, age 제거
 import React from 'react';
 import styled from '@emotion/styled';
 
@@ -55,16 +54,28 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
         </thead>
         <tbody>
           {data && data.length > 0 ? data.map(p => (
-            <tr key={p.id || p.name}>
-              <td data-label="이름" onClick={() => onProcedureClick(p.name)}>{p.name}</td>
+            <tr key={p.id || `${p.name}_${p.birth}`}>
+              <td
+                data-label="이름"
+                onClick={() => onProcedureClick(p.name, p.birth)}
+              >
+                {p.name}
+              </td>
               <td>{p.gender}</td>
               <td>{p.birth || '-'}</td>
               <td>{p.phone}</td>
               <td>{p.dept}</td>
               <td>{p.lastVisit}</td>
               <td>
-                <button className="edit" onClick={() => onEditClick(p.name)}>수정</button>
-                <button className="delete" onClick={() => onDeleteClick(p.id)}>삭제</button>
+                <button
+                  className="edit"
+                  onClick={() => onEditClick(p.name, p.birth)}
+                >
+                  수정
+                </button>
+                <button className="delete" onClick={() => onDeleteClick(p.id)}>
+                  삭제
+                </button>
               </td>
             </tr>
           )) : (
