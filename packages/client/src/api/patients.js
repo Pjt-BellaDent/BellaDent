@@ -47,3 +47,13 @@ export const deletePatient = async (id) => {
   if (!res.ok) throw new Error("환자 삭제 실패");
   return true;
 };
+
+export const addAppointment = async (data) => {
+  const res = await fetch(`${BASE}/appointments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error("예약 등록 실패");
+  return await res.json();
+};
