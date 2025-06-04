@@ -24,6 +24,7 @@ const PatientDetailModal = ({ patient, onClose }) => {
         <button onClick={onClose} style={{ position: 'absolute', top: 14, right: 16, fontWeight: 'bold', fontSize: 22, color: '#888', border: 'none', background: 'none', cursor: 'pointer' }}>×</button>
         <h3 style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 10 }}>환자 상세정보</h3>
         <div style={{ marginBottom: 10 }}><strong>이름:</strong> {patient.name}</div>
+        <div style={{ marginBottom: 10 }}><strong>생년월일:</strong> {patient.birth || '-'}</div>
         <div style={{ marginBottom: 10 }}><strong>진료과:</strong> {patient.department}</div>
         <div style={{ marginBottom: 10 }}><strong>상태:</strong> {patient.status}</div>
         {patient.memo && <div style={{ marginBottom: 10 }}><strong>메모:</strong> {patient.memo}</div>}
@@ -54,21 +55,23 @@ const WaitingManager = () => {
       const roomsObj = await res.json();
       let result = [];
       Object.entries(roomsObj).forEach(([roomKey, value]) => {
-        // 진료중 환자
-        if (value.inTreatment) {
+        if (value.inTreatment && value.inTreatment.name) {
           result.push({
-            name: value.inTreatment,
+            name: value.inTreatment.name,
+            birth: value.inTreatment.birth,
             department: roomToDepartment[roomKey],
             status: '진료중',
           });
         }
-        // 대기 환자
-        value.waiting.forEach(waitName => {
-          result.push({
-            name: waitName,
-            department: roomToDepartment[roomKey],
-            status: '대기',
-          });
+        value.waiting.forEach(waitObj => {
+          if (waitObj && waitObj.name) {
+            result.push({
+              name: waitObj.name,
+              birth: waitObj.birth,
+              department: roomToDepartment[roomKey],
+              status: '대기',
+            });
+          }
         });
       });
       setAppointments(result);
@@ -77,35 +80,37 @@ const WaitingManager = () => {
     }
   };
 
-  const markComplete = async (name, department) => {
-    if (!name || !department) return;
+  // 진료완료 처리
+  const markComplete = async (name, birth, department) => {
+    if (!name || !birth || !department) return;
     try {
-      // 기존 /appointments/complete → /appointments/complete-by-name로 변경!
       const res = await fetch('http://localhost:3000/appointments/complete-by-name', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, department })
+        body: JSON.stringify({ name, birth, department })
       });
       if (!res.ok) throw new Error('진료 완료 실패');
-      fetchWaitingList();
+      fetchWaitingList();   // 대기현황 리프레시
+      // ⬇️ 진료완료 후 환자 목록도 새로고침 필요하면
+      // (예: 환자 목록 페이지를 전역 상태관리하거나 부모에서 ref로 접근해 fetchPatients 호출)
+      // 또는, 상태값/컨텍스트로 환자목록에 강제 리프레시 트리거 전달
     } catch (error) {
       alert('진료 완료 처리 실패: ' + error.message);
     }
   };
 
-  // 호출 버튼: 반드시 대기환자만 노출
-  const callPatient = async (name, department, status) => {
+  const callPatient = async (name, birth, department, status) => {
     const room = departmentToRoom[department];
-    if (!name || !room) {
-      alert('이름 또는 진료실 정보가 없습니다.');
+    if (!name || !birth || !room) {
+      alert('이름/생년월일/진료실 정보가 없습니다.');
       return;
     }
-    if (status !== '대기') return; // 진료중/진료완료는 호출 버튼 미노출
+    if (status !== '대기') return;
     try {
       const res = await fetch('http://localhost:3000/api/call', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, room })
+        body: JSON.stringify({ name, birth, room })
       });
       if (!res.ok) throw new Error('환자 호출 실패');
     } catch (error) {
@@ -135,7 +140,7 @@ const WaitingManager = () => {
       ) : (
         appointments.map((appt, index) => (
           <div
-            key={appt.name + appt.status + appt.department}
+            key={appt.name + appt.birth + appt.status + appt.department}
             className="border p-4 rounded-xl shadow mb-4"
           >
             <div className="flex justify-between items-center">
@@ -146,29 +151,26 @@ const WaitingManager = () => {
                     style={{ color: '#2167d5', cursor: 'pointer', textDecoration: 'underline' }}
                     onClick={() => setSelectedPatient(appt)}
                   >
-                    {appt.name || '이름 정보 없음'}
+                    {appt.name} {appt.birth && <span style={{ color: '#888', fontSize: 13 }}>({appt.birth})</span>}
                   </span>
                 </p>
                 <p><strong>진료과:</strong> {appt.department || '정보 없음'}</p>
                 <p><strong>상태:</strong> {appt.status || '정보 없음'}</p>
                 {appt.memo && <p><strong>메모:</strong> {appt.memo}</p>}
               </div>
-              {/* 버튼 그룹 */}
               <div className="flex flex-col gap-2 ml-4">
-                {/* 대기 환자에만 호출 버튼 노출 */}
                 {appt.status === '대기' && (
                   <button
-                    onClick={() => callPatient(appt.name, appt.department, appt.status)}
+                    onClick={() => callPatient(appt.name, appt.birth, appt.department, appt.status)}
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700 font-bold"
-                    style={{marginBottom:'6px'}}
+                    style={{ marginBottom: '6px' }}
                   >
                     호출
                   </button>
                 )}
-                {/* 진료중, 대기 환자에만 진료 완료 노출 */}
                 {(appt.status === '진료중' || appt.status === '대기') && (
                   <button
-                    onClick={() => markComplete(appt.name, appt.department)}
+                    onClick={() => markComplete(appt.name, appt.birth, appt.department)}
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     진료 완료
@@ -179,7 +181,6 @@ const WaitingManager = () => {
           </div>
         ))
       )}
-      {/* 상세 모달 */}
       <PatientDetailModal patient={selectedPatient} onClose={() => setSelectedPatient(null)} />
     </div>
   );

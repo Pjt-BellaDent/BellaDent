@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
 
 const Panel = styled.div`
@@ -59,7 +59,7 @@ const EmptyBox = styled.div`
   gap: 6px;
 
   &::before {
-    content: "\ud83d\udc6d";
+    content: "\\ud83d\\udc6d";
     font-size: 20px;
   }
 `;
@@ -75,7 +75,14 @@ const ReservationDetail = ({ date, events, onEdit, onDelete }) => {
         reservations.map((resv, i) => (
           <Card key={resv.id || i}>
             <MetaRow>
-              <strong>{resv.name}</strong>
+              <strong>
+                {resv.name}
+                {resv.birth && (
+                  <span style={{ fontSize: 13, color: '#888', marginLeft: 6 }}>
+                    ({resv.birth})
+                  </span>
+                )}
+              </strong>
               <Badge>{resv.department}</Badge>
             </MetaRow>
             <div style={{ marginBottom: '4px' }}>

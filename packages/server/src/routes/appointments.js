@@ -7,7 +7,8 @@ import {
   getMonthlyAppointments,
   createAppointment,
   updateAppointment,
-  deleteAppointment
+  deleteAppointment,
+  getAvailableTimes
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
@@ -15,58 +16,73 @@ const router = express.Router();
 router.get("/today", getTodayAppointments);
 router.get("/stats/chart", getDashboardStats);
 router.get("/week", getWeeklyReservations);
+router.get("/available-times", getAvailableTimes); // 예약가능 시간조회 라우트
 router.get("/", getMonthlyAppointments);
 router.post('/', createAppointment);
 
-// 🔥 반드시 고정 라우트 먼저!
+// 진료완료 처리 라우트
 router.put('/complete', async (req, res) => {
-  const { name, department } = req.body;
+  const { name, department, birth } = req.body;
   const today = new Date().toISOString().slice(0, 10);
   try {
     const snapshot = await db.collection('appointments')
       .where('name', '==', name)
+      .where('birth', '==', birth)
       .where('department', '==', department)
       .where('reservationDate', '==', today)
       .where('status', 'in', ['진료중', '대기'])
       .get();
     if (snapshot.empty) {
-      console.log('No appointment found for:', { name, department, today, status: ['대기', '진료중'] });
       return res.status(404).json({ error: 'Appointment not found' });
     }
     await snapshot.docs[0].ref.update({ status: '진료완료', completedAt: Date.now() });
+    // === 이 부분에서 users의 lastVisit도 오늘로 업데이트 ===
+    const userSnap = await db.collection('users')
+      .where('name', '==', name)
+      .where('birth', '==', birth)
+      .get();
+    userSnap.forEach(doc => {
+      doc.ref.update({ lastVisit: today });
+    });
     res.json({ ok: true });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// 진료완료(이름+생년월일) 라우트
 router.put('/complete-by-name', async (req, res) => {
-  const { name, department } = req.body;
+  const { name, department, birth } = req.body;
   try {
     const snap = await db
       .collection('appointments')
       .where('name', '==', name)
+      .where('birth', '==', birth)
       .where('department', '==', department)
       .where('status', 'in', ['대기', '진료중'])
       .get();
-    console.log('쿼리 조건:', { name, department });
-    console.log('쿼리 결과 문서수:', snap.size);
     if (snap.empty) {
-      console.log('쿼리 결과 없음!');
       return res.status(404).json({ error: '해당 환자 내역 없음' });
     }
     const docRef = snap.docs[0].ref;
     await docRef.update({ status: '진료완료' });
+
+    // === 진료완료 → users.lastVisit 업데이트 ===
+    const today = new Date().toISOString().slice(0, 10);
+    const userSnap = await db.collection('users')
+      .where('name', '==', name)
+      .where('birth', '==', birth)
+      .get();
+    userSnap.forEach(doc => {
+      doc.ref.update({ lastVisit: today });
+    });
     return res.json({ success: true });
   } catch (err) {
-    console.error('에러 메시지:', err.message);
     return res.status(500).json({ error: err.message });
   }
 });
 
-// 동적 파라미터 라우트는 제일 마지막!
 router.put('/:id', updateAppointment);
-router.delete('/:id', deleteAppointment); // 삭제 핸들러
+router.delete('/:id', deleteAppointment);
 
 export default router;

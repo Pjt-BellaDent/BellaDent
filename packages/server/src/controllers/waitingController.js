@@ -22,17 +22,14 @@ export const getWaitingStatus = async (req, res) => {
       const data = doc.data();
       const roomKey = departmentToRoom[data.department];
       if (!roomKey) return;
+      // 확장: 이름+생년월일 모두 넘기기 위해 waiting.push({ name, birth })
       if (data.status === '진료중') {
-        rooms[roomKey].inTreatment = data.name;
+        rooms[roomKey].inTreatment = { name: data.name, birth: data.birth };
       } else if (data.status === '대기') {
-        rooms[roomKey].waiting.push(data.name);
+        rooms[roomKey].waiting.push({ name: data.name, birth: data.birth });
       }
-      // 상태 기록용
-      debugState.push({ name: data.name, department: data.department, status: data.status });
+      debugState.push({ name: data.name, birth: data.birth, department: data.department, status: data.status });
     });
-
-    console.log(`[waitingController] polling 응답 rooms:`, JSON.stringify(rooms));
-    console.log(`[waitingController] appointments 상태:`, debugState);
 
     res.json(rooms);
   } catch (err) {

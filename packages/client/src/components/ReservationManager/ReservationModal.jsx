@@ -133,7 +133,6 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     return eventsForDate
       .filter(e => e.department === form.department && e.reservationDate === form.reservationDate && (!initialData || initialData.time !== e.time))
       .flatMap(e => {
-        // e.time이 구간(10:00~11:00)인 경우 모두 포함
         if (e.time && e.time.includes('~')) {
           const [start, end] = e.time.split('~');
           const idxStart = HOUR_MAP.indexOf(start);
@@ -160,7 +159,6 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         status: initialData.status || '대기'
       });
 
-      // 수정시 구간 시간 선택 초기화
       if (initialData.time && initialData.time.includes('~')) {
         const [start, end] = initialData.time.split('~');
         const idxStart = HOUR_MAP.indexOf(start);
@@ -212,14 +210,13 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   };
 
   const isContinuous = (arr) => {
-    // 연속 구간인지 체크
     const idx = arr.map(t => HOUR_MAP.indexOf(t)).sort((a,b) => a-b);
     for (let i=1; i<idx.length; ++i) if (idx[i] !== idx[i-1]+1) return false;
     return true;
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.reservationDate || selectedTimes.length === 0 || !form.department) {
+    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }

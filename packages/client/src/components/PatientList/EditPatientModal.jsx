@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { updatePatient } from '../../api/patients';
 
@@ -45,8 +45,15 @@ const ButtonRow = styled.div`
 `;
 
 const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
+  // patientData는 { id, name, birth, ... } 형태로 들어오는 게 안전!
   const [form, setForm] = useState({ ...patientData });
   const [editedProcedures, setEditedProcedures] = useState([...procedures]);
+
+  // patientData 변경 시 state도 반영 (모달 재진입 시 정상동작)
+  useEffect(() => {
+    setForm({ ...patientData });
+    setEditedProcedures([...procedures]);
+  }, [patientData, procedures]);
 
   const updateProcedure = (index, key, value) => {
     const newList = [...editedProcedures];
@@ -58,7 +65,12 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
     try {
       await updatePatient(form.id, {
         ...form,
-        procedures: editedProcedures,
+        // 시술이력에 name+birth 모두 포함
+        procedures: editedProcedures.map(proc => ({
+          ...proc,
+          name: form.name,
+          birth: form.birth,
+        })),
         lastVisit: form.lastVisit || new Date().toISOString().slice(0, 10)
       });
       alert('환자 정보가 저장되었습니다.');
@@ -76,6 +88,9 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
         <label>이름</label>
         <input value={form.name} disabled />
 
+        <label>생년월일</label>
+        <input value={form.birth || ''} disabled />
+
         <label>성별</label>
         <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
           <option value="">선택</option>
@@ -83,6 +98,7 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
           <option value="여">여</option>
         </select>
 
+        {/* 나이는 DB 자동계산 추천, 없으면 입력란 유지 */}
         <label>나이</label>
         <input value={form.age || ''} onChange={e => setForm({ ...form, age: e.target.value })} />
 

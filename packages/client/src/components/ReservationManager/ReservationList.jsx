@@ -1,4 +1,3 @@
-// ✅ ReservationList.jsx 수정본 (Invalid or missing month param 해결 포함)
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import ReservationModal from './ReservationModal';
@@ -101,9 +100,8 @@ const ReservationList = () => {
 
   const filtered = reservations.filter(r => {
     const matchText =
-      (r.name && r.name.includes(search));  // ← 이름도 포함!
-    (r.department && r.department.includes(search));
-
+      (r.name && r.name.includes(search)) ||
+      (r.department && r.department.includes(search));
     const matchDateRange = (!startDate || r.reservationDate >= startDate) &&
       (!endDate || r.reservationDate <= endDate);
 
@@ -134,6 +132,10 @@ const ReservationList = () => {
 
   const handleSave = async (formData) => {
     try {
+      if (!formData.name || !formData.birth) {
+        alert('이름과 생년월일은 필수 입력입니다.');
+        return;
+      }
       if (editData?.id) {
         await fetch(`http://localhost:3000/appointments/${editData.id}`, {
           method: 'PUT',
@@ -203,6 +205,7 @@ const ReservationList = () => {
               <th>예약일</th>
               <th>시간</th>
               <th>이름</th>
+              <th>생년월일</th>
               <th>진료과</th>
               <th>상태</th>
               <th>메모</th>
@@ -211,13 +214,14 @@ const ReservationList = () => {
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan="7">일치하는 예약이 없습니다.</td></tr>
+              <tr><td colSpan="8">일치하는 예약이 없습니다.</td></tr>
             ) : (
               filtered.map((r, i) => (
                 <tr key={r.id || i}>
                   <td>{r.reservationDate || '-'}</td>
                   <td>{r.time || '-'}</td>
                   <td>{r.name || '-'}</td>
+                  <td>{r.birth || '-'}</td>
                   <td>{r.department || '-'}</td>
                   <td>{r.status || '-'}</td>
                   <td className="notes">{r.notes || r.memo || '-'}</td>
