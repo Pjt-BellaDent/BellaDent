@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import styled from '@emotion/styled';
-import { fetchProceduresByName, addProcedure } from '../../api/patients';
+import { fetchProceduresByName, addProcedure, addAppointment } from '../../api/patients';
 
-// Styled components
 const ModalOverlay = styled.div`
   display: ${({ open }) => (open ? 'flex' : 'none')};
   position: fixed;
@@ -13,7 +12,6 @@ const ModalOverlay = styled.div`
   align-items: center;
   z-index: 999;
 `;
-
 const ModalContent = styled.div`
   background: white;
   padding: 20px;
@@ -24,13 +22,11 @@ const ModalContent = styled.div`
   overflow-y: auto;
   position: relative;
 `;
-
 const Timeline = styled.div`
   margin-top: 20px;
   border-left: 4px solid #007bff;
   padding-left: 20px;
 `;
-
 const Entry = styled.div`
   margin-bottom: 20px;
   position: relative;
@@ -60,7 +56,6 @@ const Entry = styled.div`
     border-radius: 6px;
   }
 `;
-
 const AddButton = styled.button`
   background: #28a745;
   color: white;
@@ -70,7 +65,6 @@ const AddButton = styled.button`
   border: none;
   cursor: pointer;
 `;
-
 const Form = styled.div`
   margin-top: 20px;
   input, select, textarea {
@@ -90,8 +84,6 @@ const Form = styled.div`
   .submit { background-color: #007bff; color: white; }
   .cancel { background-color: #6c757d; color: white; }
 `;
-
-// 예약 시간 버튼 스타일
 const TimeButton = styled.button`
   background: ${({ active, disabled }) =>
     disabled ? '#ececec'
@@ -110,11 +102,14 @@ const TimeButton = styled.button`
   cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   transition: 0.1s;
 `;
-
 const departments = ['보철과', '교정과', '치주과'];
-const times = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+const HOUR_MAP = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+const splitAmPm = (list) => ({
+  am: list.filter(h => +h.split(':')[0] < 12),
+  pm: list.filter(h => +h.split(':')[0] >= 12)
+});
 
-const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
+const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) => {
   const [procedures, setProcedures] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -125,20 +120,26 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
     department: '',
     time: ''
   });
-  const [reservedTimes, setReservedTimes] = useState([]);
 
-  // 예약 현황과 연동하여 예약된 시간대 비활성화
-  useEffect(() => {
-    if (!formData.date || !formData.department) {
-      setReservedTimes([]);
-      return;
-    }
-    const eventsForDate = events[formData.date] || [];
-    const reserved = eventsForDate
+  // 예약된 시간 계산 (ReservationModal과 동일)
+  const reservedTimes = useMemo(() => {
+    if (!formData.department || !formData.date || !Array.isArray(events[formData.date])) return [];
+    return events[formData.date]
       .filter(e => e.department === formData.department)
-      .map(e => e.time);
-    setReservedTimes(reserved);
-  }, [formData.date, formData.department, JSON.stringify(events)]);
+      .flatMap(e => {
+        if (!e.time) return [];
+        if (e.time.includes('~')) {
+          const [start, end] = e.time.split('~');
+          const idxStart = HOUR_MAP.indexOf(start);
+          const idxEnd = HOUR_MAP.indexOf(end);
+          return HOUR_MAP.slice(idxStart, idxEnd + 1);
+        }
+        if (e.time.includes(',')) return e.time.split(',');
+        return [e.time];
+      });
+  }, [formData.department, formData.date, events]);
+
+  const { am, pm } = splitAmPm(HOUR_MAP);
 
   // 시술 이력 로딩
   useEffect(() => {
@@ -160,7 +161,6 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
       alert("모든 필수 입력값을 채워주세요!");
       return;
     }
-    // name, birth는 반드시 최상위에 string으로 포함
     const newEntry = {
       ...formData,
       name: patient.name,
@@ -168,6 +168,22 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
     };
     try {
       await addProcedure(newEntry);
+      try {
+        await addAppointment({
+          name: patient.name,
+          birth: patient.birth,
+          reservationDate: date,
+          time,
+          department,
+          doctor,
+          memo: formData.note,
+          phone: patient.phone || '-',
+          gender: patient.gender || '-',
+          status: "대기" // 상태 고정
+        });
+      } catch (err) {
+        alert("예약 등록에 실패했습니다.\n(이미 예약된 시간일 수 있습니다.)");
+      }
       setProcedures([newEntry, ...procedures]);
       setFormData({
         title: '',
@@ -178,6 +194,10 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
         time: ''
       });
       setShowForm(false);
+      // ---- 예약 정보 events 최신화! ----
+      if (fetchEvents) fetchEvents();
+      // ---- 임시 강제 새로고침 (테스트/임시)
+      // window.location.reload();
     } catch (err) {
       console.error("시술 추가 실패", err);
       alert("시술 추가에 실패했습니다.");
@@ -190,7 +210,6 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
         <h3>
           {patient ? `${patient.name} (${patient.birth}) 시술 이력` : ''}
         </h3>
-
         <Timeline>
           {procedures.length === 0 ? (
             <p>등록된 시술 이력이 없습니다.</p>
@@ -206,14 +225,11 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
             ))
           )}
         </Timeline>
-
         <AddButton onClick={() => setShowForm(!showForm)}>
           {showForm ? '입력 취소' : '+ 시술 추가'}
         </AddButton>
-
         {showForm && (
           <Form>
-            {/* 진료과 선택 */}
             <select
               value={formData.department}
               onChange={e => setFormData({ ...formData, department: e.target.value, time: '' })}
@@ -223,41 +239,43 @@ const ProcedureModal = ({ open, onClose, patient, events = {} }) => {
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
-            {/* 날짜 선택 */}
             <input
               type="date"
               value={formData.date}
               onChange={e => setFormData({ ...formData, date: e.target.value, time: '' })}
             />
-            {/* 시간 버튼 (예약된 시간 비활성화) */}
-            <div style={{ margin: '10px 0 6px 0', fontWeight: 500, color: '#555' }}>오전</div>
-            <div>
-              {times.slice(0,2).map(t => (
-                <TimeButton
-                  key={t}
-                  type="button"
-                  disabled={reservedTimes.includes(t)}
-                  active={formData.time === t}
-                  onClick={() => setFormData({ ...formData, time: t })}
-                >
-                  {t}
-                </TimeButton>
-              ))}
-            </div>
-            <div style={{ margin: '12px 0 6px 0', fontWeight: 500, color: '#555' }}>오후</div>
-            <div>
-              {times.slice(2).map(t => (
-                <TimeButton
-                  key={t}
-                  type="button"
-                  disabled={reservedTimes.includes(t)}
-                  active={formData.time === t}
-                  onClick={() => setFormData({ ...formData, time: t })}
-                >
-                  {t}
-                </TimeButton>
-              ))}
-            </div>
+            {formData.department && formData.date && (
+              <>
+                {am.length > 0 && <div style={{ margin: '10px 0 2px 0', fontWeight: 600, color: '#007bff' }}>오전</div>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                  {am.map(t => (
+                    <TimeButton
+                      key={t}
+                      type="button"
+                      disabled={reservedTimes.includes(t)}
+                      active={formData.time === t}
+                      onClick={() => !reservedTimes.includes(t) && setFormData({ ...formData, time: t })}
+                    >
+                      {t}
+                    </TimeButton>
+                  ))}
+                </div>
+                {pm.length > 0 && <div style={{ margin: '10px 0 2px 0', fontWeight: 600, color: '#007bff' }}>오후</div>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                  {pm.map(t => (
+                    <TimeButton
+                      key={t}
+                      type="button"
+                      disabled={reservedTimes.includes(t)}
+                      active={formData.time === t}
+                      onClick={() => !reservedTimes.includes(t) && setFormData({ ...formData, time: t })}
+                    >
+                      {t}
+                    </TimeButton>
+                  ))}
+                </div>
+              </>
+            )}
             <input
               placeholder="시술명 예: 라미네이트"
               value={formData.title}
