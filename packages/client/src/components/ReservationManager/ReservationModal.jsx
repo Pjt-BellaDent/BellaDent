@@ -11,7 +11,6 @@ const ModalBackground = styled.div`
   align-items: center;
   z-index: 1000;
 `;
-
 const ModalBox = styled.div`
   background: white;
   padding: 24px;
@@ -19,7 +18,6 @@ const ModalBox = styled.div`
   width: 400px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 `;
-
 const Field = styled.div`
   margin-bottom: 16px;
   label {
@@ -39,13 +37,11 @@ const Field = styled.div`
     height: 60px;
   }
 `;
-
 const BirthRow = styled.div`
   display: flex;
   gap: 6px;
   > select { flex: 1; }
 `;
-
 const TimeGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -93,7 +89,6 @@ const splitAmPm = (list) => ({
   pm: list.filter(h => +h.split(':')[0] >= 12)
 });
 
-// 드롭다운용 데이터 생성
 const getYearList = (start=1920) => {
   const now = new Date().getFullYear();
   return Array.from({length: now-start+1}, (_,i)=>String(now-i));
@@ -105,6 +100,13 @@ const getDayList = (year, month) => {
   return Array.from({length:last},(_,i)=>String(i+1).padStart(2,'0'));
 };
 
+// 진료과별 시술명 매핑
+const PROCEDURE_MAP = {
+  '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
+  '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
+  '치주과': ['치석제거', '치근활택술', '치은성형술'],
+};
+
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
   const [form, setForm] = useState({
     name: '',
@@ -113,6 +115,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     reservationDate: '',
     time: '',
     department: '',
+    title: '', // 시술명(드롭다운)
     memo: '',
     phone: '',
     gender: '',
@@ -127,7 +130,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   // ✅ 시간 복수 선택
   const [selectedTimes, setSelectedTimes] = useState([]);
 
-  // 예약 중복된 시간 목록 구하기
+  // 예약 중복된 시간 목록 구하기 (기존 로직 그대로)
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.reservationDate || !Array.isArray(eventsForDate)) return [];
     return eventsForDate
@@ -153,6 +156,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         reservationDate: initialData.reservationDate || '',
         time: initialData.time || '',
         department: initialData.department || '',
+        title: initialData.title || '',
         memo: initialData.memo || initialData.notes || '',
         phone: initialData.phone || '',
         gender: initialData.gender || '',
@@ -178,6 +182,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         reservationDate: selectedDate || today,
         time: '',
         department: '',
+        title: '',
       }));
       setSelectedTimes([]);
       setBirthYear(''); setBirthMonth(''); setBirthDay('');
@@ -195,7 +200,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value, ...(name === 'department' ? { time: '' } : {}) }));
+    setForm(prev => ({ ...prev, [name]: value, ...(name === 'department' ? { title: '' } : {}) }));
     if (name === 'department') setSelectedTimes([]);
   };
 
@@ -216,7 +221,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department) {
+    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
@@ -275,13 +280,29 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         </Field>
         <Field>
           <label>진료과</label>
-          <select name="department" value={form.department} onChange={handleChange}>
+          <select name="department" value={form.department} onChange={handleChange} required>
             <option value="">선택</option>
             <option value="보철과">보철과</option>
             <option value="교정과">교정과</option>
             <option value="치주과">치주과</option>
           </select>
         </Field>
+        {form.department && (
+          <Field>
+            <label>시술명</label>
+            <select
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+            >
+              <option value="">선택</option>
+              {PROCEDURE_MAP[form.department].map(title => (
+                <option key={title} value={title}>{title}</option>
+              ))}
+            </select>
+          </Field>
+        )}
         {form.department && form.reservationDate && (
           <>
             {am.length > 0 && <AmPmLabel>오전</AmPmLabel>}

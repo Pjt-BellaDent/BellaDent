@@ -128,22 +128,42 @@ const ModalContent = styled.div`
   }
 `;
 
+const DEPT_OPTIONS = [
+  { label: '전체', value: '' },
+  { label: '보철과', value: '보철과' },
+  { label: '교정과', value: '교정과' },
+  { label: '치주과', value: '치주과' }
+];
+
 export default function Dashboard() {
   const reservationRef = useRef(null);
   const procedureRef = useRef(null);
   const [appointments, setAppointments] = useState([]);
+  const [procedures, setProcedures] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [selectedDept, setSelectedDept] = useState('');
   const [modalData, setModalData] = useState({ visible: false, title: '', data: [] });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const today = new Date().toISOString().slice(0, 10);
+        // 예약, 시술 데이터
         const resAppointments = await fetch('http://localhost:3000/appointments/today');
         const appointmentsData = await resAppointments.json();
         setAppointments(appointmentsData);
+
+        const resProcedures = await fetch('http://localhost:3000/procedures/today');
+        setProcedures(await resProcedures.json());
+
+        // 최근 활동 (임시: appointments, procedures 최근 10개 merge)
+        const resActivities = await fetch('http://localhost:3000/activities/recent');
+        setActivities(await resActivities.json());
+
+        // 차트 데이터(기존과 동일)
         const resChart = await fetch('http://localhost:3000/stats/chart');
         const stats = await resChart.json();
 
-        // 예약 추이 라인 차트
         new Chart(reservationRef.current, {
           type: 'line',
           data: {
@@ -162,7 +182,6 @@ export default function Dashboard() {
           }
         });
 
-        // 시술 통계 바 차트
         new Chart(procedureRef.current, {
           type: 'bar',
           data: {
@@ -186,19 +205,36 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  // 진료과 필터링
+  const filteredAppointments = appointments.filter(a => selectedDept ? a.department === selectedDept : true);
+
+  // 카드용 데이터
+  const todayTreatmentCount = filteredAppointments.filter(a => a.status === '진료중' || a.status === '진료완료').length;
+  const todayReserveCount = filteredAppointments.length;
+  const todayWaitingCount = filteredAppointments.filter(a => a.status === '대기').length;
+
+  // 최근 활동 예시 표출용
+  // activities = [{ type: '예약등록', target: '윤성훈', time: '2025-06-05 14:22' }, ...]
+  const recentActivities = activities.length > 0 ? activities : [
+    { type: '예약 등록', target: '윤성훈', time: '2025-06-05 14:22:12' },
+    { type: '진료 완료', target: '김하나', time: '2025-06-05 13:15:32' },
+    { type: '시술 등록', target: '홍길동', time: '2025-06-05 10:00:40' },
+  ];
+
   const showModal = (title, data) => {
     setModalData({ visible: true, title, data });
   };
+
   return (
     <Wrapper>
       <Title>대시보드</Title>
 
       <Filter>
-        <label>의료진:</label>
-        <select>
-          <option>전체</option>
-          <option>김치과 원장</option>
-          <option>홍의사</option>
+        <label>진료과:</label>
+        <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
+          {DEPT_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
         <label>기간:</label>
         <select>
@@ -208,17 +244,17 @@ export default function Dashboard() {
       </Filter>
 
       <CardRow>
-        <Card onClick={() => showModal('오늘 진료 일정', appointments)}>
+        <Card onClick={() => showModal('오늘 진료 일정', filteredAppointments.filter(a => a.status === '진료중' || a.status === '진료완료'))}>
           <div>오늘 진료</div>
-          <strong>{appointments.length}명</strong>
+          <strong>{todayTreatmentCount}명</strong>
         </Card>
-        <Card onClick={() => showModal('예약 건수 상세', appointments)}>
+        <Card onClick={() => showModal('예약 건수 상세', filteredAppointments)}>
           <div>예약 건수</div>
-          <strong>{appointments.length + 5}건</strong>
+          <strong>{todayReserveCount}건</strong>
         </Card>
-        <Card onClick={() => showModal('대기 환자 목록', appointments.filter(x => x.status === '대기'))}>
+        <Card onClick={() => showModal('대기 환자 목록', filteredAppointments.filter(x => x.status === '대기'))}>
           <div>대기 환자</div>
-          <strong>{appointments.filter(x => x.status === '대기').length}명</strong>
+          <strong>{todayWaitingCount}명</strong>
         </Card>
       </CardRow>
 
@@ -236,9 +272,12 @@ export default function Dashboard() {
       <ActivityBox>
         <h4>최근 활동</h4>
         <ul>
-          <li>📝 홍길동 환자 등록 (05-13)</li>
-          <li>💊 김하나 진료 완료 (05-13)</li>
-          <li>📅 이철수 예약 등록 (05-14 예정)</li>
+          {recentActivities.map((act, i) => (
+            <li key={i}>
+              {act.type} - <strong>{act.target}</strong>
+              <span style={{ marginLeft: 12, color: '#888' }}>{act.time}</span>
+            </li>
+          ))}
         </ul>
       </ActivityBox>
 
@@ -250,16 +289,17 @@ export default function Dashboard() {
           ) : (
             <table>
               <thead>
-                <tr><th>시간</th><th>이름</th><th>시술</th><th>특이사항</th><th>의료진</th></tr>
+                <tr><th>시간</th><th>이름</th><th>시술</th><th>특이사항</th><th>진료과</th><th>의료진</th></tr>
               </thead>
               <tbody>
                 {modalData.data.map((item, i) => (
                   <tr key={i}>
                     <td>{item.time}</td>
                     <td>{item.name}</td>
-                    <td>{item.procedure}</td>
-                    <td>{item.note}</td>
-                    <td>{item.doctor}</td>
+                    <td>{item.title || item.procedure || '-'}</td>
+                    <td>{item.memo || item.note || '-'}</td>
+                    <td>{item.department || '-'}</td>
+                    <td>{item.doctor || '-'}</td>
                   </tr>
                 ))}
               </tbody>

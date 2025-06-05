@@ -182,6 +182,7 @@ function ReservationDetailModal({ data, onClose }) {
         <div style={{marginBottom:8}}><b>연락처</b>: {data.phone || '-'}</div>
         <div style={{marginBottom:8}}><b>성별</b>: {data.gender || '-'}</div>
         <div style={{marginBottom:8}}><b>진료과</b>: {data.department}</div>
+        <div style={{marginBottom:8}}><b>시술</b>: {data.title}</div>
         <div style={{marginBottom:8}}><b>상태</b>: {data.status}</div>
         <div style={{marginBottom:8}}><b>메모</b>: {data.memo || '-'}</div>
         <button onClick={onClose} style={{
