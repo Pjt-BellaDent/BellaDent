@@ -47,6 +47,7 @@ export const addProcedure = async (req, res) => {
     if (!data.name || !data.birth || !data.title || !data.date || !data.doctor || !data.department || !data.time) {
       return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
     }
+    // 예약 중복 체크 (필요 시)
     const conflict = await db.collection("appointments")
       .where("reservationDate", "==", data.date)
       .where("department", "==", data.department)
@@ -55,6 +56,9 @@ export const addProcedure = async (req, res) => {
     if (!conflict.empty) {
       return res.status(409).json({ error: "이미 해당 시간에 예약이 존재합니다." });
     }
+    // ⭐ 등록 시각 자동 추가!
+    data.createdAt = new Date().toISOString();
+
     await db.collection("procedures").add(data);
     res.status(201).json({ message: "시술 이력이 추가되었습니다." });
   } catch (err) {
