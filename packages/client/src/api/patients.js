@@ -17,6 +17,16 @@ export const fetchProceduresByName = async (name, birth) => {
   return await res.json();
 };
 
+// ✅ 예약 이력 조회: 이름+생년월일 모두 필요 (추가!)
+export const fetchAppointmentsByName = async (name, birth) => {
+  if (!name || !birth) throw new Error("이름과 생년월일이 필요합니다.");
+  const res = await fetch(
+    `${BASE}/appointments?name=${encodeURIComponent(name)}&birth=${encodeURIComponent(birth)}`
+  );
+  if (!res.ok) throw new Error("예약 이력 불러오기 실패");
+  return await res.json();
+};
+
 // 시술 추가 (body에 반드시 name, birth 등 포함)
 export const addProcedure = async (data) => {
   const res = await fetch(`${BASE}/procedures`, {

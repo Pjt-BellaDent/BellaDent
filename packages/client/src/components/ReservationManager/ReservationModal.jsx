@@ -16,7 +16,16 @@ const ModalBox = styled.div`
   padding: 24px;
   border-radius: 10px;
   width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+
+  /* --- 스크롤바 숨김 --- */
+  scrollbar-width: none;           /* Firefox */
+  -ms-overflow-style: none;        /* IE and Edge */
+  &::-webkit-scrollbar {           /* Chrome, Safari, Opera */
+    display: none;
+  }
 `;
 const Field = styled.div`
   margin-bottom: 16px;
@@ -83,21 +92,21 @@ const ButtonRow = styled.div`
   }
 `;
 
-const HOUR_MAP = ['10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+const HOUR_MAP = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 const splitAmPm = (list) => ({
   am: list.filter(h => +h.split(':')[0] < 12),
   pm: list.filter(h => +h.split(':')[0] >= 12)
 });
 
-const getYearList = (start=1920) => {
+const getYearList = (start = 1920) => {
   const now = new Date().getFullYear();
-  return Array.from({length: now-start+1}, (_,i)=>String(now-i));
+  return Array.from({ length: now - start + 1 }, (_, i) => String(now - i));
 };
-const getMonthList = () => Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+const getMonthList = () => Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 const getDayList = (year, month) => {
-  if (!year || !month) return Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0'));
+  if (!year || !month) return Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
   const last = new Date(Number(year), Number(month), 0).getDate();
-  return Array.from({length:last},(_,i)=>String(i+1).padStart(2,'0'));
+  return Array.from({ length: last }, (_, i) => String(i + 1).padStart(2, '0'));
 };
 
 // 진료과별 시술명 매핑
@@ -105,6 +114,11 @@ const PROCEDURE_MAP = {
   '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
   '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
   '치주과': ['치석제거', '치근활택술', '치은성형술'],
+};
+const DOCTOR_MAP = {
+  '보철과': ['김치과 원장', '이보철 선생'],
+  '교정과': ['박교정 원장', '정교정 선생'],
+  '치주과': ['최치주 원장', '한치주 선생'],
 };
 
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
@@ -115,7 +129,8 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     reservationDate: '',
     time: '',
     department: '',
-    title: '', // 시술명(드롭다운)
+    title: '',
+    doctor: '',         // 👈 담당의 추가!
     memo: '',
     phone: '',
     gender: '',
@@ -157,6 +172,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         time: initialData.time || '',
         department: initialData.department || '',
         title: initialData.title || '',
+        doctor: initialData.doctor || '', // 👈 담당의 값
         memo: initialData.memo || initialData.notes || '',
         phone: initialData.phone || '',
         gender: initialData.gender || '',
@@ -183,6 +199,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         time: '',
         department: '',
         title: '',
+        doctor: '',  // 👈 담당의 값
       }));
       setSelectedTimes([]);
       setBirthYear(''); setBirthMonth(''); setBirthDay('');
@@ -200,7 +217,11 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value, ...(name === 'department' ? { title: '' } : {}) }));
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'department' ? { title: '', doctor: '' } : {}) // 진료과 바뀌면 시술명/의사 초기화
+    }));
     if (name === 'department') setSelectedTimes([]);
   };
 
@@ -215,21 +236,21 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   };
 
   const isContinuous = (arr) => {
-    const idx = arr.map(t => HOUR_MAP.indexOf(t)).sort((a,b) => a-b);
-    for (let i=1; i<idx.length; ++i) if (idx[i] !== idx[i-1]+1) return false;
+    const idx = arr.map(t => HOUR_MAP.indexOf(t)).sort((a, b) => a - b);
+    for (let i = 1; i < idx.length; ++i) if (idx[i] !== idx[i - 1] + 1) return false;
     return true;
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title) {
+    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title || !form.doctor) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
     // 연속 구간이면 10:00~11:00 식으로, 비연속은 콤마로
-    const sorted = [...selectedTimes].sort((a,b)=>HOUR_MAP.indexOf(a)-HOUR_MAP.indexOf(b));
+    const sorted = [...selectedTimes].sort((a, b) => HOUR_MAP.indexOf(a) - HOUR_MAP.indexOf(b));
     let timeLabel;
     if (sorted.length === 1) timeLabel = sorted[0];
-    else if (isContinuous(sorted)) timeLabel = `${sorted[0]}~${sorted[sorted.length-1]}`;
+    else if (isContinuous(sorted)) timeLabel = `${sorted[0]}~${sorted[sorted.length - 1]}`;
     else timeLabel = sorted.join(',');
     onSave({ ...form, time: timeLabel });
   };
@@ -250,15 +271,15 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
           <BirthRow>
             <select value={birthYear} onChange={e => setBirthYear(e.target.value)}>
               <option value="">년</option>
-              {getYearList().map(y=>(<option key={y} value={y}>{y}년</option>))}
+              {getYearList().map(y => (<option key={y} value={y}>{y}년</option>))}
             </select>
             <select value={birthMonth} onChange={e => setBirthMonth(e.target.value)}>
               <option value="">월</option>
-              {getMonthList().map(m=>(<option key={m} value={m}>{m}월</option>))}
+              {getMonthList().map(m => (<option key={m} value={m}>{m}월</option>))}
             </select>
             <select value={birthDay} onChange={e => setBirthDay(e.target.value)}>
               <option value="">일</option>
-              {getDayList(birthYear, birthMonth).map(d=>(<option key={d} value={d}>{d}일</option>))}
+              {getDayList(birthYear, birthMonth).map(d => (<option key={d} value={d}>{d}일</option>))}
             </select>
           </BirthRow>
         </Field>
@@ -287,6 +308,22 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
             <option value="치주과">치주과</option>
           </select>
         </Field>
+        {form.department && (
+          <Field>
+            <label>담당의</label>
+            <select
+              name="doctor"
+              value={form.doctor}
+              onChange={handleChange}
+              required
+            >
+              <option value="">선택</option>
+              {DOCTOR_MAP[form.department].map(doctor => (
+                <option key={doctor} value={doctor}>{doctor}</option>
+              ))}
+            </select>
+          </Field>
+        )}
         {form.department && (
           <Field>
             <label>시술명</label>

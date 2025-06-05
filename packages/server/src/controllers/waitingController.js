@@ -7,6 +7,23 @@ const roomToDepartment = {
   '3': '치주과',
 };
 const departmentToRoom = Object.fromEntries(Object.entries(roomToDepartment).map(([k, v]) => [v, k]));
+
+// 환자별 최신 시술 불러오기 함수 (비동기)
+async function getLatestProcedure(name, birth) {
+  try {
+    const snapshot = await db.collection("procedures")
+      .where("name", "==", name)
+      .where("birth", "==", birth)
+      .orderBy("date", "desc")
+      .limit(1)
+      .get();
+    if (snapshot.empty) return null;
+    return snapshot.docs[0].data();
+  } catch {
+    return null;
+  }
+}
+
 export const getWaitingStatus = async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   try {
@@ -14,22 +31,43 @@ export const getWaitingStatus = async (req, res) => {
       .where('reservationDate', '==', today)
       .get();
 
-    const rooms = { '1': { inTreatment: '', waiting: [] }, '2': { inTreatment: '', waiting: [] }, '3': { inTreatment: '', waiting: [] } };
-    const departmentToRoom = { '보철과': '1', '교정과': '2', '치주과': '3' };
-    let debugState = [];
+    const rooms = {
+      '1': { inTreatment: null, waiting: [] },
+      '2': { inTreatment: null, waiting: [] },
+      '3': { inTreatment: null, waiting: [] }
+    };
 
-    snapshot.docs.forEach(doc => {
+    // 병렬 비동기 처리
+    const promises = snapshot.docs.map(async doc => {
       const data = doc.data();
       const roomKey = departmentToRoom[data.department];
       if (!roomKey) return;
-      // 확장: 이름+생년월일 모두 넘기기 위해 waiting.push({ name, birth })
+
+      // 최신 시술 정보 가져오기
+      const latestProcedure = await getLatestProcedure(data.name, data.birth);
+      const doctor = latestProcedure?.doctor || null;
+      const procedureTitle = latestProcedure?.title || latestProcedure?.name || null;
+
       if (data.status === '진료중') {
-        rooms[roomKey].inTreatment = { name: data.name, birth: data.birth };
+        rooms[roomKey].inTreatment = {
+          name: data.name,
+          birth: data.birth,
+          doctor,
+          procedureTitle,
+          memo: data.memo || null,
+        };
       } else if (data.status === '대기') {
-        rooms[roomKey].waiting.push({ name: data.name, birth: data.birth });
+        rooms[roomKey].waiting.push({
+          name: data.name,
+          birth: data.birth,
+          doctor,
+          procedureTitle,
+          memo: data.memo || null,
+        });
       }
-      debugState.push({ name: data.name, birth: data.birth, department: data.department, status: data.status });
     });
+
+    await Promise.all(promises);
 
     res.json(rooms);
   } catch (err) {
