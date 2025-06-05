@@ -8,23 +8,22 @@ function TreatmentInfo_2() {
         <img
           src={dentistry}
           alt="dentistry"
-          className="w-full h-50 object-cover"/>
-       
-        <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20">
-        
-          <h2 >
+          className="w-full h-50 object-cover"
+        />
+
+        <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20 text-[32px]">
+          <h2>
             <b>비급여 항목 안내</b>
           </h2>
         </p>
-         <div className='mt-16 mb-3 mx-5'>
-        </div>
+        <div className="mt-16 mb-3 mx-5"></div>
       </div>
 
-      <div className="max-w-360 mx-auto">
+      <div className="max-w-300 mx-auto">
         <title>non-covered items</title>
 
         <div>
-          <h3 className="py-2.5">
+          <h3 className="text-[24px] py-2.5">
             <b>제증명수수료</b>
           </h3>
           <p>
@@ -35,7 +34,7 @@ function TreatmentInfo_2() {
             2. 기본 1통 이외에 추가발급을 요할 때는 추가 1통당 1,000원. 접수료,
             진찰료 등은 별도로 산정하지 못함
           </p>
-          <table className="max-w-360 mx-auto mt-4 ">
+          <table className="max-w-300 mx-auto mt-4 ">
             <tr>
               <th className="w-60 bg-blue-700 text-stone-50">구분</th>
               <th className="w-180 bg-blue-700 text-stone-50">비급여항목</th>
@@ -111,7 +110,7 @@ function TreatmentInfo_2() {
             </tr>
           </table>
           <div>
-            <h4 className="mt-20 mb-6">
+            <h4 className="text-[24px] mt-20 mb-6">
               <b>비급여항목임플란트</b>
             </h4>
             <table className="my-16,my-3">
@@ -166,7 +165,7 @@ function TreatmentInfo_2() {
           </div>
 
           <div>
-            <h5 className="mt-20 mb-6">
+            <h5 className="text-[24px] mt-20 mb-6">
               <b>비급여항목치은이식성형</b>
             </h5>
 
@@ -215,7 +214,7 @@ function TreatmentInfo_2() {
             </table>
           </div>
           <div>
-            <h6 className="mt-20 mb-6">
+            <h6 className="text-[24px] mt-20 mb-6">
               <b>비급여항목레진</b>
             </h6>
             <table>
@@ -259,7 +258,7 @@ function TreatmentInfo_2() {
             </table>
           </div>
           <div>
-            <h6 className="mt-20 mb-6">
+            <h6 className="text-[24px] mt-20 mb-6">
               <b>비급여항목보존 및 보철치료</b>
             </h6>
 
@@ -323,7 +322,7 @@ function TreatmentInfo_2() {
             </table>
           </div>
           <div>
-            <h6 className="mt-20 mb-6">
+            <h6 className="text-[24px] mt-20 mb-6">
               <b>비급여항목인레이,온레이</b>
             </h6>
 
@@ -358,7 +357,7 @@ function TreatmentInfo_2() {
             </table>
 
             <div>
-              <h6 className="mt-20 mb-6">
+              <h6 className=" text-[24px] mt-20 mb-6">
                 <b>비급여항목교정치료</b>
               </h6>
 
@@ -452,7 +451,7 @@ function TreatmentInfo_2() {
               </table>
 
               <div>
-                <h6 className="mt-20 mb-6 ">
+                <h6 className="text-[24px] mt-20 mb-6 ">
                   <b>비급여항목틀니</b>
                 </h6>
 
@@ -524,7 +523,7 @@ function TreatmentInfo_2() {
                 </table>
               </div>
               <div>
-                <h6 className="mt-20 mb-6">
+                <h6 className="text-[24px] mt-20 mb-6">
                   <b>비급여항목기타진료</b>
                 </h6>
 
@@ -603,6 +602,7 @@ function TreatmentInfo_2() {
                   </tr>
                 </table>
               </div>
+              <div className="flex justify-center gap-2 mb-[165px] mx-5"></div>
             </div>
           </div>
         </div>
