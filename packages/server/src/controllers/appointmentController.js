@@ -72,6 +72,25 @@ export const getMonthlyAppointments = async (req, res) => {
   }
 };
 
+// ⭐ 이름+생년월일로 예약 이력 전체 조회(신규 추가)
+export const getAppointmentsByName = async (req, res) => {
+  try {
+    const { name, birth } = req.query;
+    if (!name || !birth) {
+      return res.status(400).json({ error: "이름과 생년월일이 필요합니다." });
+    }
+    const snapshot = await db
+      .collection("appointments")
+      .where("name", "==", name)
+      .where("birth", "==", birth)
+      .get();
+    const result = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const updateAppointment = async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
@@ -173,6 +192,7 @@ export const deleteAppointment = async (req, res) => {
     res.status(500).json({ error: "삭제 중 오류가 발생했습니다." });
   }
 };
+
 export const getAvailableTimes = async (req, res) => {
   try {
     const { date, department } = req.query;

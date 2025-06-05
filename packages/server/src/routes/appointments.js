@@ -1,5 +1,3 @@
-// appointments.js (백엔드)
-
 import express from "express";
 import { db } from "../config/firebase.js";
 import {
@@ -10,7 +8,8 @@ import {
   createAppointment,
   updateAppointment,
   deleteAppointment,
-  getAvailableTimes
+  getAvailableTimes,
+  getAppointmentsByName // ⭐ 추가!
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
@@ -18,8 +17,16 @@ const router = express.Router();
 router.get("/today", getTodayAppointments);
 router.get("/stats/chart", getDashboardStats);
 router.get("/week", getWeeklyReservations);
-router.get("/available-times", getAvailableTimes); // 예약가능 시간조회 라우트
-router.get("/", getMonthlyAppointments);
+router.get("/available-times", getAvailableTimes);
+
+// ⭐⭐ 핵심! name+birth 쿼리 있으면 getAppointmentsByName로 전체 예약 이력 반환
+router.get("/", (req, res, next) => {
+  if (req.query.name && req.query.birth) {
+    return getAppointmentsByName(req, res, next);
+  }
+  return getMonthlyAppointments(req, res, next);
+});
+
 router.post('/', createAppointment);
 
 // 진료완료 처리 라우트
@@ -38,7 +45,7 @@ router.put('/complete', async (req, res) => {
       return res.status(404).json({ error: 'Appointment not found' });
     }
     await snapshot.docs[0].ref.update({ status: '진료완료', completedAt: Date.now() });
-    // === 이 부분에서 users의 lastVisit도 오늘로 업데이트 ===
+    // === users의 lastVisit도 오늘로 업데이트 ===
     const userSnap = await db.collection('users')
       .where('name', '==', name)
       .where('birth', '==', birth)
@@ -62,7 +69,7 @@ router.put('/complete-by-name', async (req, res) => {
       .where('name', '==', name)
       .where('birth', '==', birth)
       .where('department', '==', department)
-      .where('reservationDate', '==', today)  // <<=== 날짜 조건 추가!!
+      .where('reservationDate', '==', today)  // 날짜 조건
       .where('status', 'in', ['대기', '진료중'])
       .get();
     if (snap.empty) {
@@ -71,7 +78,7 @@ router.put('/complete-by-name', async (req, res) => {
     const docRef = snap.docs[0].ref;
     await docRef.update({ status: '진료완료' });
 
-    // === 진료완료 → users.lastVisit 업데이트 ===
+    // 진료완료 → users.lastVisit 업데이트
     const userSnap = await db.collection('users')
       .where('name', '==', name)
       .where('birth', '==', birth)
@@ -85,7 +92,7 @@ router.put('/complete-by-name', async (req, res) => {
   }
 });
 
-// 👇 [추가] 진료중→대기로 변경하는 호출 취소 라우트
+// 👇 진료중→대기로 변경하는 호출 취소 라우트
 router.put('/back-to-waiting', async (req, res) => {
   const { name, department, birth } = req.body;
   try {
