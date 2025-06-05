@@ -1,19 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchProceduresByName } from '../../api/patients';
 
 const departmentToRoom = {
   '보철과': '1',
   '교정과': '2',
   '치주과': '3',
 };
-
 const roomToDepartment = {
   '1': '보철과',
   '2': '교정과',
   '3': '치주과',
 };
+const DEPARTMENTS = ['전체', '보철과', '교정과', '치주과'];
 
 const PatientDetailModal = ({ patient, onClose }) => {
+  const [procedures, setProcedures] = useState([]);
+  useEffect(() => {
+    if (patient?.name && patient?.birth) {
+      fetchProceduresByName(patient.name, patient.birth)
+        .then(setProcedures)
+        .catch(() => setProcedures([]));
+    } else {
+      setProcedures([]);
+    }
+  }, [patient]);
   if (!patient) return null;
   return (
     <div style={{
@@ -31,12 +42,15 @@ const PatientDetailModal = ({ patient, onClose }) => {
         <div style={{ marginTop: 22 }}>
           <strong>시술 이력:</strong>
           <ul style={{ margin: '12px 0 0 16px', padding: 0, color: '#2863cc' }}>
-            {(patient.procedures || [
-              { date: '2024-03-01', name: '스케일링' },
-              { date: '2024-05-02', name: '충치 치료' },
-            ]).map((p, i) => (
-              <li key={i}>{p.date} - {p.name}</li>
-            ))}
+            {procedures.length === 0 ? (
+              <li>등록된 시술 이력이 없습니다.</li>
+            ) : (
+              procedures.map((p, i) => (
+                <li key={i}>
+                  {p.date} - {p.title} / {p.doctor || '-'}{p.note ? ` : ${p.note}` : ''}
+                </li>
+            ))
+            )}
           </ul>
         </div>
       </div>
@@ -44,9 +58,24 @@ const PatientDetailModal = ({ patient, onClose }) => {
   );
 };
 
+// 호출 취소(=진료중→대기 전환) API 요청 함수
+const backToWaiting = async (name, birth, department, fetchWaitingList) => {
+  try {
+    await fetch('http://localhost:3000/appointments/back-to-waiting', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, birth, department })
+    });
+    fetchWaitingList();
+  } catch (e) {
+    alert('호출 취소(대기로 전환)에 실패했습니다.');
+  }
+};
+
 const WaitingManager = () => {
   const [appointments, setAppointments] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedDept, setSelectedDept] = useState('전체');
   const navigate = useNavigate();
 
   const fetchWaitingList = async () => {
@@ -91,9 +120,6 @@ const WaitingManager = () => {
       });
       if (!res.ok) throw new Error('진료 완료 실패');
       fetchWaitingList();   // 대기현황 리프레시
-      // ⬇️ 진료완료 후 환자 목록도 새로고침 필요하면
-      // (예: 환자 목록 페이지를 전역 상태관리하거나 부모에서 ref로 접근해 fetchPatients 호출)
-      // 또는, 상태값/컨텍스트로 환자목록에 강제 리프레시 트리거 전달
     } catch (error) {
       alert('진료 완료 처리 실패: ' + error.message);
     }
@@ -124,21 +150,38 @@ const WaitingManager = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // 진료과 필터링
+  const filteredAppointments = selectedDept === '전체'
+    ? appointments
+    : appointments.filter(appt => appt.department === selectedDept);
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">진료 대기 관리</h2>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
         <button
           onClick={() => navigate('/waiting-status')}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          style={{ marginRight: 12 }}
         >
           모니터링
         </button>
+        <select
+          value={selectedDept}
+          onChange={e => setSelectedDept(e.target.value)}
+          style={{ padding: '7px 18px', borderRadius: 6, border: '1px solid #b0b5be', fontSize: 15 }}
+        >
+          {DEPARTMENTS.map(dept => (
+            <option key={dept} value={dept}>{dept === '전체' ? '전체 진료과' : dept}</option>
+          ))}
+        </select>
       </div>
-      {appointments.length === 0 ? (
+      {filteredAppointments.length === 0 ? (
         <p>대기 중인 환자가 없습니다.</p>
       ) : (
-        appointments.map((appt, index) => (
+        filteredAppointments.map((appt, index) => (
           <div
             key={appt.name + appt.birth + appt.status + appt.department}
             className="border p-4 rounded-xl shadow mb-4"
@@ -166,6 +209,15 @@ const WaitingManager = () => {
                     style={{ marginBottom: '6px' }}
                   >
                     호출
+                  </button>
+                )}
+                {appt.status === '진료중' && (
+                  <button
+                    onClick={() => backToWaiting(appt.name, appt.birth, appt.department, fetchWaitingList)}
+                    className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-600 font-bold"
+                    style={{ marginBottom: '6px' }}
+                  >
+                    호출 취소
                   </button>
                 )}
                 {(appt.status === '진료중' || appt.status === '대기') && (

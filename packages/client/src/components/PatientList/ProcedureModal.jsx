@@ -102,7 +102,20 @@ const TimeButton = styled.button`
   cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   transition: 0.1s;
 `;
-const departments = ['보철과', '교정과', '치주과'];
+
+// 과별 시술명, 담당의 매핑
+const PROCEDURE_MAP = {
+  '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
+  '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
+  '치주과': ['치석제거', '치근활택술', '치은성형술'],
+};
+const DOCTOR_MAP = {
+  '보철과': ['김치과 원장', '이보철 선생'],
+  '교정과': ['박교정 원장', '정교정 선생'],
+  '치주과': ['최치주 원장', '한치주 선생'],
+};
+const departments = Object.keys(PROCEDURE_MAP);
+
 const HOUR_MAP = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 const splitAmPm = (list) => ({
   am: list.filter(h => +h.split(':')[0] < 12),
@@ -121,7 +134,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
     time: ''
   });
 
-  // 예약된 시간 계산 (ReservationModal과 동일)
+  // 예약된 시간 계산
   const reservedTimes = useMemo(() => {
     if (!formData.department || !formData.date || !Array.isArray(events[formData.date])) return [];
     return events[formData.date]
@@ -157,7 +170,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
 
   const handleAdd = async () => {
     const { title, date, doctor, department, time } = formData;
-    if (!title.trim() || !date || !doctor.trim() || !department || !time) {
+    if (!title || !date || !doctor || !department || !time) {
       alert("모든 필수 입력값을 채워주세요!");
       return;
     }
@@ -179,7 +192,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
           memo: formData.note,
           phone: patient.phone || '-',
           gender: patient.gender || '-',
-          status: "대기" // 상태 고정
+          status: "대기"
         });
       } catch (err) {
         alert("예약 등록에 실패했습니다.\n(이미 예약된 시간일 수 있습니다.)");
@@ -194,10 +207,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
         time: ''
       });
       setShowForm(false);
-      // ---- 예약 정보 events 최신화! ----
       if (fetchEvents) fetchEvents();
-      // ---- 임시 강제 새로고침 (테스트/임시)
-      // window.location.reload();
     } catch (err) {
       console.error("시술 추가 실패", err);
       alert("시술 추가에 실패했습니다.");
@@ -217,8 +227,12 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
             procedures.map((p, i) => (
               <Entry key={i}>
                 <h4>{p.title}</h4>
-                <div className="date">
-                  {new Date(p.date).toLocaleString('ko-KR')} / {p.doctor} / {p.department} / {p.time}
+                <div className="date" style={{ color: "#666" }}>
+                  <strong>담당의사:</strong> {p.doctor || '-'}<br/>
+                  <strong>진료과:</strong> {p.department || '-'}<br/>
+                  <strong>시술 시간:</strong> {p.time || '-'}<br/>
+                  <strong>시술일자:</strong> {p.date ? new Date(p.date).toLocaleDateString('ko-KR') : '-'}<br/>
+                  <strong>등록일자:</strong> {p.createdAt ? new Date(p.createdAt).toLocaleString('ko-KR') : '-'}
                 </div>
                 <div className="note">{p.note}</div>
               </Entry>
@@ -232,13 +246,39 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
           <Form>
             <select
               value={formData.department}
-              onChange={e => setFormData({ ...formData, department: e.target.value, time: '' })}
+              onChange={e => setFormData({ ...formData, department: e.target.value, title: '', doctor: '', time: '' })}
             >
               <option value="">진료과 선택</option>
               {departments.map(d => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
+            {/* 시술명 드롭다운 */}
+            {formData.department && (
+              <select
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                required
+              >
+                <option value="">시술명 선택</option>
+                {PROCEDURE_MAP[formData.department].map(title => (
+                  <option key={title} value={title}>{title}</option>
+                ))}
+              </select>
+            )}
+            {/* 담당의사 드롭다운 */}
+            {formData.department && (
+              <select
+                value={formData.doctor}
+                onChange={e => setFormData({ ...formData, doctor: e.target.value })}
+                required
+              >
+                <option value="">담당의 선택</option>
+                {DOCTOR_MAP[formData.department].map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            )}
             <input
               type="date"
               value={formData.date}
@@ -276,16 +316,6 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
                 </div>
               </>
             )}
-            <input
-              placeholder="시술명 예: 라미네이트"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-            />
-            <input
-              placeholder="담당의 예: 김치과"
-              value={formData.doctor}
-              onChange={e => setFormData({ ...formData, doctor: e.target.value })}
-            />
             <textarea
               placeholder="시술 메모 또는 설명"
               value={formData.note}
