@@ -3,73 +3,71 @@ import styled from '@emotion/styled';
 import axios from 'axios';
 
 const Container = styled.div`
-  max-width: 900px;
-  margin: 40px auto;
+  max-width: 960px;
+  margin: 50px auto;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
+  padding: 48px;
 `;
 
 const TitleBox = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 32px;
+  text-align: center;
+  margin-bottom: 36px;
 `;
 
 const Title = styled.h2`
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  color: #222;
 `;
 
 const FormRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 24px;
+  margin-bottom: 28px;
 `;
 
 const FormGroup = styled.div`
   flex: 1;
-  min-width: 200px;
+  min-width: 220px;
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 6px;
-  font-weight: 500;
-  color: #444;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 15px;
-  background: #fafafa;
+  background: #f9f9f9;
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid #ccc;
   font-size: 15px;
-  background: #fafafa;
+  background: #f9f9f9;
 `;
 
 const Button = styled.button`
   background: #007bff;
   color: white;
-  padding: 12px 24px;
+  padding: 14px 28px;
   font-size: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 10px;
   transition: background 0.3s ease;
   &:hover {
     background-color: #0056b3;
@@ -78,14 +76,14 @@ const Button = styled.button`
 
 const Table = styled.table`
   width: 100%;
-  margin-top: 40px;
+  margin-top: 50px;
   border-collapse: collapse;
   font-size: 15px;
 `;
 
 const Th = styled.th`
   padding: 14px;
-  background: #f4f6fa;
+  background: #f1f3f6;
   text-align: left;
   border-bottom: 2px solid #ddd;
   color: #333;
@@ -98,7 +96,7 @@ const Td = styled.td`
 `;
 
 const EmptyMsg = styled.p`
-  margin-top: 40px;
+  margin-top: 50px;
   text-align: center;
   color: #888;
 `;
@@ -106,7 +104,7 @@ const EmptyMsg = styled.p`
 const OnsiteRegistration = () => {
   const [form, setForm] = useState({
     name: '',
-    birth: '',
+    rrn: '',
     gender: '',
     phone: '',
     address: ''
@@ -121,7 +119,7 @@ const OnsiteRegistration = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.birth || !form.gender || !form.phone) {
+    if (!form.name || !form.rrn || !form.gender || !form.phone) {
       alert('모든 필수 정보를 입력해주세요.');
       return;
     }
@@ -134,8 +132,33 @@ const OnsiteRegistration = () => {
     }
 
     setPatients(prev => [...prev, form]);
-    setForm({ name: '', birth: '', gender: '', phone: '', address: '' });
+    setForm({ name: '', rrn: '', gender: '', phone: '', address: '' });
   };
+
+  const handleRegister = async () => {
+  const newPatient = {
+    name: formData.name,
+    birth: formData.birth,
+    gender: formData.gender,
+    phone: formData.phone,
+    address: formData.address,
+    insuranceNumber: '123456-7890123',
+    firstVisitDate: new Date(),
+    lastVisitDate: new Date(),
+    allergies: '',
+    medications: '',
+    memo: '',
+  };
+
+  try {
+    await axios.post('http://localhost:3000/api/onsite/firestore', newPatient);
+    alert('등록 완료');
+  } catch (error) {
+    console.error('등록 실패:', error);
+    alert('등록 중 오류 발생');
+  }
+};
+
 
   return (
     <Container>
@@ -149,8 +172,14 @@ const OnsiteRegistration = () => {
             <Input name="name" value={form.name} onChange={handleChange} required />
           </FormGroup>
           <FormGroup>
-            <Label>생년월일</Label>
-            <Input type="date" name="birth" value={form.birth} onChange={handleChange} required />
+            <Label>주민등록번호</Label>
+            <Input
+              name="rrn"
+              placeholder="예: 000101-3******"
+              value={form.rrn}
+              onChange={handleChange}
+              required
+            />
           </FormGroup>
           <FormGroup>
             <Label>성별</Label>
@@ -179,7 +208,7 @@ const OnsiteRegistration = () => {
           <thead>
             <tr>
               <Th>이름</Th>
-              <Th>생년월일</Th>
+              <Th>주민등록번호</Th>
               <Th>성별</Th>
               <Th>전화번호</Th>
               <Th>주소</Th>
@@ -189,7 +218,7 @@ const OnsiteRegistration = () => {
             {patients.map((p, idx) => (
               <tr key={idx}>
                 <Td>{p.name}</Td>
-                <Td>{p.birth}</Td>
+                <Td>{p.rrn}</Td>
                 <Td>{p.gender}</Td>
                 <Td>{p.phone}</Td>
                 <Td>{p.address}</Td>
