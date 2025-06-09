@@ -1,3 +1,4 @@
+// src/config/firebase.js (ESM 문법, dotenv + firebase-admin/app)
 import dotenv from "dotenv";
 import { readFile } from "fs/promises";
 import { initializeApp, cert } from "firebase-admin/app";
@@ -9,6 +10,7 @@ dotenv.config();
 const serviceAccount = JSON.parse(
   await readFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, "utf8")
 );
+
 initializeApp({
   credential: cert(serviceAccount),
 });

@@ -29,7 +29,6 @@ const Filters = styled.div`
   }
 `;
 
-// 👇 events를 props로 받는 부분이 중요!
 const PatientList = ({ events }) => {
   const [patients, setPatients] = useState([]);
   const [proceduresData, setProceduresData] = useState({});
@@ -49,10 +48,10 @@ const PatientList = ({ events }) => {
 
       const procData = {};
       for (let p of res) {
-        if (!p.name || !p.birth) continue; // name과 birth 모두 있을 때만 시술 이력 조회
+        if (!p.name || !p.birth) continue;
         const history = await fetchProceduresByName(p.name, p.birth);
         procData[`${p.name}_${p.birth}`] = history;
-      }      
+      }
       setProceduresData(procData);
     } catch (err) {
       console.error("데이터 불러오기 실패", err);
@@ -72,12 +71,16 @@ const PatientList = ({ events }) => {
     );
   };
 
-  // 전체 환자 객체를 넘겨야 연락처/성별 등 누락 없음!
   const openProcedureModal = (patientObj) => {
     const patient = patients.find(
       p => p.name === patientObj.name && p.birth === patientObj.birth
     );
-    setSelectedPatient(patient); // 전체 객체 저장!
+    if (!patient) return;
+
+    setSelectedPatient({
+      ...patient,
+      userId: patient.id
+    });
     setProcedureModalOpen(true);
   };
 
@@ -158,14 +161,14 @@ const PatientList = ({ events }) => {
       <ProcedureModal
         open={procedureModalOpen}
         onClose={() => setProcedureModalOpen(false)}
-        patient={selectedPatient}   // 전체 환자 객체 전달!
+        patient={selectedPatient}
         events={events}
       />
 
       <SurveyModal
         open={surveyModalOpen}
         onClose={() => setSurveyModalOpen(false)}
-        patientName={selectedPatient ? selectedPatient.name : ''}
+        patient={selectedPatient}
       />
     </Container>
   );

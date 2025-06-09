@@ -1,75 +1,49 @@
+// src/controllers/waitingController.js
 import { db } from "../config/firebase.js";
 
-// 진료실 매핑
-const roomToDepartment = {
-  '1': '보철과',
-  '2': '교정과',
-  '3': '치주과',
-};
-const departmentToRoom = Object.fromEntries(Object.entries(roomToDepartment).map(([k, v]) => [v, k]));
-
-// 환자별 최신 시술 불러오기 함수 (비동기)
-async function getLatestProcedure(name, birth) {
-  try {
-    const snapshot = await db.collection("procedures")
-      .where("name", "==", name)
-      .where("birth", "==", birth)
-      .orderBy("date", "desc")
-      .limit(1)
-      .get();
-    if (snapshot.empty) return null;
-    return snapshot.docs[0].data();
-  } catch {
-    return null;
-  }
-}
-
+// 대기 현황 조회
 export const getWaitingStatus = async (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
   try {
-    const snapshot = await db.collection('appointments')
-      .where('reservationDate', '==', today)
-      .get();
+    const snapshot = await db.collection('waiting').get();
+    const waitingList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(waitingList);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-    const rooms = {
-      '1': { inTreatment: null, waiting: [] },
-      '2': { inTreatment: null, waiting: [] },
-      '3': { inTreatment: null, waiting: [] }
-    };
+// 대기 환자 추가
+export const addWaitingPatient = async (req, res) => {
+  try {
+    const data = req.body;
+    if (!data.name || !data.birth || !data.department) {
+      return res.status(400).json({ error: "이름, 생년월일, 진료과 필수" });
+    }
+    data.createdAt = new Date().toISOString();
+    const doc = await db.collection('waiting').add(data);
+    res.status(201).json({ id: doc.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-    // 병렬 비동기 처리
-    const promises = snapshot.docs.map(async doc => {
-      const data = doc.data();
-      const roomKey = departmentToRoom[data.department];
-      if (!roomKey) return;
+// 대기 환자 수정
+export const updateWaitingStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.collection('waiting').doc(id).update(req.body);
+    res.json({ message: "대기 환자 정보 수정 완료" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-      // 최신 시술 정보 가져오기
-      const latestProcedure = await getLatestProcedure(data.name, data.birth);
-      const doctor = latestProcedure?.doctor || null;
-      const procedureTitle = latestProcedure?.title || latestProcedure?.name || null;
-
-      if (data.status === '진료중') {
-        rooms[roomKey].inTreatment = {
-          name: data.name,
-          birth: data.birth,
-          doctor,
-          procedureTitle,
-          memo: data.memo || null,
-        };
-      } else if (data.status === '대기') {
-        rooms[roomKey].waiting.push({
-          name: data.name,
-          birth: data.birth,
-          doctor,
-          procedureTitle,
-          memo: data.memo || null,
-        });
-      }
-    });
-
-    await Promise.all(promises);
-
-    res.json(rooms);
+// 대기 환자 삭제
+export const deleteWaitingPatient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.collection('waiting').doc(id).delete();
+    res.json({ message: "대기 환자 삭제 완료" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

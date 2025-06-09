@@ -55,6 +55,8 @@ const ReservationManager = () => {
   // 예약 저장 (이름+생년월일 필수)
   const handleSave = async (formData) => {
     try {
+      console.log('저장할 데이터:', formData); // 데이터 확인용 로그
+
       if (!formData.name || !formData.birth) {
         alert('이름과 생년월일은 필수 입력입니다.');
         return;
@@ -117,7 +119,6 @@ const ReservationManager = () => {
           onDelete={handleDelete}
           onAdd={handleAdd}
         />
-        {/* 👇 환자목록에서 시술이력 추가 등 예약현황을 반영하고 싶을 때 events 전달 */}
       </RightContent>
       <ReservationModal
         open={modalOpen}

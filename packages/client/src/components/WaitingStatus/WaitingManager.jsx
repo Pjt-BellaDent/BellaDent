@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
 import { fetchProceduresByName, fetchAppointmentsByName } from '../../api/patients';
 
@@ -28,7 +29,7 @@ const PatientDetailModal = ({ patient, onClose }) => {
       fetchAppointmentsByName(patient.name, patient.birth)
         .then(data => setAppointments(data))
         .catch(() => setAppointments([]));
-        fetchProceduresByName(patient.name, patient.birth)
+      fetchProceduresByName(patient.name, patient.birth)
         .then(data => setProcedures(data))
         .catch(() => setProcedures([]));
     } else {
@@ -125,7 +126,7 @@ const WaitingManager = () => {
             department: roomToDepartment[roomKey],
             status: '진료중',
             doctor: value.inTreatment.doctor,
-            procedureTitle: value.inTreatment.procedureTitle, // 추가
+            procedureTitle: value.inTreatment.procedureTitle,
             memo: value.inTreatment.memo,
           });
         }
@@ -137,7 +138,7 @@ const WaitingManager = () => {
               department: roomToDepartment[roomKey],
               status: '대기',
               doctor: waitObj.doctor,
-              procedureTitle: waitObj.procedureTitle, // 추가
+              procedureTitle: waitObj.procedureTitle,
               memo: waitObj.memo,
             });
           }
