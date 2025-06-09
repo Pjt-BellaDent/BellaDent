@@ -1,5 +1,4 @@
 // src/controllers/appointmentsController.js
-// ERD 완전 호환 버전 (진료 예약/대기/통계)
 import { db } from "../config/firebase.js";
 
 // 오늘의 예약 전체 조회
@@ -84,7 +83,6 @@ export const getAppointmentsByName = async (req, res) => {
 // 예약 대시보드/통계 (주간/월간 등은 추가 함수로 분리 권장)
 export const getDashboardStats = async (req, res) => {
   try {
-    // 통계용 데이터 샘플, 필요 시 쿼리 직접 구현
     const stats = {
       reservations: [10, 12, 8, 15, 9, 5, 7],
       procedureLabels: ['라미네이트', '스케일링', '잇몸성형'],
@@ -96,20 +94,17 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
+// 월간 예약 조회 (date 필드 기준)
 export const getMonthlyAppointments = async (req, res) => {
   try {
     const { month } = req.query; // "YYYY-MM" 형식
-
     if (!month) {
       return res.status(400).json({ error: "month 쿼리 파라미터가 필요합니다." });
     }
-
-    // 예약일자 기준으로 필터링 (예: 예약일자 컬럼명이 reservationDate일 경우)
     const snapshot = await db.collection("appointments")
-      .where("reservationDate", ">=", `${month}-01`)
-      .where("reservationDate", "<=", `${month}-31`)
+      .where("date", ">=", `${month}-01`)
+      .where("date", "<=", `${month}-31`)
       .get();
-
     const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(appointments);
   } catch (err) {
@@ -117,7 +112,7 @@ export const getMonthlyAppointments = async (req, res) => {
   }
 };
 
-// 주간 예약 조회 예시 (이번 주 시작~끝 날짜 기준)
+// 주간 예약 조회 (date 필드 기준)
 export const getWeeklyReservations = async (req, res) => {
   try {
     const today = new Date();
@@ -130,10 +125,9 @@ export const getWeeklyReservations = async (req, res) => {
     const formatDate = (date) => date.toISOString().slice(0, 10);
 
     const snapshot = await db.collection("appointments")
-      .where("reservationDate", ">=", formatDate(monday))
-      .where("reservationDate", "<=", formatDate(sunday))
+      .where("date", ">=", formatDate(monday))
+      .where("date", "<=", formatDate(sunday))
       .get();
-
     const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(appointments);
   } catch (err) {
