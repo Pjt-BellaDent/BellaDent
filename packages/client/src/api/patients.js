@@ -2,7 +2,7 @@ const BASE = "http://localhost:3000";
 
 // 전체 환자 조회
 export const fetchAllPatients = async () => {
-  const res = await fetch(`${BASE}/patients`);
+  const res = await fetch(`${BASE}/users/patients/all`);
   if (!res.ok) throw new Error("환자 목록 불러오기 실패");
   return await res.json();
 };
@@ -40,7 +40,7 @@ export const addProcedure = async (data) => {
 
 // 환자 정보 수정
 export const updatePatient = async (id, data) => {
-  const res = await fetch(`${BASE}/patients/${id}`, {
+  const res = await fetch(`${BASE}/users/patients/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
@@ -51,7 +51,7 @@ export const updatePatient = async (id, data) => {
 
 // 환자 삭제
 export const deletePatient = async (id) => {
-  const res = await fetch(`${BASE}/patients/${id}`, {
+  const res = await fetch(`${BASE}/users/patients/${id}`, {
     method: "DELETE"
   });
   if (!res.ok) throw new Error("환자 삭제 실패");

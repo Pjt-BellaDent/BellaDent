@@ -32,23 +32,19 @@ import NoticeModal from './components/Notice/NoticeModal';
 import WaitingStatus from './components/WaitingStatus/WaitingStatus';
 import WaitingManager from './components/WaitingStatus/WaitingManager';
 import StaffSchedule from './components/StaffSchedule/StaffSchedule';
-import StaffScheduleList from './components/StaffSchedule/StaffScheduleList';
 import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
-import ReservationList from './components/ReservationManager/ReservationList.jsx';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
 import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
 import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
-import UserPermission from './components/GeneralSettings/UserPermission.jsx';
-import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
 
 function App() {
   return (
     <HospitalProvider>
       <Routes>
-        {/* 웹 프레임 내 라우트 */}
+        {/* 공개 웹 프레임 */}
         <Route path="/" element={<Frame />}>
           <Route index element={<Home />} />
           <Route path="SignIn" element={<SignIn />} />
@@ -72,28 +68,31 @@ function App() {
           <Route path="reviews" element={<Reviews />} />
         </Route>
 
-        {/* 관리자 페이지 라우트 */}
+        {/* 관리자/스태프/매니저 전용 대시보드 프레임 */}
         <Route path="/Dashboard" element={<DashboardFrame />}>
           <Route index element={<Dashboard />} />
+          {/* 공지/게시판(매니저, 관리자) */}
           <Route path="notice" element={<NoticeModal />} />
-          <Route path="waiting-manage/WaitingStatus" element={<WaitingStatus />} />
+          {/* 대기현황(스태프, 관리자) */}
           <Route path="waiting-manage" element={<WaitingManager />} />
-          <Route path="schedule" element={<StaffSchedule />} />
-          <Route path="staff-schedules" element={<StaffScheduleList />} />
-          <Route path="patients" element={<PatientList />} />
+          <Route path="waiting-status" element={<WaitingStatus />} />
+          {/* 예약관리(스태프, 매니저, 관리자) */}
           <Route path="reservations" element={<ReservationManager />} />
-          <Route path="reservations/list" element={<ReservationList />} />
+          {/* 직원일정(스태프, 관리자) */}
+          <Route path="schedule" element={<StaffSchedule />} />
+          {/* 환자관리(스태프, 관리자) */}
+          <Route path="patients" element={<PatientList />} />
+          {/* 문자발송(스태프, 관리자) */}
+          <Route path="sms" element={<Sms />} />
+          {/* 후기(매니저, 관리자) */}
+          <Route path="feedback" element={<Feedback />} />
+          {/* 챗봇설정, 채팅(관리자) */}
           <Route path="chat" element={<Chat />} />
           <Route path="chat-settings" element={<ChatbotSettings />} />
+          {/* 시스템 설정(관리자) */}
           <Route path="settings" element={<GeneralSettings />} />
-          <Route path="sms" element={<Sms />} />
-          <Route path="feedback" element={<Feedback />} />
-          <Route path="user-permissions" element={<UserPermission />} />
-          <Route path="hospital-info" element={<HospitalInfo />} />
         </Route>
-        <Route path="/waiting-status" element={<WaitingStatus />} />
       </Routes>
-      
     </HospitalProvider>
   );
 }

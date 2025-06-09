@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import ScheduleCalendar from './ScheduleCalendar';
 import ScheduleList from './ScheduleList';
 import SchedulePopup from './SchedulePopup';
-import { useNavigate } from 'react-router-dom'; // 추가
+import { useNavigate } from 'react-router-dom';
 import {
   fetchSchedulesByMonth,
   createSchedule,
@@ -22,7 +22,7 @@ const StaffSchedule = () => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filterRank, setFilterRank] = useState('전체');
-  const navigate = useNavigate(); // 추가
+  const navigate = useNavigate();
 
   const formatKey = (date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -47,6 +47,7 @@ const StaffSchedule = () => {
   useEffect(() => {
     loadSchedules();
   }, [currentDate]);
+
   const handleDateClick = (year, month, day) => {
     const selected = new Date(year, month, day);
     setSelectedDate(selected);
@@ -68,8 +69,6 @@ const StaffSchedule = () => {
   };
 
   const handleDeleteSchedule = async (itemId) => {
-    + console.log('[삭제 실행] 전달된 ID:', itemId);
-
     await deleteSchedule(itemId);
     loadSchedules();
   };
@@ -83,9 +82,10 @@ const StaffSchedule = () => {
     setEditData(null);
     setPopupOpen(true);
   };
+
   return (
     <Container>
-     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>📆 의료진 근무 스케줄</h2>
         <button onClick={() => navigate('/Dashboard/reservations/list')} style={{
           padding: '6px 12px',

@@ -71,7 +71,6 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
         <p>등록된 스케줄이 없습니다.</p>
       ) : (
         list.map((item) => (
-
           <Entry key={item.id}>
             <Info>
               👤 {item.rank} {item.name} | 🕒 {item.time} {item.off ? '🌙휴무' : ''} <br />
@@ -82,12 +81,11 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
               <button
                 className="delete"
                 onClick={() => {
-                  onDelete(item.id); // ❗ 꼭 이렇게
+                  onDelete(item.id);
                 }}
               >
                 삭제
               </button>
-
             </Actions>
           </Entry>
         ))

@@ -1,4 +1,5 @@
-import { db } from '../config/firebase.js';
+// src/controllers/staffScheduleController.js (직원 스케줄)
+import { db } from "../config/firebase.js";
 
 const collection = db.collection('staffSchedules');
 
@@ -24,7 +25,6 @@ export const getSchedulesByMonth = async (req, res) => {
       .where('scheduleDate', '>=', `${month}-01`)
       .where('scheduleDate', '<=', `${month}-31`)
       .get();
-
     const schedules = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(schedules);
   } catch (error) {
