@@ -1,202 +1,114 @@
+// 🔧 관리자용 Chat.jsx 전체 코드 (Firestore 연동)
+
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import { db } from '';
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  doc,
+  addDoc,
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 
-const ChatWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  height: 100%;
-`;
-
-const ChatList = styled.div`
-  width: 250px;
-  background: #fff;
-  border-right: 1px solid #ccc;
-  padding: 20px;
-  overflow-y: auto;
-`;
-
-const ChatRoom = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #e9edf5;
-`;
-
-const ChatHeader = styled.div`
-  padding: 15px;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  font-weight: bold;
-`;
-
-const ChatMessages = styled.div`
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const Message = styled.div`
-  max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background-color: ${({ type }) => (type === 'staff' ? '#007bff' : '#dbe3ef')};
-  color: ${({ type }) => (type === 'staff' ? '#fff' : '#333')};
-  align-self: ${({ type }) => (type === 'patient' ? 'flex-end' : 'flex-start')};
-`;
-
-const TypingBubble = styled.div`
-  width: 50px;
-  height: 36px;
-  border-radius: 20px;
-  background: #dbe3ef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  color: #777;
-  align-self: flex-start;
-
-  &::after {
-    content: '...';
-    animation: blink 1.2s infinite;
-  }
-
-  @keyframes blink {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
-  }
-`;
-
-const ChatInput = styled.div`
-  padding: 15px;
-  background: #fff;
-  border-top: 1px solid #ddd;
-  display: flex;
-  gap: 10px;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-`;
-
-const Button = styled.button`
-  padding: 10px 18px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const ChatItem = styled.div`
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  &:hover {
-    background: #f0f0f5;
-  }
-`;
+const ChatWrapper = styled.div`/* ...동일 */`;
+const ChatList = styled.div`/* ...동일 */`;
+const ChatRoom = styled.div`/* ...동일 */`;
+const ChatHeader = styled.div`/* ...동일 */`;
+const ChatMessages = styled.div`/* ...동일 */`;
+const Message = styled.div`/* ...동일 */`;
+const TypingBubble = styled.div`/* ...동일 */`;
+const ChatInput = styled.div`/* ...동일 */`;
+const Input = styled.input`/* ...동일 */`;
+const Button = styled.button`/* ...동일 */`;
+const ChatItem = styled.div`/* ...동일 */`;
 
 const Chat = () => {
   const [inputText, setInputText] = useState('');
-  const [activeUser, setActiveUser] = useState(null);
-  const [unreadList, setUnreadList] = useState(['김철수']);
-  const [typingUsers, setTypingUsers] = useState([]);
-
-  const userList = ['김철수', '이은정', 'AI 진료 봇'];
-
+  const [activeUser, setActiveUser] = useState(null); // consultationId
+  const [userList, setUserList] = useState([]); // 상담 목록
   const [chatData, setChatData] = useState({});
-
-  useEffect(() => {
-    const initialChats = {};
-    userList.forEach((name) => {
-      initialChats[name] = [
-        {
-          type: 'staff', // 처음 메시지도 직원 메시지
-          text: `안녕하세요. ${name}님. 무엇을 도와드릴까요?`
-        }
-      ];
-    });
-    setChatData(initialChats);
-  }, []);
+  const [staffUid] = useState('STAFF_UID'); // TODO: 로그인된 직원 UID로 교체 필요
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
-  const isTyping = activeUser && typingUsers.includes(activeUser);
 
+  // 상담 목록 구독
+  useEffect(() => {
+    const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().userId,
+        status: doc.data().status
+      }));
+      setUserList(users);
+    });
+    return () => unsub();
+  }, []);
+
+  // 메시지 구독
   useEffect(() => {
     if (!activeUser) return;
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    const q = query(msgRef, orderBy('sentAt'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => doc.data());
+      setChatData(prev => ({
+        ...prev,
+        [activeUser]: msgs
+      }));
+    });
+    return () => unsub();
+  }, [activeUser]);
 
-    if (inputText.trim()) {
-      if (!typingUsers.includes(activeUser)) {
-        setTypingUsers(prev => [...prev, activeUser]);
-      }
-    }
-
-    const timeout = setTimeout(() => {
-      setTypingUsers(prev => prev.filter(name => name !== activeUser));
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, [inputText, activeUser]);
-
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = inputText.trim();
     if (!text || !activeUser) return;
 
-    const newMessage = { type: 'staff', text };
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    await addDoc(msgRef, {
+      senderId: staffUid,
+      senderType: 'staff',
+      content: text,
+      sentAt: serverTimestamp()
+    });
 
-    setChatData(prev => ({
-      ...prev,
-      [activeUser]: [...(prev[activeUser] || []), newMessage]
-    }));
+    await updateDoc(doc(db, 'consultations', activeUser), {
+      updatedAt: serverTimestamp(),
+      handlerId: staffUid,
+      status: 'responded'
+    });
 
     setInputText('');
-    setTypingUsers(prev => prev.filter(name => name !== activeUser));
   };
 
-  const handleChatClick = (name) => {
-    setUnreadList(prev => prev.filter(n => n !== name));
-    setActiveUser(name);
+  const handleChatClick = (consultationId) => {
+    setActiveUser(consultationId);
   };
 
   return (
     <ChatWrapper>
       <ChatList>
         <h3>고객 채팅 목록</h3>
-        {userList.map(name => (
-          <ChatItem key={name} onClick={() => handleChatClick(name)}>
-            <span>{name}</span>
-            {(!activeUser || name !== activeUser) && typingUsers.includes(name) && (
-              <span style={{ color: '#777' }}>...</span>
-            )}
+        {userList.map(user => (
+          <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
+            <span>{user.name}</span>
+            <span style={{ color: '#999', fontSize: '12px' }}>{user.status}</span>
           </ChatItem>
         ))}
       </ChatList>
 
       <ChatRoom>
         <ChatHeader>
-          {activeUser ? `${activeUser}님과 상담 중` : '상담 선택 대기 중'}
+          {activeUser ? `${userList.find(u => u.id === activeUser)?.name}님과 상담 중` : '상담 선택 대기 중'}
         </ChatHeader>
         <ChatMessages>
-          {activeUser && messages.map((msg, idx) => (
-            <Message key={idx} type={msg.type}>{msg.text}</Message>
+          {messages.map((msg, idx) => (
+            <Message key={idx} type={msg.senderType}>{msg.content}</Message>
           ))}
-          {isTyping && <TypingBubble />}
         </ChatMessages>
         <ChatInput>
           <Input

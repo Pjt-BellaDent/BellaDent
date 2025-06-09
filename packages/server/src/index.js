@@ -8,6 +8,7 @@ import noticeRoutes from './routes/notice.js';
 import smsRoutes from './routes/sms.js';
 import onsiteRoutes from './routes/onsite.js';
 import feedbackRoutes from './routes/feedback.js';
+import aiChatRoutes from './routes/aiChat.js';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/notice', noticeRoutes);
 app.use('/api/sms', smsRoutes);
 app.use('/api/onsite', onsiteRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/aiChat', aiChatRoutes);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
