@@ -106,12 +106,10 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
             `${date.getFullYear()}년 ${date.getMonth() + 1}월`
           }
           formatShortWeekday={(locale, date) => koreanWeekdays[date.getDay()]}
-          // ✅ 달력 각 날짜에 마감 점 찍기
           tileContent={({ date, view }) => {
             if (view !== 'month') return null;
             const dateKey = getDateStr(date);
             const eventsForDay = events[dateKey] || [];
-            // 과별 마감 여부
             const closedDeptsForDay = departments.filter(d => {
               const bookedTimes = eventsForDay
                 .filter(e => e.department === d.name)
@@ -128,7 +126,6 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
                 });
               return times.every(t => bookedTimes.includes(t));
             });
-            // 점(동그라미)만 노출, 여러 과 마감시 여러 개
             return (
               <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 2 }}>
                 {closedDeptsForDay.map(d => (

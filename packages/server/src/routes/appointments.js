@@ -1,3 +1,4 @@
+// src/routes/appointments.js (확장/기존과 호환, 진료예약/상태변경/통계)
 import express from "express";
 import { db } from "../config/firebase.js";
 import {
@@ -8,18 +9,21 @@ import {
   createAppointment,
   updateAppointment,
   deleteAppointment,
-  getAvailableTimes,
-  getAppointmentsByName // ⭐ 추가!
-} from "../controllers/appointmentController.js";
+  getAppointmentsByName
+} from "../controllers/appointmentsController.js";
 
 const router = express.Router();
 
+// 오늘 예약 조회
 router.get("/today", getTodayAppointments);
+// 대시보드 차트 통계
 router.get("/stats/chart", getDashboardStats);
+// 주간 예약 조회
 router.get("/week", getWeeklyReservations);
-router.get("/available-times", getAvailableTimes);
+// 예약 가능한 시간 조회 (임시 제거, 함수 없음)
+// router.get("/available-times", getAvailableTimes);
 
-// ⭐⭐ 핵심! name+birth 쿼리 있으면 getAppointmentsByName로 전체 예약 이력 반환
+// name+birth 쿼리 시 전체 예약이력 반환, 없으면 월별
 router.get("/", (req, res, next) => {
   if (req.query.name && req.query.birth) {
     return getAppointmentsByName(req, res, next);
@@ -29,7 +33,7 @@ router.get("/", (req, res, next) => {
 
 router.post('/', createAppointment);
 
-// 진료완료 처리 라우트
+// 진료완료 처리
 router.put('/complete', async (req, res) => {
   const { name, department, birth } = req.body;
   const today = new Date().toISOString().slice(0, 10);
@@ -45,7 +49,7 @@ router.put('/complete', async (req, res) => {
       return res.status(404).json({ error: 'Appointment not found' });
     }
     await snapshot.docs[0].ref.update({ status: '진료완료', completedAt: Date.now() });
-    // === users의 lastVisit도 오늘로 업데이트 ===
+    // users의 lastVisit도 업데이트
     const userSnap = await db.collection('users')
       .where('name', '==', name)
       .where('birth', '==', birth)
@@ -59,17 +63,17 @@ router.put('/complete', async (req, res) => {
   }
 });
 
-// 진료완료(이름+생년월일) 라우트 - 날짜 조건 추가!!
+// 진료완료(이름+생년월일, 날짜조건) 라우트
 router.put('/complete-by-name', async (req, res) => {
   const { name, department, birth } = req.body;
-  const today = new Date().toISOString().slice(0, 10); // 오늘 날짜
+  const today = new Date().toISOString().slice(0, 10);
   try {
     const snap = await db
       .collection('appointments')
       .where('name', '==', name)
       .where('birth', '==', birth)
       .where('department', '==', department)
-      .where('reservationDate', '==', today)  // 날짜 조건
+      .where('reservationDate', '==', today)
       .where('status', 'in', ['대기', '진료중'])
       .get();
     if (snap.empty) {
@@ -77,8 +81,7 @@ router.put('/complete-by-name', async (req, res) => {
     }
     const docRef = snap.docs[0].ref;
     await docRef.update({ status: '진료완료' });
-
-    // 진료완료 → users.lastVisit 업데이트
+    // users.lastVisit 동기화
     const userSnap = await db.collection('users')
       .where('name', '==', name)
       .where('birth', '==', birth)
@@ -92,7 +95,7 @@ router.put('/complete-by-name', async (req, res) => {
   }
 });
 
-// 👇 진료중→대기로 변경하는 호출 취소 라우트
+// 진료중→대기로 변경
 router.put('/back-to-waiting', async (req, res) => {
   const { name, department, birth } = req.body;
   try {
@@ -105,7 +108,6 @@ router.put('/back-to-waiting', async (req, res) => {
       .where('reservationDate', '==', today)
       .where('status', '==', '진료중')
       .get();
-
     if (snap.empty) {
       return res.status(404).json({ error: '대상 예약이 없습니다.' });
     }

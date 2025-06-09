@@ -20,7 +20,6 @@ const ModalBox = styled.div`
   overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 
-  /* --- 스크롤바 숨김 --- */
   scrollbar-width: none;           /* Firefox */
   -ms-overflow-style: none;        /* IE and Edge */
   &::-webkit-scrollbar {           /* Chrome, Safari, Opera */
@@ -115,6 +114,12 @@ const PROCEDURE_MAP = {
   '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
   '치주과': ['치석제거', '치근활택술', '치은성형술'],
 };
+// 진료과별 진료실(체어) 번호 매핑
+const DEPARTMENT_TO_CHAIR = {
+  '보철과': '1',
+  '교정과': '2',
+  '치주과': '3',
+};
 const DOCTOR_MAP = {
   '보철과': ['김치과 원장', '이보철 선생'],
   '교정과': ['박교정 원장', '정교정 선생'],
@@ -130,22 +135,20 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     time: '',
     department: '',
     title: '',
-    doctor: '',         // 👈 담당의 추가!
+    doctor: '',
+    chairNumber: '',
     memo: '',
     phone: '',
     gender: '',
     status: '대기'
   });
 
-  // 생년월일 드롭다운 상태
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
 
-  // ✅ 시간 복수 선택
   const [selectedTimes, setSelectedTimes] = useState([]);
 
-  // 예약 중복된 시간 목록 구하기 (기존 로직 그대로)
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.reservationDate || !Array.isArray(eventsForDate)) return [];
     return eventsForDate
@@ -161,6 +164,24 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       });
   }, [form.department, form.reservationDate, eventsForDate, initialData]);
 
+  // userId 자동 조회
+  useEffect(() => {
+    if (form.name && form.birth) {
+      fetch(`http://localhost:3000/users/userId?name=${encodeURIComponent(form.name)}&birth=${encodeURIComponent(form.birth)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.userId) {
+            setForm(prev => ({ ...prev, userId: data.userId }));
+          } else {
+            setForm(prev => ({ ...prev, userId: "" }));
+          }
+        })
+        .catch(() => setForm(prev => ({ ...prev, userId: "" })));
+    } else {
+      setForm(prev => ({ ...prev, userId: "" }));
+    }
+  }, [form.name, form.birth]);
+
   useEffect(() => {
     if (initialData) {
       const [yy, mm, dd] = (initialData.birth || '').split('-');
@@ -172,7 +193,8 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         time: initialData.time || '',
         department: initialData.department || '',
         title: initialData.title || '',
-        doctor: initialData.doctor || '', // 👈 담당의 값
+        doctor: initialData.doctor || '',
+        chairNumber: initialData.chairNumber || DEPARTMENT_TO_CHAIR[initialData.department] || '',
         memo: initialData.memo || initialData.notes || '',
         phone: initialData.phone || '',
         gender: initialData.gender || '',
@@ -195,18 +217,19 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       const today = new Date().toISOString().slice(0, 10);
       setForm(prev => ({
         ...prev,
+        userId: '',
         reservationDate: selectedDate || today,
         time: '',
         department: '',
         title: '',
-        doctor: '',  // 👈 담당의 값
+        doctor: '',
+        chairNumber: '',
       }));
       setSelectedTimes([]);
       setBirthYear(''); setBirthMonth(''); setBirthDay('');
     }
   }, [initialData, selectedDate]);
 
-  // 생년월일 값 동기화
   useEffect(() => {
     if (birthYear && birthMonth && birthDay) {
       setForm(prev => ({ ...prev, birth: `${birthYear}-${birthMonth}-${birthDay}` }));
@@ -220,12 +243,11 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     setForm(prev => ({
       ...prev,
       [name]: value,
-      ...(name === 'department' ? { title: '', doctor: '' } : {}) // 진료과 바뀌면 시술명/의사 초기화
+      ...(name === 'department' ? { title: '', doctor: '', chairNumber: DEPARTMENT_TO_CHAIR[value] || '' } : {})
     }));
     if (name === 'department') setSelectedTimes([]);
   };
 
-  // 시간 버튼 클릭
   const handleTimeClick = (t) => {
     if (reservedTimes.includes(t)) return;
     if (selectedTimes.includes(t)) {
@@ -242,11 +264,10 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.birth || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title || !form.doctor) {
+    if (!form.name || !form.birth || !form.userId || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title || !form.doctor) {
       alert('모든 필수 항목을 입력해주세요.');
       return;
     }
-    // 연속 구간이면 10:00~11:00 식으로, 비연속은 콤마로
     const sorted = [...selectedTimes].sort((a, b) => HOUR_MAP.indexOf(a) - HOUR_MAP.indexOf(b));
     let timeLabel;
     if (sorted.length === 1) timeLabel = sorted[0];

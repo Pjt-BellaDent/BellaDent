@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 
@@ -136,8 +136,9 @@ const makeInit = () => {
 };
 
 const WaitingStatus = () => {
-  const [rooms, setRooms] = useState(makeInit());
-  useEffect(() => {
+  const [rooms, setRooms] = React.useState(makeInit());
+
+  React.useEffect(() => {
     const fetchRooms = async () => {
       try {
         const res = await fetch('http://localhost:3000/waiting/status');
