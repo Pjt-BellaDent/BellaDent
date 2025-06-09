@@ -19,20 +19,13 @@ const ModalBox = styled.div`
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-
-  scrollbar-width: none;           /* Firefox */
-  -ms-overflow-style: none;        /* IE and Edge */
-  &::-webkit-scrollbar {           /* Chrome, Safari, Opera */
-    display: none;
-  }
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
 `;
 const Field = styled.div`
   margin-bottom: 16px;
-  label {
-    display: block;
-    font-size: 14px;
-    margin-bottom: 6px;
-  }
+  label { display: block; font-size: 14px; margin-bottom: 6px; }
   input, select, textarea {
     width: 100%;
     padding: 8px 10px;
@@ -40,14 +33,10 @@ const Field = styled.div`
     border: 1px solid #ccc;
     border-radius: 6px;
   }
-  textarea {
-    resize: vertical;
-    height: 60px;
-  }
+  textarea { resize: vertical; height: 60px; }
 `;
 const BirthRow = styled.div`
-  display: flex;
-  gap: 6px;
+  display: flex; gap: 6px;
   > select { flex: 1; }
 `;
 const TimeGrid = styled.div`
@@ -82,13 +71,8 @@ const ButtonRow = styled.div`
     border: none;
     cursor: pointer;
   }
-  .save {
-    background: #007bff;
-    color: white;
-  }
-  .cancel {
-    background: #ccc;
-  }
+  .save { background: #007bff; color: white; }
+  .cancel { background: #ccc; }
 `;
 
 const HOUR_MAP = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
@@ -108,22 +92,29 @@ const getDayList = (year, month) => {
   return Array.from({ length: last }, (_, i) => String(i + 1).padStart(2, '0'));
 };
 
-// 진료과별 시술명 매핑
 const PROCEDURE_MAP = {
   '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
   '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
   '치주과': ['치석제거', '치근활택술', '치은성형술'],
 };
-// 진료과별 진료실(체어) 번호 매핑
 const DEPARTMENT_TO_CHAIR = {
   '보철과': '1',
   '교정과': '2',
   '치주과': '3',
 };
 const DOCTOR_MAP = {
-  '보철과': ['김치과 원장', '이보철 선생'],
-  '교정과': ['박교정 원장', '정교정 선생'],
-  '치주과': ['최치주 원장', '한치주 선생'],
+  '보철과': [
+    { name: '김치과 원장', id: 'doctor1' },
+    { name: '이보철 선생', id: 'doctor2' },
+  ],
+  '교정과': [
+    { name: '박교정 원장', id: 'doctor3' },
+    { name: '정교정 선생', id: 'doctor4' },
+  ],
+  '치주과': [
+    { name: '최치주 원장', id: 'doctor5' },
+    { name: '한치주 선생', id: 'doctor6' },
+  ],
 };
 
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
@@ -131,28 +122,26 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     name: '',
     birth: '',
     userId: '',
-    reservationDate: '',
-    time: '',
+    date: '',        // ★ 필드명 통일
     department: '',
     title: '',
     doctor: '',
+    doctorId: '',
     chairNumber: '',
     memo: '',
     phone: '',
     gender: '',
-    status: '대기'
+    status: '대기',
   });
-
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
-
   const [selectedTimes, setSelectedTimes] = useState([]);
 
   const reservedTimes = useMemo(() => {
-    if (!form.department || !form.reservationDate || !Array.isArray(eventsForDate)) return [];
+    if (!form.department || !form.date || !Array.isArray(eventsForDate)) return [];
     return eventsForDate
-      .filter(e => e.department === form.department && e.reservationDate === form.reservationDate && (!initialData || initialData.time !== e.time))
+      .filter(e => e.department === form.department && e.date === form.date && (!initialData || initialData.time !== e.time))
       .flatMap(e => {
         if (e.time && e.time.includes('~')) {
           const [start, end] = e.time.split('~');
@@ -162,7 +151,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         }
         return [e.time];
       });
-  }, [form.department, form.reservationDate, eventsForDate, initialData]);
+  }, [form.department, form.date, eventsForDate, initialData]);
 
   // userId 자동 조회
   useEffect(() => {
@@ -189,18 +178,17 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         name: initialData.name || '',
         birth: initialData.birth || '',
         userId: initialData.userId || '',
-        reservationDate: initialData.reservationDate || '',
-        time: initialData.time || '',
+        date: initialData.date || selectedDate || '', // ★ 변경
         department: initialData.department || '',
         title: initialData.title || '',
         doctor: initialData.doctor || '',
+        doctorId: initialData.doctorId || '',
         chairNumber: initialData.chairNumber || DEPARTMENT_TO_CHAIR[initialData.department] || '',
         memo: initialData.memo || initialData.notes || '',
         phone: initialData.phone || '',
         gender: initialData.gender || '',
-        status: initialData.status || '대기'
+        status: initialData.status || '대기',
       });
-
       if (initialData.time && initialData.time.includes('~')) {
         const [start, end] = initialData.time.split('~');
         const idxStart = HOUR_MAP.indexOf(start);
@@ -211,18 +199,17 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       } else {
         setSelectedTimes([]);
       }
-
       setBirthYear(yy || ''); setBirthMonth(mm || ''); setBirthDay(dd || '');
     } else {
       const today = new Date().toISOString().slice(0, 10);
       setForm(prev => ({
         ...prev,
         userId: '',
-        reservationDate: selectedDate || today,
-        time: '',
+        date: selectedDate || today,  // ★ 변경
         department: '',
         title: '',
         doctor: '',
+        doctorId: '',
         chairNumber: '',
       }));
       setSelectedTimes([]);
@@ -238,12 +225,18 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
   }, [birthYear, birthMonth, birthDay]);
 
+  // 담당의(doctorId) 선택 변경시 id도 세팅
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'doctor') {
+      const found = DOCTOR_MAP[form.department]?.find(d => d.name === value);
+      setForm(prev => ({ ...prev, doctor: value, doctorId: found?.id || '' }));
+      return;
+    }
     setForm(prev => ({
       ...prev,
       [name]: value,
-      ...(name === 'department' ? { title: '', doctor: '', chairNumber: DEPARTMENT_TO_CHAIR[value] || '' } : {})
+      ...(name === 'department' ? { title: '', doctor: '', doctorId: '', chairNumber: DEPARTMENT_TO_CHAIR[value] || '' } : {})
     }));
     if (name === 'department') setSelectedTimes([]);
   };
@@ -263,17 +256,30 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     return true;
   };
 
+  // 실제 appointments 저장 규격에 맞게 변환해서 onSave 호출
   const handleSubmit = () => {
-    if (!form.name || !form.birth || !form.userId || !form.reservationDate || selectedTimes.length === 0 || !form.department || !form.title || !form.doctor) {
-      alert('모든 필수 항목을 입력해주세요.');
+    if (!form.userId || !form.doctorId || !form.date || selectedTimes.length === 0 || !form.department || !form.title || !form.chairNumber) {
+      alert('필수 항목 누락. 담당의/환자 선택, 날짜, 시간, 진료과, 시술, 체어를 모두 선택해주세요.');
       return;
     }
     const sorted = [...selectedTimes].sort((a, b) => HOUR_MAP.indexOf(a) - HOUR_MAP.indexOf(b));
-    let timeLabel;
-    if (sorted.length === 1) timeLabel = sorted[0];
-    else if (isContinuous(sorted)) timeLabel = `${sorted[0]}~${sorted[sorted.length - 1]}`;
-    else timeLabel = sorted.join(',');
-    onSave({ ...form, time: timeLabel });
+    let startTime = sorted[0];
+    let endTime = sorted[sorted.length - 1];
+    if (!isContinuous(sorted)) {
+      alert('시작/종료 시간이 연속적으로 선택되어야 합니다.');
+      return;
+    }
+    const chairNumber = parseInt(form.chairNumber, 10);
+    onSave({
+      userId: form.userId,
+      doctorId: form.doctorId,
+      date: form.date,  // ★ 변경
+      startTime,
+      endTime,
+      chairNumber,
+      status: form.status || 'reserved',
+      // 필요시 추가: memo 등
+    });
   };
 
   const departmentHours = HOUR_MAP;
@@ -318,7 +324,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         </Field>
         <Field>
           <label>예약일</label>
-          <input type="date" name="reservationDate" value={form.reservationDate} onChange={handleChange} />
+          <input type="date" name="date" value={form.date} onChange={handleChange} />
         </Field>
         <Field>
           <label>진료과</label>
@@ -340,7 +346,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
             >
               <option value="">선택</option>
               {DOCTOR_MAP[form.department].map(doctor => (
-                <option key={doctor} value={doctor}>{doctor}</option>
+                <option key={doctor.id} value={doctor.name}>{doctor.name}</option>
               ))}
             </select>
           </Field>
@@ -361,7 +367,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
             </select>
           </Field>
         )}
-        {form.department && form.reservationDate && (
+        {form.department && form.date && (
           <>
             {am.length > 0 && <AmPmLabel>오전</AmPmLabel>}
             <TimeGrid>
@@ -399,7 +405,14 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         </Field>
         <ButtonRow>
           <button className="cancel" onClick={onClose}>취소</button>
-          <button className="save" onClick={handleSubmit}>저장</button>
+          <button
+            className="save"
+            onClick={handleSubmit}
+            disabled={!form.userId}
+            title={!form.userId ? "등록된 환자만 예약 가능" : ""}
+          >
+            저장
+          </button>
         </ButtonRow>
       </ModalBox>
     </ModalBackground>
