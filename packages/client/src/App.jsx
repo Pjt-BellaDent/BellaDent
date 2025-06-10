@@ -34,11 +34,13 @@ import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
-import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
+import GeneralSettings from './components/GeneralSettings/GeneralSettings';
 import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
-import UserPermission from './components/GeneralSettings/UserPermission.jsx';
-import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+import UserPermission from './components/GeneralSettings/UserPermission';
+import HospitalInfo from './components/GeneralSettings/HospitalInfo';
+
+import NotFound from './components/NotFound';
 
 function App() {
   return (
@@ -46,7 +48,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Frame />}>
           <Route index element={<Home />} />
-          <Route path="SignIn" element={<SignIn />} />
+          <Route path="signIn" element={<SignIn />} />
           <Route path="signup" element={<SignUp />} />
           <Route path="userinfo" element={<UserInfo />} />
 
@@ -68,7 +70,7 @@ function App() {
           <Route path="reviews" element={<Reviews />} />
         </Route>
 
-        <Route path="/Dashboard" element={<DashboardFrame />}>
+        <Route path="/dashboard" element={<DashboardFrame />}>
           <Route index element={<Dashboard />} />
           <Route path="notice" element={<NoticeModal />} />
           <Route path="waiting" element={<WaitingStatus />} />{' '}
@@ -83,6 +85,7 @@ function App() {
           <Route path="user-permissions" element={<UserPermission />} />
           <Route path="hospital-info" element={<HospitalInfo />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
