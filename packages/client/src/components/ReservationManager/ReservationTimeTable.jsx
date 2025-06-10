@@ -51,34 +51,27 @@ const DelBtn = styled.button`
   font-size: 13px; padding: 2px 10px; font-weight: 600; cursor: pointer;
 `;
 
+// 시간 범위 체크 함수 (startTime~endTime 구간 지원)
+const isTimeInReservation = (res, time) => {
+  if (!res.startTime) return false;
+  const idxStart = times.indexOf(res.startTime);
+  const idxEnd = res.endTime ? times.indexOf(res.endTime) : idxStart;
+  const idx = times.indexOf(time);
+  return idx >= idxStart && idx <= idxEnd;
+};
+
 function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
   const [detailData, setDetailData] = useState(null);
 
-  if (!date) return <div style={{color:'#888',marginTop:40}}>왼쪽 달력에서 날짜를 선택하세요.</div>;
+  if (!date) return <div style={{ color: '#888', marginTop: 40 }}>왼쪽 달력에서 날짜를 선택하세요.</div>;
+  // 최신 구조: events[date]로 바로 접근 (이미 date로 그룹핑된 데이터)
   const dayEvents = events[date] || [];
-
-  // 구간, 복수, 단일 모두 지원
-  const isTimeInReservation = (res, time) => {
-    if (!res.time) return false;
-    if (res.time.includes('~')) {
-      // 구간 (ex: 14:00~15:00)
-      const [start, end] = res.time.split('~');
-      const idxStart = times.indexOf(start);
-      const idxEnd = times.indexOf(end);
-      const idx = times.indexOf(time);
-      return idx >= idxStart && idx <= idxEnd;
-    } else if (res.time.includes(',')) {
-      // 비연속 복수시간 (ex: 14:00,16:00)
-      return res.time.split(',').includes(time);
-    } else {
-      // 단일
-      return res.time === time;
-    }
-  };
+  console.log('events:', events);
+  console.log('선택한 date:', date);
+  console.log('이 날짜의 예약:', dayEvents);
 
   const getReservation = (dept, time) =>
     dayEvents.find(res => res.department === dept && isTimeInReservation(res, time));
-
   return (
     <>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 15 }}>
@@ -114,6 +107,8 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
               <td>{time}</td>
               {departments.map(dept => {
                 const res = getReservation(dept, time);
+                console.log('테이블 cell:', { dept, time, res });
+
                 return (
                   <td key={dept}>
                     {res ? (
@@ -134,19 +129,19 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
                             </span>
                           )}
                         </span>
-                        <span>({res.status})</span>
+                        {/* 상태(status)는 표시하지 않음 */}
                         <EditBtn onClick={() => onEdit(res)}>수정</EditBtn>
                         <DelBtn onClick={() => onDelete(res.id)}>삭제</DelBtn>
                       </RowFlex>
                     ) : (
                       <span
                         style={{
-                          color:'#aaa',
-                          fontSize:13,
+                          color: '#aaa',
+                          fontSize: 13,
                           cursor: "pointer",
                           textDecoration: "underline"
                         }}
-                        onClick={() => onAdd({ department: dept, time })}
+                        onClick={() => onAdd({ department: dept, startTime: time, endTime: time })}
                         title="이 시간에 예약 등록"
                       >
                         예약 없음
@@ -176,16 +171,16 @@ function ReservationDetailModal({ data, onClose }) {
       <div style={{
         background: "#fff", borderRadius: 12, padding: 30, minWidth: 340, maxWidth: 420
       }}>
-        <h3 style={{marginTop:0,marginBottom:14}}>환자 상세 정보</h3>
-        <div style={{marginBottom:8}}><b>이름</b>: {data.name}</div>
-        <div style={{marginBottom:8}}><b>생년월일</b>: {data.birth || '-'}</div>
-        <div style={{marginBottom:8}}><b>연락처</b>: {data.phone || '-'}</div>
-        <div style={{marginBottom:8}}><b>성별</b>: {data.gender || '-'}</div>
-        <div style={{marginBottom:8}}><b>진료과</b>: {data.department}</div>
-        <div style={{marginBottom:8}}><b>의사</b>: {data.doctor}</div>
-        <div style={{marginBottom:8}}><b>시술</b>: {data.title}</div>
-        <div style={{marginBottom:8}}><b>상태</b>: {data.status}</div>
-        <div style={{marginBottom:8}}><b>메모</b>: {data.memo || '-'}</div>
+        <h3 style={{ marginTop: 0, marginBottom: 14 }}>환자 상세 정보</h3>
+        <div style={{ marginBottom: 8 }}><b>이름</b>: {data.name}</div>
+        <div style={{ marginBottom: 8 }}><b>생년월일</b>: {data.birth || '-'}</div>
+        <div style={{ marginBottom: 8 }}><b>연락처</b>: {data.phone || '-'}</div>
+        <div style={{ marginBottom: 8 }}><b>성별</b>: {data.gender || '-'}</div>
+        <div style={{ marginBottom: 8 }}><b>진료과</b>: {data.department}</div>
+        <div style={{ marginBottom: 8 }}><b>의사</b>: {data.doctor}</div>
+        <div style={{ marginBottom: 8 }}><b>시술</b>: {data.title}</div>
+        <div style={{ marginBottom: 8 }}><b>상태</b>: {data.status}</div>
+        <div style={{ marginBottom: 8 }}><b>메모</b>: {data.memo || '-'}</div>
         <button onClick={onClose} style={{
           background: "#2071e5", color: "#fff", border: "none", borderRadius: 7, fontSize: 14, padding: "8px 24px", fontWeight: 600, marginTop: 14
         }}>닫기</button>
