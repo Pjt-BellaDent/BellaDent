@@ -33,8 +33,8 @@ function ClinicNews() {
         <Text CN="text-2xl text-center my-4">제목</Text>
         <Board
           posts={posts}
-          CN="border-y divide-y border-gray-300 divide-gray-300"
-          UL="my-4 text-2xl cursor-pointer select-none"
+        
+          UL="mt-4 text-2xl cursor-pointer select-none"
           LI="my-4 text-lg duration-500 ease-in-out"
         />
       </Container>
