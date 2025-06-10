@@ -20,4 +20,4 @@ export const saveNotices = (req, res) => {
     author: n.author || '관리자',
   }));
   res.json({ success: true });
-};
+}; 
