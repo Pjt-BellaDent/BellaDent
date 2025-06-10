@@ -32,14 +32,14 @@ function Doctors() {
       </LineBanner>
       <Container CN="pt-20">
         <ul className="flex justify-center items-center pb-40">
-          <li className="w-100 flex justify-center">
+          <li className="w-100 flex justify-center border">
             <Link className="py-4 text-xl">의료진1</Link>
           </li>
-          <li className="w-100 py-4 text-xl">
-            <Link>의료진2</Link>
+          <li className="w-100 flex justify-center border">
+            <Link className="py-4 text-xl">의료진2</Link>
           </li>
-          <li className="w-100 py-4 text-xl">
-            <Link>의료진3</Link>
+          <li className="w-100 flex justify-center border">
+            <Link className="py-4 text-xl">의료진3</Link>
           </li>
         </ul>
         <Card
