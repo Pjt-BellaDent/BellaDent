@@ -9,15 +9,12 @@
   "private": true,
   "workspaces": [
     "packages/server",
-    "packages/client"
+    "packages/client",
+    "packages/functions"
   ],
   "scripts": {
     "server": "yarn workspace server run dev",
-    "client": "yarn workspace client run dev"
-  },
-  "dependencies": {
-    "cookie-parser": "^1.4.7",
-    "firebase": "^11.9.0",
-    "react-icons": "^5.5.0"
+    "client": "yarn workspace client run dev",
+    "function": "yarn workspace functions run deploy"
   }
 }
