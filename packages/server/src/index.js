@@ -4,15 +4,16 @@ import logger from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-// ===== 라우트 =====
-import usersRouter from "./routes/users.js";
+import userRouter from "./routes/users.js";
+import consultationsRouter from "./routes/consultations.js";
+import reviewsRouter from "./routes/reviews.js";
+import smsLogsRouter from "./routes/smsLogs.js";
 import appointmentsRouter from "./routes/appointments.js";
 import procedureRouter from "./routes/procedure.js";
 import staffSchedulesRouter from "./routes/staffSchedules.js";
 import recordsRouter from "./routes/records.js";
 import postsRouter from "./routes/posts.js";
 import smsRouter from "./routes/sms.js";
-import consultationsRouter from "./routes/consultations.js";
 import messagesRouter from "./routes/messages.js";
 import activitiesRouter from './routes/activities.js';
 import statsRouter from './routes/stats.js';
@@ -29,6 +30,10 @@ app.use(cookieParser());
 app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173', credentials: true }));
 app.use(logger('dev'));
 
+app.use("/users", userRouter);
+app.use("/consultations", consultationsRouter);
+app.use("/reviews", reviewsRouter);
+app.use("/sms", smsLogsRouter);
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/users", usersRouter);

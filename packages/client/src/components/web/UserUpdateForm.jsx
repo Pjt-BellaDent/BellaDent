@@ -1,11 +1,11 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserInfoContext } from '../context/UserInfoContext.jsx';
+import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
 
-function UserUpdateFrom() {
+function UserUpdateForm() {
   const navigate = useNavigate();
-  const { userInfo } = useContext(UserInfoContext);
+  const { userInfo, userToken } = useUserInfo();
   const [formData, setFormData] = useState({
     id: '',
     email: '',
@@ -18,8 +18,13 @@ function UserUpdateFrom() {
       if (userInfo) {
         try {
           const url = `http://localhost:3000/users/${userInfo.id}`;
-          const response = await axios.get(url);
-          if (response.status === 201) {
+          const response = await axios.get(url, {
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
+            withCredentials: true,
+          });
+          if (response.status === 200) {
             const data = response.data.userInfo;
             setFormData({
               ...formData,
@@ -36,7 +41,7 @@ function UserUpdateFrom() {
       }
     };
     getUserInfo();
-  }, []);
+  }, [userInfo]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,16 +52,25 @@ function UserUpdateFrom() {
     try {
       const url = `http://localhost:3000/users/${userInfo.id}`;
       const response = await axios
-        .put(url, {
-          id: formData.id,
-          email: formData.email,
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address,
-          updatedAt: new Date(),
-        })
+        .put(
+          url,
+          {
+            id: formData.id,
+            email: formData.email,
+            name: formData.name,
+            phone: formData.phone,
+            address: formData.address,
+            updatedAt: new Date(),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${userInfo.token}`,
+            },
+            withCredentials: true,
+          }
+        )
         .then((res) => {
-          if (res.status === 201) {
+          if (res.status === 200) {
             alert('회원정보가 수정되었습니다.');
             navigate(-1);
           }
@@ -68,7 +82,7 @@ function UserUpdateFrom() {
 
   const handleCancel = () => {
     navigate(-1);
-  }
+  };
 
   return (
     <>
@@ -87,7 +101,7 @@ function UserUpdateFrom() {
                 name="email"
                 id="email"
                 readOnly
-                defaultValue={formData.email}
+                value={formData.email}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
             </div>
@@ -104,7 +118,8 @@ function UserUpdateFrom() {
                 type="text"
                 name="name"
                 id="name"
-                defaultValue={formData.name}
+                readOnly
+                value={formData.name}
                 required
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
@@ -123,7 +138,7 @@ function UserUpdateFrom() {
                 name="phone"
                 id="phone"
                 maxLength={13}
-                defaultValue={formData.phone}
+                value={formData.phone}
                 required
                 placeholder="01X-XXXX-XXXX"
                 onChange={handleChange}
@@ -143,7 +158,7 @@ function UserUpdateFrom() {
                 type="text"
                 name="address"
                 id="address"
-                defaultValue={formData.address}
+                value={formData.address}
                 onChange={handleChange}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
@@ -170,4 +185,4 @@ function UserUpdateFrom() {
   );
 }
 
-export default UserUpdateFrom;
+export default UserUpdateForm;
