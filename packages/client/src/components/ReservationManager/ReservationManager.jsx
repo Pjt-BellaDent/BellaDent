@@ -57,10 +57,7 @@ const ReservationManager = () => {
     try {
       console.log('저장할 데이터:', formData); // 데이터 확인용 로그
 
-      if (!formData.name || !formData.birth) {
-        alert('이름과 생년월일은 필수 입력입니다.');
-        return;
-      }
+    
       const method = editData?.id ? 'PUT' : 'POST';
       const url = editData?.id
         ? `http://localhost:3000/appointments/${editData.id}`
