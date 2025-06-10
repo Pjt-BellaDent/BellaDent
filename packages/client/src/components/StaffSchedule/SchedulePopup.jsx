@@ -97,8 +97,8 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null }) => {
       alert('직급, 이름, 시간을 모두 입력해주세요.');
       return;
     }
-    onSave(form);
-    onClose();
+
+    onSave(form); // 백엔드 등록 or 수정은 상위에서 판단
   };
 
   return (
