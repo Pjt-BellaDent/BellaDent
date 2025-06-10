@@ -1,18 +1,21 @@
 import Joi from "joi";
-import { v4 as uuidv4 } from "uuid";
 
 export const reviewSchema = Joi.object({
-  id: Joi.string().default(() => uuidv4()),
-  review: Joi.string().required(),
-  reviewImg: Joi.string().required(),
-  author: Joi.string().required(),
-  createdAt: Joi.date().required(),
-  updatedAt: Joi.date().default(() => new Date()),
+  title: Joi.string().required(),
+  content: Joi.string().required(),
+  authorId: Joi.string().required(),
+  isPublic: Joi.boolean().default(true),
+  visibilityReason: Joi.string().allow(null).optional(),
+  approved: Joi.boolean().default(true),
 });
 
 export const updateReviewSchema = Joi.object({
   id: Joi.string().required(),
-  review: Joi.string().required(),
-  reviewImg: Joi.string().required(),
-  updatedAt: Joi.date().required(),
+  title: Joi.string().optional(),
+  content: Joi.string().optional(),
+  authorId: Joi.string().optional(),
+  isPublic: Joi.boolean().optional(),
+  visibilityReason: Joi.string().allow(null).optional(),
+  approved: Joi.boolean().optional(),
+  deleteImageUrls: Joi.array().items(Joi.string()).optional().default([]),
 });
