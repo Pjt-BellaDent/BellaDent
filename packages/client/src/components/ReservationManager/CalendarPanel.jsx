@@ -40,7 +40,6 @@ const EventItem = styled.li`
   gap: 10px;
   .dot { width: 9px; height: 9px; border-radius: 100%; display: inline-block; background: #41c5f2; }
 `;
-// 마감 배지 (달력 아래)
 const BadgeWrap = styled.div`
   margin: 4px 0 8px 0;
   font-size: 13px;
@@ -58,7 +57,6 @@ const Badge = styled.span`
   letter-spacing: 1px;
 `;
 
-// 한글 요일
 const koreanWeekdays = ['일', '월', '화', '수', '목', '금', '토'];
 const pad = n => String(n).padStart(2, '0');
 const getDateStr = date =>
@@ -67,9 +65,9 @@ const getDateStr = date =>
     : '';
 
 const departments = [
-  { name: '보철과', color: '#3cc441' },   // 초록
-  { name: '교정과', color: '#f5433a' },   // 빨강
-  { name: '치주과', color: '#1794f7' },   // 파랑/녹색
+  { name: '보철과', color: '#3cc441' },
+  { name: '교정과', color: '#f5433a' },
+  { name: '치주과', color: '#1794f7' },
 ];
 const times = ['10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
 
@@ -82,15 +80,12 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
     const bookedTimes = todayEvents
       .filter(e => e.department === d.name)
       .flatMap(e => {
-        if (!e.time) return [];
-        if (e.time.includes('~')) {
-          const [start, end] = e.time.split('~');
-          const idxStart = times.indexOf(start);
-          const idxEnd = times.indexOf(end);
-          return times.slice(idxStart, idxEnd + 1);
+        if (e.startTime && e.endTime) {
+          const idxStart = times.indexOf(e.startTime);
+          const idxEnd = times.indexOf(e.endTime);
+          if (idxStart !== -1 && idxEnd !== -1) return times.slice(idxStart, idxEnd + 1);
         }
-        if (e.time.includes(',')) return e.time.split(',');
-        return [e.time];
+        return [];
       });
     return times.every(t => bookedTimes.includes(t));
   });
@@ -114,15 +109,12 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
               const bookedTimes = eventsForDay
                 .filter(e => e.department === d.name)
                 .flatMap(e => {
-                  if (!e.time) return [];
-                  if (e.time.includes('~')) {
-                    const [start, end] = e.time.split('~');
-                    const idxStart = times.indexOf(start);
-                    const idxEnd = times.indexOf(end);
-                    return times.slice(idxStart, idxEnd + 1);
+                  if (e.startTime && e.endTime) {
+                    const idxStart = times.indexOf(e.startTime);
+                    const idxEnd = times.indexOf(e.endTime);
+                    if (idxStart !== -1 && idxEnd !== -1) return times.slice(idxStart, idxEnd + 1);
                   }
-                  if (e.time.includes(',')) return e.time.split(',');
-                  return [e.time];
+                  return [];
                 });
               return times.every(t => bookedTimes.includes(t));
             });
@@ -143,7 +135,6 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
           }}
         />
       </CalendarWrapper>
-      {/* 달력 아래: 과별 마감 배지 */}
       <BadgeWrap>
         {closedDepts.map(d => (
           <Badge key={d.name} color={d.color}>
@@ -156,11 +147,12 @@ function CalendarPanel({ selectedDate, onDateChange, events }) {
         {todayEvents.length === 0 ? (
           <li style={{color:'#aaa'}}>예약 없음</li>
         ) : todayEvents
-          .sort((a,b)=>a.time.localeCompare(b.time))
+          .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
           .map(e => (
-            <EventItem key={e.id || (e.name + e.birth + e.time)}>
+            <EventItem key={e.id || (e.name + e.birth + e.startTime)}>
               <span className="dot" />
-              {e.time} 
+              {e.startTime}
+              {e.endTime && e.startTime !== e.endTime ? `~${e.endTime}` : ''}
               <span style={{ marginLeft: 5 }}>
                 {e.name}
                 {e.birth && (

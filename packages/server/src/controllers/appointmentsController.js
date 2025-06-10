@@ -18,6 +18,8 @@ export const getTodayAppointments = async (req, res) => {
 // 예약 생성
 export const createAppointment = async (req, res) => {
   try {
+    // undefined → null or "" 처리
+    const safeValue = v => v === undefined ? null : v;
     const {
       userId,
       doctorId,
@@ -25,13 +27,33 @@ export const createAppointment = async (req, res) => {
       startTime,
       endTime,
       chairNumber,
-      status
+      status,
+      department,
+      name,
+      birth,
+      title,
+      phone,
+      gender,
+      memo,
     } = req.body;
     if (!userId || !doctorId || !date || !startTime || !endTime || !chairNumber) {
       return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
     }
     const ref = await db.collection("appointments").add({
-      userId, doctorId, date, startTime, endTime, chairNumber, status: status || "reserved"
+      userId: safeValue(userId),
+      doctorId: safeValue(doctorId),
+      date: safeValue(date),
+      startTime: safeValue(startTime),
+      endTime: safeValue(endTime),
+      chairNumber: safeValue(chairNumber),
+      status: safeValue(status) || "reserved",
+      department: safeValue(department),
+      name: safeValue(name),
+      birth: safeValue(birth),
+      title: safeValue(title),
+      phone: safeValue(phone),
+      gender: safeValue(gender),
+      memo: safeValue(memo),
     });
     res.status(201).json({ id: ref.id });
   } catch (err) {

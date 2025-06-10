@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { fetchProceduresByName } from '../../api/patients';
 
-// 진료과별 담당의사 매핑
 const DOCTOR_MAP = {
   '보철과': ['김치과 원장', '이보철 선생'],
   '교정과': ['박교정 원장', '정교정 선생'],
@@ -85,16 +84,12 @@ const ReservationDetail = ({ date, events, onEdit, onDelete }) => {
   const [selectedDept, setSelectedDept] = useState('전체');
   const [selectedDoctor, setSelectedDoctor] = useState('전체');
 
-  // 진료과 목록 추출
   const departmentList = ['전체', ...Object.keys(DOCTOR_MAP)];
-
-  // 현재 선택된 진료과에 맞는 의사 목록
   const doctorList = selectedDept === '전체'
     ? ['전체']
     : ['전체', ...DOCTOR_MAP[selectedDept]];
 
   useEffect(() => {
-    // 환자별 시술이력 fetch (이름+생년월일)
     const fetchAllProcedures = async () => {
       const map = {};
       for (const resv of reservations) {
@@ -113,15 +108,16 @@ const ReservationDetail = ({ date, events, onEdit, onDelete }) => {
     else setProcedureMap({});
   }, [reservations]);
 
-  // 필터 함수: 진료과/의사 드롭다운 반영
+  // 진료과/의사별 필터
+  const filterByDeptAndDoctor = (r) =>
+    (selectedDept === '전체' || r.department === selectedDept) &&
+    (selectedDoctor === '전체' || r.doctor === selectedDoctor);
+
+  // 시술이력 필터
   const filterProcedures = (procs) => {
     let filtered = procs;
-    if (selectedDept !== '전체') {
-      filtered = filtered.filter(p => p.department === selectedDept);
-    }
-    if (selectedDoctor !== '전체') {
-      filtered = filtered.filter(p => p.doctor === selectedDoctor);
-    }
+    if (selectedDept !== '전체') filtered = filtered.filter(p => p.department === selectedDept);
+    if (selectedDoctor !== '전체') filtered = filtered.filter(p => p.doctor === selectedDoctor);
     return filtered;
   };
 
@@ -144,41 +140,43 @@ const ReservationDetail = ({ date, events, onEdit, onDelete }) => {
       {reservations.length === 0 ? (
         <EmptyBox>예약이 없습니다.</EmptyBox>
       ) : (
-        reservations.map((resv, i) => {
-          const procs = procedureMap[`${resv.name}_${resv.birth}`] || [];
-          const filteredProcs = filterProcedures(procs);
-          return (
-            <Card key={resv.id || i}>
-              <MetaRow>
-                <strong>
-                  {resv.name}
-                  {resv.birth && (
-                    <span style={{ fontSize: 13, color: '#888', marginLeft: 6 }}>
-                      ({resv.birth})
-                    </span>
-                  )}
-                </strong>
-                <Badge>{resv.department}</Badge>
-              </MetaRow>
-              <div style={{ marginBottom: '4px' }}>
-                시간: {resv.time || '-'} | 상태: {resv.status || '대기'}
-              </div>
-              <div>연락처: {resv.phone || '-'}</div>
-              <div>성별: {resv.gender || '-'}</div>
-              <div>
-                <b>시술: </b>
-                {filteredProcs.length > 0
-                  ? filteredProcs.map(p => `${p.title} (${p.department}, ${p.doctor})`).join(', ')
-                  : '-'}
-              </div>
-              <div>메모: {resv.memo || resv.notes || '-'}</div>
-              <ButtonGroup>
-                <button className="edit" onClick={() => onEdit(resv)}>수정</button>
-                <button className="delete" onClick={() => onDelete(resv.id)}>삭제</button>
-              </ButtonGroup>
-            </Card>
-          );
-        })
+        reservations
+          .filter(filterByDeptAndDoctor)
+          .map((resv, i) => {
+            const procs = procedureMap[`${resv.name}_${resv.birth}`] || [];
+            const filteredProcs = filterProcedures(procs);
+            return (
+              <Card key={resv.id || i}>
+                <MetaRow>
+                  <strong>
+                    {resv.name}
+                    {resv.birth && (
+                      <span style={{ fontSize: 13, color: '#888', marginLeft: 6 }}>
+                        ({resv.birth})
+                      </span>
+                    )}
+                  </strong>
+                  <Badge>{resv.department}</Badge>
+                </MetaRow>
+                <div style={{ marginBottom: '4px' }}>
+                  시간: {(resv.startTime && resv.endTime) ? `${resv.startTime}~${resv.endTime}` : '-'} | 상태: {resv.status || '대기'}
+                </div>
+                <div>연락처: {resv.phone || '-'}</div>
+                <div>성별: {resv.gender || '-'}</div>
+                <div>
+                  <b>시술: </b>
+                  {filteredProcs.length > 0
+                    ? filteredProcs.map(p => `${p.title} (${p.department}, ${p.doctor})`).join(', ')
+                    : '-'}
+                </div>
+                <div>메모: {resv.memo || resv.notes || '-'}</div>
+                <ButtonGroup>
+                  <button className="edit" onClick={() => onEdit(resv)}>수정</button>
+                  <button className="delete" onClick={() => onDelete(resv.id)}>삭제</button>
+                </ButtonGroup>
+              </Card>
+            );
+          })
       )}
     </Panel>
   );

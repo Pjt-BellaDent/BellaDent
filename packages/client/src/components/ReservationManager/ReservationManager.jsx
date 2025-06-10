@@ -42,8 +42,9 @@ const ReservationManager = () => {
       const data = await res.json();
       const grouped = {};
       data.forEach(item => {
-        if (!grouped[item.reservationDate]) grouped[item.reservationDate] = [];
-        grouped[item.reservationDate].push(item);
+        const dateKey = item.date; // ★ 반드시 date 필드 사용!
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(item);
       });
       setEvents(grouped);
     } catch (err) {
@@ -52,12 +53,10 @@ const ReservationManager = () => {
   };
   useEffect(() => { fetchEvents(); }, [selectedDate]);
 
-  // 예약 저장 (이름+생년월일 필수)
+  // 예약 저장
   const handleSave = async (formData) => {
     try {
-      console.log('저장할 데이터:', formData); // 데이터 확인용 로그
-
-    
+      // 반드시 department, date, startTime, endTime 등 모두 포함
       const method = editData?.id ? 'PUT' : 'POST';
       const url = editData?.id
         ? `http://localhost:3000/appointments/${editData.id}`
@@ -93,8 +92,10 @@ const ReservationManager = () => {
   const handleAdd = (prefill = {}) => {
     setEditData({
       department: prefill.department || '',
-      time: prefill.time || '',
-      reservationDate: getDateStr(selectedDate)
+      date: getDateStr(selectedDate),
+      startTime: prefill.startTime || '',
+      endTime: prefill.endTime || '',
+      // 추가로 필요한 필드(doctorId, title, 등) 있으면 여기에 넣어도 됨
     });
     setModalOpen(true);
   };

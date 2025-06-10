@@ -116,6 +116,7 @@ const DOCTOR_MAP = {
     { name: '한치주 선생', id: 'doctor6' },
   ],
 };
+
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
   const [form, setForm] = useState({
     name: '',
@@ -137,25 +138,25 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const [birthDay, setBirthDay] = useState('');
   const [selectedTimes, setSelectedTimes] = useState([]);
 
-  // ✅ 최신 fetch만 반영 (race condition 대응)
+  // userId fetch race condition 방지
   const latestFetch = useRef(0);
 
+  // 예약 시간 차단(해당 날짜, 해당 진료과, 이미 예약된 구간)
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.date || !Array.isArray(eventsForDate)) return [];
     return eventsForDate
-      .filter(e => e.department === form.department && e.date === form.date && (!initialData || initialData.time !== e.time))
+      .filter(e => e.department === form.department && e.date === form.date)
       .flatMap(e => {
-        if (e.time && e.time.includes('~')) {
-          const [start, end] = e.time.split('~');
-          const idxStart = HOUR_MAP.indexOf(start);
-          const idxEnd = HOUR_MAP.indexOf(end);
+        if (e.startTime && e.endTime) {
+          const idxStart = HOUR_MAP.indexOf(e.startTime);
+          const idxEnd = HOUR_MAP.indexOf(e.endTime);
           return HOUR_MAP.slice(idxStart, idxEnd + 1);
         }
-        return [e.time];
+        return [];
       });
-  }, [form.department, form.date, eventsForDate, initialData]);
+  }, [form.department, form.date, eventsForDate]);
 
-  // userId 자동 조회 (최신 요청만 반영)
+  // userId 자동 조회
   useEffect(() => {
     if (form.name && form.birth) {
       const currentFetch = Date.now();
@@ -195,13 +196,10 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         gender: initialData.gender || '',
         status: initialData.status || '대기',
       });
-      if (initialData.time && initialData.time.includes('~')) {
-        const [start, end] = initialData.time.split('~');
-        const idxStart = HOUR_MAP.indexOf(start);
-        const idxEnd = HOUR_MAP.indexOf(end);
+      if (initialData.startTime && initialData.endTime) {
+        const idxStart = HOUR_MAP.indexOf(initialData.startTime);
+        const idxEnd = HOUR_MAP.indexOf(initialData.endTime);
         setSelectedTimes(HOUR_MAP.slice(idxStart, idxEnd + 1));
-      } else if (initialData.time) {
-        setSelectedTimes([initialData.time]);
       } else {
         setSelectedTimes([]);
       }
@@ -231,6 +229,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
   }, [birthYear, birthMonth, birthDay]);
 
+  // 담당의(doctorId) 선택시 id도 같이 세팅
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'doctor') {
@@ -246,6 +245,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     if (name === 'department') setSelectedTimes([]);
   };
 
+  // 예약 시간 버튼 클릭
   const handleTimeClick = (t) => {
     if (reservedTimes.includes(t)) return;
     if (selectedTimes.includes(t)) {
@@ -255,12 +255,14 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
   };
 
+  // 연속된 시간 구간만 허용
   const isContinuous = (arr) => {
     const idx = arr.map(t => HOUR_MAP.indexOf(t)).sort((a, b) => a - b);
     for (let i = 1; i < idx.length; ++i) if (idx[i] !== idx[i - 1] + 1) return false;
     return true;
   };
 
+  // 실제 appointments 저장 규격에 맞게 변환해서 onSave 호출
   const handleSubmit = () => {
     if (!form.userId || !form.doctorId || !form.date || selectedTimes.length === 0 || !form.department || !form.title || !form.chairNumber) {
       alert('필수 항목 누락. 담당의/환자 선택, 날짜, 시간, 진료과, 시술, 체어를 모두 선택해주세요.');
@@ -277,12 +279,17 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     onSave({
       userId: form.userId,
       doctorId: form.doctorId,
+      department: form.department, // ★ 반드시 포함!
       date: form.date,
       startTime,
       endTime,
       chairNumber,
       status: form.status || 'reserved',
-      // 필요시 추가: memo 등
+      title: form.title,
+      memo: form.memo,
+      name: form.name,     // ← 추가!!
+      birth: form.birth,   // ← 추가!!
+      // 추가 필드 필요시 여기에
     });
   };
 
