@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { UserInfoContext } from '../context/UserInfoContext';
+import { useUserInfo } from '../contexts/UserInfoContext';
 import NoticeModal from '../components/Notice/NoticeModal';
 
 function DashboardFrame() {
-  const { userInfo, isLogin } = useContext(UserInfoContext);
+  const { userInfo } = useUserInfo();
 
   const noticeRef = useRef(); // ⬅️ ref 생성
   const todayKey = new Date().toISOString().split('T')[0];
@@ -18,11 +18,10 @@ function DashboardFrame() {
     }
   }, []);
 
-    setTitle('');
-    setBody('');
-    setEditIndex(null);
-    setShowForm(false);
-  };
+  setTitle('');
+  setBody('');
+  setEditIndex(null);
+  setShowForm(false);
 
   const handleDelete = (idx) => {
     setNotices(notices.filter((_, i) => i !== idx));
@@ -36,7 +35,7 @@ function DashboardFrame() {
     setShowForm(true);
   };
 
-  if (!isLogin || !userInfo) {
+  if (!userInfo) {
     return <div>로그인이 필요합니다.</div>;
   }
 
@@ -79,4 +78,3 @@ function DashboardFrame() {
 }
 
 export default DashboardFrame;
-  

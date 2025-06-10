@@ -4,6 +4,7 @@ import logger from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+
 import userRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
 import reviewsRouter from "./routes/reviews.js";
@@ -13,7 +14,6 @@ import procedureRouter from "./routes/procedure.js";
 import staffSchedulesRouter from "./routes/staffSchedules.js";
 import recordsRouter from "./routes/records.js";
 import postsRouter from "./routes/posts.js";
-import smsRouter from "./routes/sms.js";
 import messagesRouter from "./routes/messages.js";
 import activitiesRouter from './routes/activities.js';
 import statsRouter from './routes/stats.js';
@@ -22,7 +22,6 @@ import noticeRoutes from './routes/notice.js';
 import smsRoutes from './routes/sms.js';
 import onsiteRoutes from './routes/onsite.js';
 import feedbackRoutes from './routes/feedback.js';
-import aiChatRoutes from './routes/aiChat.js';
 
 
 dotenv.config();
@@ -46,7 +45,6 @@ app.use('/api/notice', noticeRoutes);
 app.use('/api/sms', smsRoutes);
 app.use('/api/onsite', onsiteRoutes);
 app.use('/api/feedback', feedbackRoutes);
-app.use('/aiChat', aiChatRoutes);
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/appointments", appointmentsRouter);
