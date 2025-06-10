@@ -1,37 +1,37 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import axios from 'axios';
 
-const Container = styled.div`
-  max-width: 960px;
-  margin: 50px auto;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
-  padding: 48px;
+const AppContainer = styled.div`
+  background: #f9f9f9;
+  padding: 40px 20px;
+  min-height: 100vh;
 `;
 
-const TitleBox = styled.div`
-  text-align: center;
-  margin-bottom: 36px;
+const Wrapper = styled.div`
+  max-width: 960px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 48px 60px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Noto Sans KR', sans-serif;
 `;
 
 const Title = styled.h2`
-  font-size: 28px;
-  font-weight: 700;
-  color: #222;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
 `;
 
-const FormRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  margin-bottom: 28px;
+const Description = styled.p`
+  text-align: center;
+  color: #777;
+  margin-bottom: 40px;
 `;
 
 const FormGroup = styled.div`
-  flex: 1;
-  min-width: 220px;
+  margin-bottom: 20px;
 `;
 
 const Label = styled.label`
@@ -39,198 +39,161 @@ const Label = styled.label`
   margin-bottom: 8px;
   font-weight: 600;
   color: #333;
+  font-size: 14px;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 15px;
-  background: #f9f9f9;
+  font-size: 14px;
+  background: #fff;
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 15px;
-  background: #f9f9f9;
+  font-size: 14px;
+  background: #fff;
+`;
+
+const TwoColumnRow = styled.div`
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+`;
+
+const HalfWidth = styled.div`
+  flex: 1;
+  min-width: 300px;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  font-weight: bold;
+  margin: 40px 0 16px;
 `;
 
 const Button = styled.button`
-  background: #007bff;
-  color: white;
-  padding: 14px 28px;
+  width: 100%;
+  padding: 16px 0;
+  background: #5f0080;
+  color: #fff;
   font-size: 16px;
+  font-weight: bold;
   border: none;
-  border-radius: 10px;
+  border-radius: 4px;
+  margin-top: 20px;
   cursor: pointer;
-  margin-top: 10px;
   transition: background 0.3s ease;
   &:hover {
-    background-color: #0056b3;
+    background: #3e005b;
   }
 `;
 
-const Table = styled.table`
-  width: 100%;
-  margin-top: 50px;
-  border-collapse: collapse;
-  font-size: 15px;
-`;
-
-const Th = styled.th`
-  padding: 14px;
-  background: #f1f3f6;
-  text-align: left;
-  border-bottom: 2px solid #ddd;
-  color: #333;
-`;
-
-const Td = styled.td`
-  padding: 14px;
-  border-bottom: 1px solid #eee;
-  color: #555;
-`;
-
-const EmptyMsg = styled.p`
-  margin-top: 50px;
+const EmptyMessage = styled.p`
   text-align: center;
-  color: #888;
+  color: #999;
+  margin-top: 24px;
 `;
 
-const OnsiteRegistration = () => {
+const OnsiteRegister = () => {
   const [form, setForm] = useState({
     name: '',
-    rrn: '',
+    birth: '',
     gender: '',
     phone: '',
-    address: ''
+    address: '',
+    insuranceNumber: '',
+    firstVisitDate: '',
+    lastVisitDate: ''
   });
 
   const [patients, setPatients] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.rrn || !form.gender || !form.phone) {
+    if (!form.name || !form.birth || !form.gender || !form.phone) {
       alert('모든 필수 정보를 입력해주세요.');
       return;
     }
-
-    try {
-      const res = await axios.post('http://localhost:3000/api/onsite/register', form);
-      console.log('서버 응답:', res.data);
-    } catch (err) {
-      console.error('서버 오류:', err);
-    }
-
-    setPatients(prev => [...prev, form]);
-    setForm({ name: '', rrn: '', gender: '', phone: '', address: '' });
+    setPatients((prev) => [...prev, form]);
+    setForm({
+      name: '', birth: '', gender: '', phone: '', address: '',
+      insuranceNumber: '', firstVisitDate: '', lastVisitDate: ''
+    });
   };
-
-  const handleRegister = async () => {
-  const newPatient = {
-    name: formData.name,
-    birth: formData.birth,
-    gender: formData.gender,
-    phone: formData.phone,
-    address: formData.address,
-    insuranceNumber: '123456-7890123',
-    firstVisitDate: new Date(),
-    lastVisitDate: new Date(),
-    allergies: '',
-    medications: '',
-    memo: '',
-  };
-
-  try {
-    await axios.post('http://localhost:3000/api/onsite/firestore', newPatient);
-    alert('등록 완료');
-  } catch (error) {
-    console.error('등록 실패:', error);
-    alert('등록 중 오류 발생');
-  }
-};
-
 
   return (
-    <Container>
-      <TitleBox>
+    <AppContainer>
+      <Wrapper>
         <Title>현장 접수</Title>
-      </TitleBox>
-      <form onSubmit={handleSubmit}>
-        <FormRow>
+        <Description>기본 정보를 입력해 주세요. <span style={{ color: '#dc3545' }}>*</span> 표시는 필수 항목입니다.</Description>
+        <form onSubmit={handleSubmit}>
+          <TwoColumnRow>
+            <HalfWidth>
+              <Label>이름 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Input name="name" value={form.name} onChange={handleChange} required />
+            </HalfWidth>
+            <HalfWidth>
+              <Label>생년월일 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Input type="date" name="birth" value={form.birth} onChange={handleChange} required />
+            </HalfWidth>
+          </TwoColumnRow>
+
+          <TwoColumnRow>
+            <HalfWidth>
+              <Label>성별 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Select name="gender" value={form.gender} onChange={handleChange} required>
+                <option value="">선택</option>
+                <option value="남">남</option>
+                <option value="여">여</option>
+              </Select>
+            </HalfWidth>
+            <HalfWidth>
+              <Label>전화번호 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Input name="phone" value={form.phone} onChange={handleChange} required />
+            </HalfWidth>
+          </TwoColumnRow>
+
           <FormGroup>
-            <Label>이름</Label>
-            <Input name="name" value={form.name} onChange={handleChange} required />
-          </FormGroup>
-          <FormGroup>
-            <Label>주민등록번호</Label>
-            <Input
-              name="rrn"
-              placeholder="예: 000101-3******"
-              value={form.rrn}
-              onChange={handleChange}
-              required
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label>성별</Label>
-            <Select name="gender" value={form.gender} onChange={handleChange} required>
-              <option value="">선택</option>
-              <option value="남">남</option>
-              <option value="여">여</option>
-            </Select>
-          </FormGroup>
-        </FormRow>
-        <FormRow>
-          <FormGroup>
-            <Label>전화번호</Label>
-            <Input type="tel" name="phone" value={form.phone} onChange={handleChange} required />
-          </FormGroup>
-          <FormGroup style={{ flex: 2 }}>
             <Label>주소</Label>
             <Input name="address" value={form.address} onChange={handleChange} />
           </FormGroup>
-        </FormRow>
-        <Button type="submit">접수</Button>
-      </form>
 
-      {patients.length > 0 ? (
-        <Table>
-          <thead>
-            <tr>
-              <Th>이름</Th>
-              <Th>주민등록번호</Th>
-              <Th>성별</Th>
-              <Th>전화번호</Th>
-              <Th>주소</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {patients.map((p, idx) => (
-              <tr key={idx}>
-                <Td>{p.name}</Td>
-                <Td>{p.rrn}</Td>
-                <Td>{p.gender}</Td>
-                <Td>{p.phone}</Td>
-                <Td>{p.address}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <EmptyMsg>접수된 환자가 아직 없습니다.</EmptyMsg>
-      )}
-    </Container>
+          <SectionTitle>진료 관련 정보</SectionTitle>
+
+          <FormGroup>
+            <Label>의료보험 번호</Label>
+            <Input name="insuranceNumber" value={form.insuranceNumber} onChange={handleChange} />
+          </FormGroup>
+
+          <TwoColumnRow>
+            <HalfWidth>
+              <Label>첫 내원일</Label>
+              <Input type="date" name="firstVisitDate" value={form.firstVisitDate} onChange={handleChange} />
+            </HalfWidth>
+            <HalfWidth>
+              <Label>마지막 내원일</Label>
+              <Input type="date" name="lastVisitDate" value={form.lastVisitDate} onChange={handleChange} />
+            </HalfWidth>
+          </TwoColumnRow>
+
+          <Button type="submit">접수</Button>
+        </form>
+
+        {patients.length === 0 && <EmptyMessage>접수된 환자가 아직 없습니다.</EmptyMessage>}
+      </Wrapper>
+    </AppContainer>
   );
 };
 
-export default OnsiteRegistration;
+export default OnsiteRegister;
