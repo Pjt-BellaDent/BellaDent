@@ -1,10 +1,10 @@
 import React from 'react';
-import UserUpdateFrom from '../../../components/UserUpdateForm';
+import UserUpdateForm from '../../../components/web/UserUpdateForm';
 
 function UserUpdate() {
   return (
     <>
-      <UserUpdateFrom />
+      <UserUpdateForm />
     </>
   );
 }
