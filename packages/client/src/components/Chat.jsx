@@ -1,18 +1,7 @@
 // 🔧 직원용 Chat.jsx (입력 중 표시까지 포함된 전체 코드)
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-import { db } from '../firebase';
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  doc,
-  addDoc,
-  updateDoc,
-  serverTimestamp,
-  getDoc,
-} from 'firebase/firestore';
+
 
 const ChatWrapper = styled.div`
   display: flex;
