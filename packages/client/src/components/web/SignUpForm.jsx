@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function SignUpForm() {
@@ -11,9 +11,6 @@ function SignUpForm() {
     name: '',
     phone: '',
     address: '',
-    birthDate: null,
-    gender: null,
-    createdAt: '',
   });
 
   const handleChange = (e) => {
@@ -35,9 +32,6 @@ function SignUpForm() {
           name: formData.name,
           phone: formData.phone,
           address: formData.address,
-          birthDate: formData.birthDate,
-          gender: formData.gender,
-          createdAt: new Date(),
         })
         .then((res) => {
           if (res.status === 201) {
