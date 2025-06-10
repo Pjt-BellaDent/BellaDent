@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { HospitalProvider } from './contexts/HospitalContext.jsx';
 
 import Frame from './routes/web/Frame';
 
@@ -36,20 +35,24 @@ import PatientList from './components/PatientList/PatientList';
 import ReservationManager from './components/ReservationManager/ReservationManager';
 import Chat from './components/Chat';
 import ChatbotSettings from './components/ChatbotSettings';
-import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
+import GeneralSettings from './components/GeneralSettings/GeneralSettings';
 import Sms from './components/Sms/SmsBroadcast';
 import Feedback from './components/Feedback/FeedbackList';
+import UserPermission from './components/GeneralSettings/UserPermission';
+import HospitalInfo from './components/GeneralSettings/HospitalInfo';
+
+import NotFound from './components/NotFound';
 
 function App() {
   return (
-    <HospitalProvider>
+    <>
       <Routes>
-        {/* 공개 웹 프레임 */}
         <Route path="/" element={<Frame />}>
           <Route index element={<Home />} />
-          <Route path="SignIn" element={<SignIn />} />
+          <Route path="signIn" element={<SignIn />} />
           <Route path="signup" element={<SignUp />} />
           <Route path="userinfo" element={<UserInfo />} />
+
           <Route path="user-update" element={<UserUpdate />} />
           <Route path="greeting" element={<Greeting />} />
           <Route path="tour" element={<Tour />} />
@@ -91,9 +94,12 @@ function App() {
           <Route path="chat-settings" element={<ChatbotSettings />} />
           {/* 시스템 설정(관리자) */}
           <Route path="settings" element={<GeneralSettings />} />
+          <Route path="user-permissions" element={<UserPermission />} />
+          <Route path="hospital-info" element={<HospitalInfo />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
-    </HospitalProvider>
+    </>
   );
 }
 

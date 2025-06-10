@@ -1,17 +1,46 @@
-// src/routes/consultations.js (상담 라우트)
-import express from 'express';
+import express from "express";
 import {
-  createConsultation,
-  getConsultations,
-  updateConsultation,
+  createOrAddMessage,
+  aiChatBotReply,
+  staffReply,
+  getAllConsultations,
+  getMessagesById,
+  enableMessage,
+  disabledMessage,
   deleteConsultation
-} from '../controllers/consultationsController.js';
+} from "../controllers/consultationsController.js";
+import {
+  authenticateFirebaseToken, // 모든 보호된 라우트에 적용
+  patientRoleCheck, // 환자 포함 모든 인증 사용자
+  staffRoleCheck, // 스태프 이상
+  managerRoleCheck, // 매니저 이상
+  adminRoleCheck, // 어드민만
+} from "../middleware/roleCheck.js";
 
 const router = express.Router();
 
-router.post('/', createConsultation);         // 상담 등록
-router.get('/', getConsultations);            // 전체/조건별 조회
-router.put('/:id', updateConsultation);       // 상담 상태/담당자 수정
-router.delete('/:id', deleteConsultation);    // 상담 삭제
+router.post(
+  "/",
+  authenticateFirebaseToken,
+  patientRoleCheck,
+  createOrAddMessage
+);
+router.post("/ai", authenticateFirebaseToken, patientRoleCheck, aiChatBotReply);
+router.post("/staff", authenticateFirebaseToken, staffRoleCheck, staffReply);
+router.get(
+  "/:id",
+  authenticateFirebaseToken,
+  staffRoleCheck,
+  getAllConsultations
+);
+router.get(
+  "/:id",
+  authenticateFirebaseToken,
+  patientRoleCheck,
+  getMessagesById
+);
+router.put("/enable/:id", authenticateFirebaseToken, managerRoleCheck, enableMessage);
+router.put("/disabled/:id", authenticateFirebaseToken, managerRoleCheck, disabledMessage);
+router.delete("/:id", authenticateFirebaseToken, adminRoleCheck, deleteConsultation);
 
 export default router;
