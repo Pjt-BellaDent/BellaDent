@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import styled from '@emotion/styled';
 
 const ModalBackground = styled.div`
@@ -116,13 +116,12 @@ const DOCTOR_MAP = {
     { name: '한치주 선생', id: 'doctor6' },
   ],
 };
-
 const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
   const [form, setForm] = useState({
     name: '',
     birth: '',
     userId: '',
-    date: '',        // ★ 필드명 통일
+    date: '',
     department: '',
     title: '',
     doctor: '',
@@ -137,6 +136,9 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
   const [selectedTimes, setSelectedTimes] = useState([]);
+
+  // ✅ 최신 fetch만 반영 (race condition 대응)
+  const latestFetch = useRef(0);
 
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.date || !Array.isArray(eventsForDate)) return [];
@@ -153,19 +155,23 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       });
   }, [form.department, form.date, eventsForDate, initialData]);
 
-  // userId 자동 조회
+  // userId 자동 조회 (최신 요청만 반영)
   useEffect(() => {
     if (form.name && form.birth) {
+      const currentFetch = Date.now();
+      latestFetch.current = currentFetch;
       fetch(`http://localhost:3000/users/userId?name=${encodeURIComponent(form.name)}&birth=${encodeURIComponent(form.birth)}`)
         .then(res => res.json())
         .then(data => {
-          if (data.userId) {
-            setForm(prev => ({ ...prev, userId: data.userId }));
-          } else {
-            setForm(prev => ({ ...prev, userId: "" }));
+          if (latestFetch.current === currentFetch) {
+            setForm(prev => ({ ...prev, userId: data.userId || "" }));
           }
         })
-        .catch(() => setForm(prev => ({ ...prev, userId: "" })));
+        .catch(() => {
+          if (latestFetch.current === currentFetch) {
+            setForm(prev => ({ ...prev, userId: "" }));
+          }
+        });
     } else {
       setForm(prev => ({ ...prev, userId: "" }));
     }
@@ -178,7 +184,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
         name: initialData.name || '',
         birth: initialData.birth || '',
         userId: initialData.userId || '',
-        date: initialData.date || selectedDate || '', // ★ 변경
+        date: initialData.date || selectedDate || '',
         department: initialData.department || '',
         title: initialData.title || '',
         doctor: initialData.doctor || '',
@@ -205,7 +211,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       setForm(prev => ({
         ...prev,
         userId: '',
-        date: selectedDate || today,  // ★ 변경
+        date: selectedDate || today,
         department: '',
         title: '',
         doctor: '',
@@ -225,7 +231,6 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
   }, [birthYear, birthMonth, birthDay]);
 
-  // 담당의(doctorId) 선택 변경시 id도 세팅
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'doctor') {
@@ -256,7 +261,6 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     return true;
   };
 
-  // 실제 appointments 저장 규격에 맞게 변환해서 onSave 호출
   const handleSubmit = () => {
     if (!form.userId || !form.doctorId || !form.date || selectedTimes.length === 0 || !form.department || !form.title || !form.chairNumber) {
       alert('필수 항목 누락. 담당의/환자 선택, 날짜, 시간, 진료과, 시술, 체어를 모두 선택해주세요.');
@@ -273,7 +277,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     onSave({
       userId: form.userId,
       doctorId: form.doctorId,
-      date: form.date,  // ★ 변경
+      date: form.date,
       startTime,
       endTime,
       chairNumber,
@@ -284,7 +288,6 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
 
   const departmentHours = HOUR_MAP;
   const { am, pm } = splitAmPm(departmentHours);
-
   return (
     <ModalBackground open={open} onClick={e => e.target === e.currentTarget && onClose()}>
       <ModalBox>
