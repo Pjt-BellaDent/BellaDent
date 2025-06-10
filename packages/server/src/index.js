@@ -4,9 +4,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import userRouter from "./routes/users.js";
-import aiChatRouter from "./routes/aiChat.js";
+import consultationsRouter from "./routes/consultations.js";
 import reviewsRouter from "./routes/reviews.js";
-import messagesRouter from "./routes/messages.js";
+import smsLogsRouter from "./routes/smsLogs.js";
 
 dotenv.config();
 
@@ -24,9 +24,9 @@ app.use(
 app.use(logger('dev'))
 
 app.use("/users", userRouter);
-app.use("/chat", aiChatRouter);
+app.use("/consultations", consultationsRouter);
 app.use("/reviews", reviewsRouter);
-app.use("/messages", messagesRouter);
+app.use("/sms", smsLogsRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
