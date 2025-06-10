@@ -129,57 +129,98 @@ const ModalContent = styled.div`
   }
 `;
 
-const Dashboard = () => {
+const DEPT_OPTIONS = [
+  { label: '전체', value: '' },
+  { label: '보철과', value: '보철과' },
+  { label: '교정과', value: '교정과' },
+  { label: '치주과', value: '치주과' }
+];
+
+export default function Dashboard() {
   const reservationRef = useRef(null);
   const procedureRef = useRef(null);
+  const [appointments, setAppointments] = useState([]);
+  const [procedures, setProcedures] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [selectedDept, setSelectedDept] = useState('');
   const [modalData, setModalData] = useState({ visible: false, title: '', data: [] });
 
-  const todayAppointments = [
-    { time: '09:00', name: '홍길동', procedure: '라미네이트', note: '치아 6개 시술', doctor: '김치과 원장' },
-    { time: '10:30', name: '김하나', procedure: '스케일링', note: '잇몸 민감', doctor: '홍의사' },
-    { time: '13:00', name: '이수정', procedure: '잇몸성형', note: '지혈 체크 필요', doctor: '김치과 원장' }
-  ];
-
-  const chartData = {
-    reservation: [10, 15, 7, 20, 13, 9, 4],
-    procedure: [3, 5, 2]
-  };
-
   useEffect(() => {
-    new Chart(reservationRef.current, {
-      type: 'line',
-      data: {
-        labels: ['월', '화', '수', '목', '금', '토', '일'],
-        datasets: [{
-          label: '예약 수',
-          data: chartData.reservation,
-          fill: false,
-          borderColor: '#007bff',
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
-      }
-    });
+    const fetchData = async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        // 예약, 시술 데이터
+        const resAppointments = await fetch('http://localhost:3000/appointments/today');
+        const appointmentsData = await resAppointments.json();
+        setAppointments(appointmentsData);
 
-    new Chart(procedureRef.current, {
-      type: 'bar',
-      data: {
-        labels: ['라미네이트', '스케일링', '잇몸성형'],
-        datasets: [{
-          label: '시술 횟수',
-          data: chartData.procedure,
-          backgroundColor: ['#007bff', '#28a745', '#ffc107']
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } }
+        const resProcedures = await fetch('http://localhost:3000/procedures/today');
+        setProcedures(await resProcedures.json());
+
+        // 최근 활동 (임시: appointments, procedures 최근 10개 merge)
+        const resActivities = await fetch('http://localhost:3000/activities/recent');
+        setActivities(await resActivities.json());
+
+        // 차트 데이터(기존과 동일)
+        const resChart = await fetch('http://localhost:3000/stats/chart');
+        const stats = await resChart.json();
+
+        new Chart(reservationRef.current, {
+          type: 'line',
+          data: {
+            labels: ['일', '월', '화', '수', '목', '금', '토'],
+            datasets: [{
+              label: '예약 수',
+              data: stats.reservations,
+              fill: false,
+              borderColor: '#007bff',
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        new Chart(procedureRef.current, {
+          type: 'bar',
+          data: {
+            labels: stats.procedureLabels,
+            datasets: [{
+              label: '시술 횟수',
+              data: stats.procedures,
+              backgroundColor: ['#007bff', '#28a745', '#ffc107']
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+      } catch (error) {
+        console.error('데이터 불러오기 실패:', error);
       }
-    });
+    };
+
+    fetchData();
   }, []);
+
+  // 진료과 필터링
+  const filteredAppointments = appointments.filter(a => selectedDept ? a.department === selectedDept : true);
+
+  // 카드용 데이터
+  const todayTreatmentCount = filteredAppointments.filter(a => a.status === '진료중' || a.status === '진료완료').length;
+  const todayReserveCount = filteredAppointments.length;
+  const todayWaitingCount = filteredAppointments.filter(a => a.status === '대기').length;
+
+  // 최근 활동 예시 표출용
+  // activities = [{ type: '예약등록', target: '윤성훈', time: '2025-06-05 14:22' }, ...]
+  const recentActivities = activities.length > 0 ? activities : [
+    { type: '예약 등록', target: '윤성훈', time: '2025-06-05 14:22:12' },
+    { type: '진료 완료', target: '김하나', time: '2025-06-05 13:15:32' },
+    { type: '시술 등록', target: '홍길동', time: '2025-06-05 10:00:40' },
+  ];
 
   const showModal = (title, data) => {
     setModalData({ visible: true, title, data });
@@ -190,24 +231,31 @@ const Dashboard = () => {
       <Title>대시보드</Title>
 
       <Filter>
-        <label>의료진:</label>
-        <select><option>전체</option><option>김치과 원장</option><option>홍의사</option></select>
+        <label>진료과:</label>
+        <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
+          {DEPT_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
         <label>기간:</label>
-        <select><option>주간</option><option>월간</option></select>
+        <select>
+          <option>주간</option>
+          <option>월간</option>
+        </select>
       </Filter>
 
       <CardRow>
-        <Card onClick={() => showModal('오늘 진료 일정', todayAppointments)}>
+        <Card onClick={() => showModal('오늘 진료 일정', filteredAppointments.filter(a => a.status === '진료중' || a.status === '진료완료'))}>
           <div>오늘 진료</div>
-          <strong>18명</strong>
+          <strong>{todayTreatmentCount}명</strong>
         </Card>
-        <Card onClick={() => showModal('예약 건수 상세', todayAppointments)}>
+        <Card onClick={() => showModal('예약 건수 상세', filteredAppointments)}>
           <div>예약 건수</div>
-          <strong>27건</strong>
+          <strong>{todayReserveCount}건</strong>
         </Card>
-        <Card onClick={() => showModal('대기 환자 목록', todayAppointments.filter(x => x.name !== '이수정'))}>
+        <Card onClick={() => showModal('대기 환자 목록', filteredAppointments.filter(x => x.status === '대기'))}>
           <div>대기 환자</div>
-          <strong>5명</strong>
+          <strong>{todayWaitingCount}명</strong>
         </Card>
       </CardRow>
 
@@ -225,9 +273,12 @@ const Dashboard = () => {
       <ActivityBox>
         <h4>최근 활동</h4>
         <ul>
-          <li>📝 홍길동 환자 등록 (05-13)</li>
-          <li>💊 김하나 진료 완료 (05-13)</li>
-          <li>📅 이철수 예약 등록 (05-14 예정)</li>
+          {recentActivities.map((act, i) => (
+            <li key={i}>
+              {act.type} - <strong>{act.target}</strong>
+              <span style={{ marginLeft: 12, color: '#888' }}>{act.time}</span>
+            </li>
+          ))}
         </ul>
       </ActivityBox>
 
@@ -239,12 +290,17 @@ const Dashboard = () => {
           ) : (
             <table>
               <thead>
-                <tr><th>시간</th><th>이름</th><th>시술</th><th>특이사항</th><th>의료진</th></tr>
+                <tr><th>시간</th><th>이름</th><th>시술</th><th>특이사항</th><th>진료과</th><th>의료진</th></tr>
               </thead>
               <tbody>
                 {modalData.data.map((item, i) => (
                   <tr key={i}>
-                    <td>{item.time}</td><td>{item.name}</td><td>{item.procedure}</td><td>{item.note}</td><td>{item.doctor}</td>
+                    <td>{item.time}</td>
+                    <td>{item.name}</td>
+                    <td>{item.title || item.procedure || '-'}</td>
+                    <td>{item.memo || item.note || '-'}</td>
+                    <td>{item.department || '-'}</td>
+                    <td>{item.doctor || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -255,6 +311,4 @@ const Dashboard = () => {
       </Modal>
     </Wrapper>
   );
-};
-
-export default Dashboard;
+}
