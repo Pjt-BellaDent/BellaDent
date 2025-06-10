@@ -1,193 +1,132 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import CalendarGrid from './CalendarGrid';
-import ReservationDetail from './ReservationDetail';
+import CalendarPanel from './CalendarPanel';
+import ReservationTimeTable from './ReservationTimeTable';
 import ReservationModal from './ReservationModal';
 
-const Container = styled.div`
-  padding: 30px;
-`;
-
-const CalendarHeader = styled.div`
+const FlexWrap = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  font-size: 14px;
-
-  .nav {
-    display: flex;
-    gap: 10px;
-
-    button {
-      background: none;
-      border: none;
-      color: #007bff;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-  }
-
-  .month {
-    font-size: 16px;
-    font-weight: bold;
-  }
-
-  .filter select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
+  gap: 32px;
+  align-items: flex-start;
 `;
-
-
-const FilterBar = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-bottom: 20px;
-
-  select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
+const RightContent = styled.div`
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  min-height: 550px;
+  box-shadow: 0 2px 8px rgba(34,43,77,0.07);
+  padding: 34px 36px 26px 36px;
 `;
 
 const ReservationManager = () => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 4));
-  const [selectedDept, setSelectedDept] = useState('전체');
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [events, setEvents] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  const [events, setEvents] = useState({
-    '2025-05-01': [
-      { time: '10:00', type: '보철과', name: '이수민', memo: '앞니 시술상담' },
-      { time: '14:00', type: '교정과', name: '김하늘', memo: '교정 중간 체크' }
-    ],
-    '2025-05-05': [
-      { time: '11:00', type: '잇몸클리닉', name: '정하늘', memo: '잇몸 염증 체크' }
-    ]
-  });
+  // 날짜 YYYY-MM-DD
+  const getDateStr = (date) =>
+    date
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : '';
 
-  const formatDateKey = (date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  // 월 YYYY-MM
+  const getMonthStr = (date) =>
+    date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '';
 
-  const changeMonth = (delta) => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + delta);
-    setCurrentDate(newDate);
-    setSelectedDate(null);
-  };
-
-  const handleDayClick = (year, month, day) => {
-    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    setSelectedDate(key);
-  };
-
-  const handleAddEvent = (eventData) => {
-    if (!selectedDate) return;
-    setEvents(prev => {
-      const updated = { ...prev };
-      if (!updated[selectedDate]) updated[selectedDate] = [];
-      updated[selectedDate].push(eventData);
-      return updated;
-    });
-    setModalOpen(false);
-    setEditData(null);
-  };
-
-  const handleEditEvent = (dateKey, index, newData) => {
-    setEvents(prev => {
-      const updated = { ...prev };
-      updated[dateKey][index] = newData;
-      return updated;
-    });
-    setModalOpen(false);
-    setEditData(null);
-  };
-
-  const handleDeleteEvent = (dateKey, index) => {
-    setEvents(prev => {
-      const updated = { ...prev };
-      updated[dateKey].splice(index, 1);
-      if (updated[dateKey].length === 0) delete updated[dateKey];
-      return updated;
-    });
-    if (selectedDate === dateKey && !events[dateKey]?.length) {
-      setSelectedDate(null);
+  // 예약 데이터 불러오기
+  const fetchEvents = async () => {
+    try {
+      const month = getMonthStr(selectedDate);
+      const res = await fetch(`http://localhost:3000/appointments?month=${month}`);
+      const data = await res.json();
+      const grouped = {};
+      data.forEach(item => {
+        const dateKey = item.date; // ★ 반드시 date 필드 사용!
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(item);
+      });
+      setEvents(grouped);
+    } catch (err) {
+      console.error('예약 불러오기 실패', err);
     }
   };
+  useEffect(() => { fetchEvents(); }, [selectedDate]);
 
+  // 예약 저장
+  const handleSave = async (formData) => {
+    try {
+      // 반드시 department, date, startTime, endTime 등 모두 포함
+      const method = editData?.id ? 'PUT' : 'POST';
+      const url = editData?.id
+        ? `http://localhost:3000/appointments/${editData.id}`
+        : `http://localhost:3000/appointments`;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setModalOpen(false);
+      setEditData(null);
+      fetchEvents();
+    } catch (err) { console.error('저장 실패', err); }
+  };
+
+  // 예약 수정
   const handleEditClick = (eventData) => {
     setEditData(eventData);
     setModalOpen(true);
   };
+  // 예약 삭제
+  const handleDelete = async (id) => {
+    if (!id) return;
+    try {
+      const res = await fetch(`http://localhost:3000/appointments/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      fetchEvents();
+    } catch (err) { alert('삭제 실패'); }
+  };
+
+  // 예약 등록(빠른등록 포함)
+  const handleAdd = (prefill = {}) => {
+    setEditData({
+      department: prefill.department || '',
+      date: getDateStr(selectedDate),
+      startTime: prefill.startTime || '',
+      endTime: prefill.endTime || '',
+      // 추가로 필요한 필드(doctorId, title, 등) 있으면 여기에 넣어도 됨
+    });
+    setModalOpen(true);
+  };
+
+  const dateStr = getDateStr(selectedDate);
 
   return (
-    <Container>
-      <h2>📅 예약 관리</h2>
-
-      <CalendarHeader>
-  <div className="nav">
-    <button onClick={() => changeMonth(-1)}>⬅ 이전</button>
-    <button onClick={() => changeMonth(1)}>다음 ➡</button>
-  </div>
-
-  <div className="month">
-    {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
-  </div>
-
-  <div className="filter">
-    <select value={selectedDept} onChange={e => setSelectedDept(e.target.value)}>
-      <option value="전체">전체</option>
-      <option value="보철과">보철과</option>
-      <option value="교정과">교정과</option>
-      <option value="잇몸클리닉">잇몸클리닉</option>
-    </select>
-  </div>
-</CalendarHeader>
-
-      <CalendarGrid
-        date={currentDate}
+    <FlexWrap>
+      <CalendarPanel
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
         events={events}
-        onDayClick={handleDayClick}
-        filterDept={selectedDept}
       />
-
-
-      <ReservationDetail
-        dateKey={selectedDate}
-        events={events}
-        onAdd={() => {
-          setEditData(null);
-          setModalOpen(true);
-        }}
-        onEdit={handleEditClick}
-        onDelete={handleDeleteEvent}
-      />
-
+      <RightContent>
+        <ReservationTimeTable
+          date={dateStr}
+          events={events}
+          onEdit={handleEditClick}
+          onDelete={handleDelete}
+          onAdd={handleAdd}
+        />
+      </RightContent>
       <ReservationModal
         open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditData(null);
-        }}
-        onSave={(data) => {
-          if (editData) {
-            const idx = events[selectedDate]?.findIndex(e =>
-              e.name === editData.name && e.time === editData.time
-            );
-            if (idx > -1) handleEditEvent(selectedDate, idx, data);
-          } else {
-            handleAddEvent(data);
-          }
-        }}
+        onClose={() => { setModalOpen(false); setEditData(null); }}
+        onSave={handleSave}
         initialData={editData}
+        selectedDate={dateStr}
+        eventsForDate={events[dateStr] || []}
       />
-    </Container>
+    </FlexWrap>
   );
 };
 
