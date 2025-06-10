@@ -36,14 +36,11 @@ app.use("/reviews", reviewsRouter);
 app.use("/sms", smsLogsRouter);
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
-app.use("/users", usersRouter);
 app.use("/appointments", appointmentsRouter);
 app.use("/procedures", procedureRouter);
 app.use("/staff-schedules", staffSchedulesRouter);
 app.use("/records", recordsRouter);
 app.use("/posts", postsRouter);
-app.use("/sms", smsRouter);
-app.use("/consultations", consultationsRouter);
 app.use("/messages", messagesRouter);
 app.use('/activities', activitiesRouter);
 app.use('/stats', statsRouter);
