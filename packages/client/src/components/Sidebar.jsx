@@ -51,41 +51,43 @@ const NavLink = styled(Link, {
   }
 `;
 
+// ERD 기준 role 명칭: patient, staff, manager, admin
+// menuItems의 roles도 맞게 정리
 const menuItems = [
   {
     path: '/Dashboard',
     label: '📊 대시보드',
-    roles: ['super_admin', 'doctor', 'consultant'],
+    roles: ['admin', 'manager', 'staff'],
   },
   {
-    path: '/Dashboard/waiting',
+    path: '/Dashboard/waiting-manage',
     label: '⏳ 대기현황',
-    roles: ['super_admin', 'doctor'],
+    roles: ['admin', 'staff'],
   },
   {
     path: '/Dashboard/reservations',
     label: '📅 예약 관리',
-    roles: ['super_admin', 'consultant'],
+    roles: ['admin', 'manager', 'staff'],
   },
   {
     path: '/Dashboard/schedule',
-    label: '📆 의료진 일정',
-    roles: ['super_admin', 'doctor'],
+    label: '📆 직원 일정',
+    roles: ['admin', 'staff'],
   },
   {
     path: '/Dashboard/patients',
     label: '📋 환자 목록',
-    roles: ['super_admin', 'doctor'],
+    roles: ['admin', 'staff'],
   },
   {
     path: '/Dashboard/feedback',
     label: '📝 후기',
-    roles: ['super_admin', 'doctor'],
+    roles: ['admin', 'manager'],
   },
   {
     path: '/Dashboard/sms',
-    label: '📱 단체 문자 발송',
-    roles: ['super_admin', 'doctor'],
+    label: '📱 문자 발송',
+    roles: ['admin', 'staff'],
   },
   {
   path: '/Dashboard/onsite-register',
@@ -98,22 +100,20 @@ const menuItems = [
     roles: ['super_admin', 'consultant'],
   },
   {
-    path: '/Dashboard/chat-settings',
-    label: '⚙️ 챗봇 설정',
-    roles: ['super_admin'],
+    path: '/Dashboard/settings',
+    label: '⚙️ 설정',
+    roles: ['admin'],
   },
-  { path: '/Dashboard/settings', label: '⚙️ 설정', roles: ['super_admin'] },
 ];
 
-const Sidebar = ({ role = 'super_admin', name = '홍길동', onOpenNotice }) => {
+const Sidebar = ({ role = 'admin', name = '홍길동', onOpenNotice }) => {
   const location = useLocation();
 
   return (
     <Wrapper>
       <UserInfo>👤 {name}</UserInfo>
 
-      {/* 공지사항 버튼 별도 추가 */}
-      {(role === 'super_admin' || role === 'manager') && (
+      {(role === 'admin' || role === 'manager') && (
         <ButtonItem onClick={onOpenNotice}>📢 직원 공지사항</ButtonItem>
       )}
 

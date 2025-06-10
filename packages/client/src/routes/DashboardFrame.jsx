@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import NoticeWrapper from '../components/Notice/NoticeWrapper';
+import { useUserInfo } from '../contexts/UserInfoContext';
+import NoticeModal from '../components/Notice/NoticeModal';
 
 function DashboardFrame() {
-  // ✅ 임시 로그인 사용자 정보
-  const currentUser = {
-    name: '최나영',
-    role: 'super_admin',
-  };
+  const { userInfo } = useUserInfo();
 
   const noticeRef = useRef(); // ⬅️ ref 생성
   const todayKey = new Date().toISOString().split('T')[0];
@@ -21,21 +18,63 @@ function DashboardFrame() {
     }
   }, []);
 
-  return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar
-        role={currentUser.role}
-        name={currentUser.name}
-        onOpenNotice={() => noticeRef.current?.open()} // ⬅️ 사이드바에서 수동 호출
-      />
-      <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
-        <Outlet />
-      </main>
+  setTitle('');
+  setBody('');
+  setEditIndex(null);
+  setShowForm(false);
 
-      <NoticeWrapper ref={noticeRef} />
-    </div>
+  const handleDelete = (idx) => {
+    setNotices(notices.filter((_, i) => i !== idx));
+  };
+
+  const handleEdit = (idx) => {
+    const item = notices[idx];
+    setTitle(item.title);
+    setBody(item.body);
+    setEditIndex(idx);
+    setShowForm(true);
+  };
+
+  if (!userInfo) {
+    return <div>로그인이 필요합니다.</div>;
+  }
+
+  return (
+    <>
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar
+          role={userInfo.role}
+          name={userInfo.name}
+          onOpenNotice={() => setShowNotice(true)}
+        />
+        <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
+          <Outlet />
+        </main>
+        {showNotice && (
+          <NoticeModal
+            show={showNotice}
+            onClose={() => {
+              setShowNotice(false);
+              setShowForm(false);
+              setTitle('');
+              setBody('');
+              setEditIndex(null);
+            }}
+            notices={notices}
+            onAdd={handleAdd}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            title={title}
+            setTitle={setTitle}
+            body={body}
+            setBody={setBody}
+            showForm={showForm}
+            setShowForm={setShowForm}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
 export default DashboardFrame;
-  
