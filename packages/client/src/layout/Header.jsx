@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 import { useMenuList } from '../contexts/MenuListContext.jsx';
 import logo from '../assets/logo.png';
@@ -27,9 +26,8 @@ function Header() {
   }, []);
 
   const handleLogout = () => {
-    Cookies.remove('token');
-    alert('로그아웃 되었습니다.');
     setIsLogin(!isLogin);
+    alert('로그아웃 되었습니다.');
     navigate(0);
   };
 
@@ -54,7 +52,7 @@ function Header() {
                   <p>{menu.label}</p>
                   <ul
                     ref={(el) => (submenuRefs.current[i] = el)}
-                    className="flex flex-col absolute left-1/2 -translate-x-1/2 min-w-50 bg-white shadow-lg  py-2 transition-all duration-800 gap-2 z-10"
+                    className="flex flex-col absolute left-1/2 -translate-x-1/2 min-w-50 bg-white shadow-lg  py-2 transition-all duration-500 gap-2 z-10"
                     style={{
                       maxHeight:
                         onMenu === i && submenuRefs.current[i]
