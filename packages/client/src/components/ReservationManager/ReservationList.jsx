@@ -132,10 +132,7 @@ const ReservationList = () => {
 
   const handleSave = async (formData) => {
     try {
-      if (!formData.name || !formData.birth) {
-        alert('이름과 생년월일은 필수 입력입니다.');
-        return;
-      }
+    
       if (editData?.id) {
         await fetch(`http://localhost:3000/appointments/${editData.id}`, {
           method: 'PUT',
