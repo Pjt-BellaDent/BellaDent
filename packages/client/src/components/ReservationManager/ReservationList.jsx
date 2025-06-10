@@ -102,8 +102,9 @@ const ReservationList = () => {
     const matchText =
       (r.name && r.name.includes(search)) ||
       (r.department && r.department.includes(search));
-    const matchDateRange = (!startDate || r.reservationDate >= startDate) &&
-      (!endDate || r.reservationDate <= endDate);
+    // date 필드 기준으로 필터링
+    const matchDateRange = (!startDate || r.date >= startDate) &&
+      (!endDate || r.date <= endDate);
 
     return matchText && matchDateRange;
   });
@@ -132,7 +133,6 @@ const ReservationList = () => {
 
   const handleSave = async (formData) => {
     try {
-    
       if (editData?.id) {
         await fetch(`http://localhost:3000/appointments/${editData.id}`, {
           method: 'PUT',
@@ -213,24 +213,26 @@ const ReservationList = () => {
             {filtered.length === 0 ? (
               <tr><td colSpan="8">일치하는 예약이 없습니다.</td></tr>
             ) : (
-              filtered.map((r, i) => (
-                <tr key={r.id || i}>
-                  <td>{r.reservationDate || '-'}</td>
-                  <td>{r.time || '-'}</td>
-                  <td>{r.name || '-'}</td>
-                  <td>{r.birth || '-'}</td>
-                  <td>{r.department || '-'}</td>
-                  <td>{r.status || '-'}</td>
-                  <td className="notes">{r.notes || r.memo || '-'}</td>
-                  <td className="actions">
-                    <button onClick={() => {
-                      setEditData(r);
-                      setModalOpen(true);
-                    }}>수정</button>
-                    <button onClick={() => handleDelete(r.id)}>삭제</button>
-                  </td>
-                </tr>
-              ))
+              filtered
+                .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
+                .map((r, i) => (
+                  <tr key={r.id || i}>
+                    <td>{r.date || '-'}</td>
+                    <td>{(r.startTime && r.endTime) ? `${r.startTime}~${r.endTime}` : '-'}</td>
+                    <td>{r.name || '-'}</td>
+                    <td>{r.birth || '-'}</td>
+                    <td>{r.department || '-'}</td>
+                    <td>{r.status || '-'}</td>
+                    <td className="notes">{r.notes || r.memo || '-'}</td>
+                    <td className="actions">
+                      <button onClick={() => {
+                        setEditData(r);
+                        setModalOpen(true);
+                      }}>수정</button>
+                      <button onClick={() => handleDelete(r.id)}>삭제</button>
+                    </td>
+                  </tr>
+                ))
             )}
           </tbody>
         </Table>
