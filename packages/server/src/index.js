@@ -7,6 +7,8 @@ import userRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
 import reviewsRouter from "./routes/reviews.js";
 import smsLogsRouter from "./routes/smsLogs.js";
+import noticesRouter from "./routes/notices.js";
+import faqsRouter from "./routes/faqs.js";
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ app.use("/users", userRouter);
 app.use("/consultations", consultationsRouter);
 app.use("/reviews", reviewsRouter);
 app.use("/sms", smsLogsRouter);
+app.use("/notices", noticesRouter);
+app.use("/faqs", faqsRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
