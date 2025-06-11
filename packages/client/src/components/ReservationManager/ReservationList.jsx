@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import ReservationModal from './ReservationModal';
+import {
+  fetchAppointments,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment
+} from '../../api/appointments';
 
 const Wrapper = styled.div`
   padding: 30px;
@@ -76,16 +82,9 @@ const ReservationList = () => {
     try {
       setLoading(true);
       const month = getCurrentMonth();
-      const res = await fetch(`http://localhost:3000/appointments?month=${month}`);
-      const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setReservations(data);
-        setError('');
-      } else {
-        setError(data?.error || '데이터 형식 오류');
-        setReservations([]);
-      }
+      const data = await fetchAppointments(month);
+      setReservations(data);
+      setError('');
     } catch (err) {
       setError('서버 요청 실패');
       console.error(err);
@@ -102,8 +101,8 @@ const ReservationList = () => {
     const matchText =
       (r.name && r.name.includes(search)) ||
       (r.department && r.department.includes(search));
-    // date 필드 기준으로 필터링
-    const matchDateRange = (!startDate || r.date >= startDate) &&
+    const matchDateRange =
+      (!startDate || r.date >= startDate) &&
       (!endDate || r.date <= endDate);
 
     return matchText && matchDateRange;
@@ -116,13 +115,7 @@ const ReservationList = () => {
     }
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
-        const res = await fetch(`http://localhost:3000/appointments/${id}`, {
-          method: 'DELETE'
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
+        await deleteAppointment(id);
         fetchReservations();
       } catch (err) {
         console.error('삭제 실패:', err);
@@ -134,17 +127,9 @@ const ReservationList = () => {
   const handleSave = async (formData) => {
     try {
       if (editData?.id) {
-        await fetch(`http://localhost:3000/appointments/${editData.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
+        await updateAppointment(editData.id, formData);
       } else {
-        await fetch(`http://localhost:3000/appointments`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
+        await createAppointment(formData);
       }
       fetchReservations();
     } catch (err) {
@@ -167,14 +152,12 @@ const ReservationList = () => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
-
           <span>~</span>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
-
           <input
             type="text"
             placeholder="이름 또는 진료과 검색"

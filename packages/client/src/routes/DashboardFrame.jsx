@@ -1,11 +1,11 @@
-import React, { useContext, useState } from 'react';
+import React, {  useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import NoticeModal from '../components/Notice/NoticeModal';
-import { UserInfoContext } from '../context/UserInfoContext';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 
 function DashboardFrame() {
-  const { userInfo, isLogin } = useContext(UserInfoContext);
+  const { userInfo, isLogin } = useUserInfo();
 
   const [showNotice, setShowNotice] = useState(false);
   const [notices, setNotices] = useState([]);
@@ -44,7 +44,7 @@ function DashboardFrame() {
     setShowForm(true);
   };
 
-  if (!isLogin || !userInfo) {
+  if (!userInfo) {
     return <div>로그인이 필요합니다.</div>;
   }
 
