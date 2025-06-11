@@ -1,5 +1,5 @@
 // client/src/api/appointments.js
-import axios from "../libs/axiosInstance";
+import axios from "../libs/axiosIntance";
 
 export const fetchAppointments = async () => {
   const res = await axios.get("/appointments");
