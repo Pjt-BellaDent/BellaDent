@@ -1,27 +1,32 @@
-// client/src/api/appointments.js
-import axios from "../libs/axiosIntance";
+// src/api/appointments.js
+import axios from '@/libs/axiosInstance';
 
-export const fetchAppointments = async () => {
-  const res = await axios.get("/appointments");
-  return res.data;
+export const fetchAppointments = async (month) => {
+  const { data } = await axios.get('/appointments', {
+    params: { month },
+  });
+  return data;
 };
 
-export const fetchAppointmentById = async (appointmentId) => {
-  const res = await axios.get(`/appointments/${appointmentId}`);
-  return res.data;
+export const fetchAppointmentsByName = async (name, birth) => {
+  if (!name || !birth) throw new Error("이름과 생년월일이 필요합니다.");
+  const { data } = await axios.get('/appointments', {
+    params: { name, birth },
+  });
+  return data;
 };
 
-export const createAppointment = async (appointmentData) => {
-  const res = await axios.post("/appointments", appointmentData);
-  return res.data;
+export const addAppointment = async (payload) => {
+  const { data } = await axios.post('/appointments', payload);
+  return data;
 };
 
-export const updateAppointment = async (appointmentId, updateData) => {
-  const res = await axios.put(`/appointments/${appointmentId}`, updateData);
-  return res.data;
+export const updateAppointment = async (id, payload) => {
+  const { data } = await axios.put(`/appointments/${id}`, payload);
+  return data;
 };
 
-export const deleteAppointment = async (appointmentId) => {
-  const res = await axios.delete(`/appointments/${appointmentId}`);
-  return res.data;
+export const deleteAppointment = async (id) => {
+  await axios.delete(`/appointments/${id}`);
+  return true;
 };
