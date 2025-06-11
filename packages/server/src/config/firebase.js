@@ -1,11 +1,17 @@
+import dotenv from "dotenv";
+import { readFile } from "fs/promises";
 import * as admin from 'firebase-admin';
 import { initializeApp, cert, getApps, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { getStorage } from 'firebase-admin/storage';
 
+dotenv.config();
+
 // 실제 서비스 계정 JSON 객체를 불러옵니다.
-const serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+const serviceAccount = JSON.parse(
+  await readFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, "utf8")
+);
 
 // Firebase Admin 앱이 이미 초기화되었는지 확인합니다.
 const app = getApps().length === 0 ?
