@@ -3,21 +3,25 @@ import {
   signUp,
   CreatePatient,
   CreateStaff,
+} from "../controllers/userCreateController.js";
+import { deleteUser } from "../controllers/userDeleteController.js";
+import {
   signIn,
   getUserById,
   getPatients,
   getPatientById,
   getPatientByName,
   getStaffById,
+} from "../controllers/userReadController.js";
+import {
   updateUser,
   updatePatient,
   updateStaff,
   enableUser,
   disabledUser,
-  deleteUser,
-} from "../controllers/userController.js";
+} from "../controllers/userUpdateController.js";
 import {
-  auth as authenticateFirebaseToken, // 모든 보호된 라우트에 적용
+  authenticateFirebaseToken, // 모든 보호된 라우트에 적용
   patientRoleCheck, // 환자 포함 모든 인증 사용자
   staffRoleCheck, // 스태프 이상
   managerRoleCheck, // 매니저 이상
@@ -25,6 +29,7 @@ import {
 } from "../middleware/roleCheck.js";
 
 const router = express.Router();
+const auth = authenticateFirebaseToken; // Firebase 인증 미들웨어
 
 router.post("/signUp", signUp); // 홈페이지 회원가입
 router.post("/patient", auth, staffRoleCheck, CreatePatient); // 환자 등록

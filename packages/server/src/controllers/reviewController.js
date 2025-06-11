@@ -11,18 +11,17 @@ export const createReview = async (req, res) => {
   });
 
   if (error) {
-    return res
-      .status(400)
-      .json({ message: "Validation Error", details: error.details });
+    return res.status(400).json({ message: "Validation Error" });
   }
 
   try {
     const imageFiles = files.reviewImg || [];
     const imageUrls = [];
+    const now = Timestamp.now();
 
     for (let i = 0; i < imageFiles.length; i++) {
       const file = imageFiles[i];
-      const fileName = `image-${Date.now()}-${file.originalname}-${uuidv4()}`;
+      const fileName = `image-${now}-${file.originalname}-${uuidv4()}`;
       const uploadRef = bucket.file(fileName);
 
       await uploadRef.save(file.buffer, {
@@ -34,12 +33,9 @@ export const createReview = async (req, res) => {
       imageUrls.push(publicUrl);
     }
 
-    const reviewId = uuidv4();
-    const now = Timestamp.now();
-
-    const docRef = db.collection("reviews").doc(reviewId);
+    const docRef = db.collection("reviews").doc();
     await docRef.set({
-      id: reviewId,
+      id: docRef.id, // Firestore 문서 ID
       ...value,
       imageUrls,
       createdAt: now,
@@ -56,32 +52,42 @@ export const createReview = async (req, res) => {
 // 전체 후기 조회
 export const readAllReviews = async (req, res) => {
   try {
-    const reviewsData = await db.collection("reviews").get();
-    const reviews = reviewsData.docs.map((doc) => doc.data());
-    res.status(200).json({ reviews, message: "전체 치료 후기 조회 성공" });
+    const reviewsDoc = await db.collection("reviews").get();
+    const reviewsData = reviewsDoc.docs.map((doc) => doc.data());
+
+    if (!reviewsDoc.exists) {
+      return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
+    }
+
+    res
+      .status(200)
+      .json({ reviews: reviewsData, message: "전체 치료 후기 조회 성공" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 단일 후기 조회
+// 후기 목록 조회 (id)
 export const readReviewById = async (req, res) => {
   const reviewId = req.params.id;
 
   try {
-    const reviewDoc = await db.collection("reviews").doc(reviewId).get();
-    if (!reviewDoc.exists) {
+    const reviewsDoc = await db.collection("reviews").doc(reviewId).get();
+    const reviewsData = reviewsDoc.docs.map((doc) => doc.data());
+
+    if (!reviewsDoc.exists) {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
+
     res
       .status(200)
-      .json({ review: reviewDoc.data(), message: "치료 후기 조회 성공" });
+      .json({ reviews: reviewsData, message: "치료 후기 조회 성공" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// 비활성화 후기 목록 조회
+// 비활성화 후기 목록 조회 (id)
 export const readDisabledReviewsByAuthorId = async (req, res) => {
   const authorId = req.params.id;
 
@@ -137,6 +143,7 @@ export const readPendingReviews = async (req, res) => {
 
 // 후기 수정
 export const updateReview = async (req, res) => {
+  const reviewId = req.params.id;
   const files = req.files || {};
   const { value, error } = updateReviewSchema.validate(req.body, {
     abortEarly: false,
@@ -145,13 +152,13 @@ export const updateReview = async (req, res) => {
   if (error) {
     return res.status(400).json({
       message: "Validation Error",
-      details: error.details,
     });
   }
 
   try {
-    const docRef = db.collection("reviews").doc(req.params.id);
+    const docRef = db.collection("reviews").doc(reviewId);
     const doc = await docRef.get();
+    const now = Timestamp.now();
 
     if (!doc.exists) {
       return res.status(404).json({ message: "치료 후기를 찾을 수 없습니다." });
@@ -180,7 +187,7 @@ export const updateReview = async (req, res) => {
     const newImageUrls = [];
 
     for (const file of imageFiles) {
-      const fileName = `image-${Date.now()}-${file.originalname}-${uuidv4()}`;
+      const fileName = `image-${now}-${file.originalname}-${uuidv4()}`;
       const uploadRef = bucket.file(fileName);
 
       await uploadRef.save(file.buffer, {
@@ -191,8 +198,6 @@ export const updateReview = async (req, res) => {
       const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
       newImageUrls.push(publicUrl);
     }
-
-    const now = Timestamp.now();
 
     // 4. Firestore 업데이트 (남은 이미지 + 새 이미지)
     await docRef.update({
@@ -211,7 +216,8 @@ export const updateReview = async (req, res) => {
 // 후기 활성화 승인 요청
 export const requestReapproval = async (req, res) => {
   try {
-    const docRef = db.collection("reviews").doc(req.params.id);
+    const reviewId = req.params.id;
+    const docRef = db.collection("reviews").doc(reviewId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -235,7 +241,8 @@ export const requestReapproval = async (req, res) => {
 // 후기 활성화
 export const enableReview = async (req, res) => {
   try {
-    const docRef = db.collection("reviews").doc(req.params.id);
+    const reviewId = req.params.id;
+    const docRef = db.collection("reviews").doc(reviewId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -259,19 +266,9 @@ export const enableReview = async (req, res) => {
 
 // 후기 비활성화
 export const disabledReview = async (req, res) => {
-  const { value, error } = updateReviewSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation Error",
-      details: error.details,
-    });
-  }
-
   try {
-    const docRef = db.collection("reviews").doc(req.params.id);
+    const reviewId = req.params.id;
+    const docRef = db.collection("reviews").doc(reviewId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -296,7 +293,8 @@ export const disabledReview = async (req, res) => {
 // 후기 삭제
 export const deleteReview = async (req, res) => {
   try {
-    const docRef = db.collection("reviews").doc(req.params.id);
+    const reviewId = req.params.id;
+    const docRef = db.collection("reviews").doc(reviewId);
     const doc = await docRef.get();
 
     if (!doc.exists) {
@@ -318,7 +316,7 @@ export const deleteReview = async (req, res) => {
     // 2. Firestore 문서 삭제
     await docRef.delete();
 
-    res.status(200).json({ message: "치료 후기 삭제 성공" });
+    res.status(204).json({ message: "치료 후기 삭제 성공" });
   } catch (err) {
     console.error("치료 후기 삭제 에러:", err);
     res.status(500).json({ error: err.message });
