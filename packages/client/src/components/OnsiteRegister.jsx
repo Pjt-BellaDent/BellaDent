@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
+import axios from 'axios';
 
 const AppContainer = styled.div`
   background: #f9f9f9;
@@ -113,23 +114,39 @@ const OnsiteRegister = () => {
   });
 
   const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.birth || !form.gender || !form.phone) {
       alert('모든 필수 정보를 입력해주세요.');
       return;
     }
-    setPatients((prev) => [...prev, form]);
-    setForm({
-      name: '', birth: '', gender: '', phone: '', address: '',
-      insuranceNumber: '', firstVisitDate: '', lastVisitDate: ''
-    });
+
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:3000/api/onsite/register', form);
+      if (response.data.success) {
+        alert('접수가 완료되었습니다.');
+        setPatients((prev) => [...prev, response.data.patient]);
+        setForm({
+          name: '', birth: '', gender: '', phone: '', address: '',
+          insuranceNumber: '', firstVisitDate: '', lastVisitDate: ''
+        });
+      } else {
+        alert('접수에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('접수 중 오류:', error);
+      alert('서버 오류로 접수에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -187,10 +204,20 @@ const OnsiteRegister = () => {
             </HalfWidth>
           </TwoColumnRow>
 
-          <Button type="submit">접수</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? '접수 중...' : '접수'}
+          </Button>
         </form>
 
-        {patients.length === 0 && <EmptyMessage>접수된 환자가 아직 없습니다.</EmptyMessage>}
+        {patients.length === 0 ? (
+          <EmptyMessage>접수된 환자가 아직 없습니다.</EmptyMessage>
+        ) : (
+          <ul style={{ marginTop: '20px' }}>
+            {patients.map((p, idx) => (
+              <li key={idx}>{p.name} ({p.birth})</li>
+            ))}
+          </ul>
+        )}
       </Wrapper>
     </AppContainer>
   );

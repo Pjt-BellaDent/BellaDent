@@ -1,23 +1,81 @@
-import { db } from '../config/firebase.js';
-import { v4 as uuidv4 } from 'uuid';
+// src/controllers/onsiteController.js (현장 접수)
+import { db } from "../config/firebase.js";
 
-export const savePatientToFirestore = async (req, res) => {
+// 현장 접수 등록
+export const registerPatient = async (req, res) => {
   try {
-    const data = req.body;
-    const uid = uuidv4(); // 또는 전화번호 등으로 고유화
+    const {
+      name,
+      birth,
+      gender,
+      phone,
+      address,
+      insuranceNumber,
+      firstVisitDate,
+      lastVisitDate,
+    } = req.body;
 
-    const userRef = db.collection('users').doc(uid);
-    const patientRef = userRef.collection('patients').doc(uid);
+    if (!name || !birth || !gender || !phone) {
+      return res.status(400).json({ error: "필수 항목 누락" });
+    }
 
-    await patientRef.set({
-      ...data,
-      firstVisitDate: new Date(),
-      lastVisitDate: new Date(),
+    const ref = await db.collection("onsitePatients").add({
+      name,
+      birth,
+      gender,
+      phone,
+      address,
+      insuranceNumber,
+      firstVisitDate,
+      lastVisitDate,
+      createdAt: new Date().toISOString(),
     });
 
-    res.status(200).json({ message: '환자 등록 완료' });
-  } catch (error) {
-    console.error('Firestore 저장 실패:', error);
-    res.status(500).json({ error: '환자 저장 실패' });
+    res.status(201).json({ success: true, id: ref.id });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// 전체 접수 조회 (+ 조건 필터 가능)
+export const getOnsitePatients = async (req, res) => {
+  try {
+    let query = db.collection("onsitePatients");
+    const { phone, name } = req.query;
+
+    if (phone) query = query.where("phone", "==", phone);
+    if (name) query = query.where("name", "==", name);
+
+    const snapshot = await query.get();
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.json({ success: true, patients: data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// 접수 정보 수정
+export const updateOnsitePatient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.collection("onsitePatients").doc(id).update(req.body);
+    res.json({ success: true, message: "접수 정보 수정 완료" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// 접수 삭제
+export const deleteOnsitePatient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.collection("onsitePatients").doc(id).delete();
+    res.json({ success: true, message: "접수 삭제 완료" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 };

@@ -92,12 +92,12 @@ const menuItems = [
   {
   path: '/Dashboard/onsite-register',
   label: '🧾 현장 접수',
-  roles: ['super_admin', 'consultant'],
+  roles: ['admin', 'consultant'],
   },
   {
     path: '/Dashboard/chat',
     label: '💬 AI 채팅/상담',
-    roles: ['super_admin', 'consultant'],
+    roles: ['admin', 'consultant'],
   },
   {
     path: '/Dashboard/settings',
