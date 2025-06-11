@@ -45,7 +45,7 @@ function SignInForm() {
         }
       );
       setModalType('success'); // 성공 모달 타입 설정
-      setUserToken(res.data.token);
+      setUserToken(idToken);
       setUserInfo(res.data.userInfo);
       setModalMessage(res.data.message);
       setShowModal(true);
