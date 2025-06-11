@@ -1,7 +1,6 @@
 import { smsLogSchema } from "../models/smsLog.js";
 import { db } from "../config/firebase.js";
 import dotenv from "dotenv";
-import { v4 as uuidv4 } from "uuid";
 import { Timestamp } from "firebase-admin/firestore";
 
 dotenv.config();
@@ -16,7 +15,7 @@ export const GetSendNumber = async (req, res) => {
         "x-api-key": process.env.SMS_SERVICE_X_API_KEY,
       },
       body: JSON.stringify({
-        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
+        "token_key": process.env.SMS_SERVICE_TOKEN_KEY,
         // "token_key": 문서 서식 작업시 "" 삭제 됨 필히 확인 요함
       }),
     });
@@ -43,16 +42,13 @@ export const SendMessage = async (req, res) => {
   });
 
   if (error) {
-    return res
-      .status(400)
-      .json({ message: "Validation Error", details: error.details });
+    return res.status(400).json({ message: "Validation Error" });
   }
 
   // **추가 검증: dest_phone과 destId 배열의 길이가 같은지 확인**
   if (value.dest_phone.length !== value.destId.length) {
     return res.status(400).json({
       message: "Validation Error",
-      details: "dest_phone and destId array lengths must match.",
     });
   }
 
@@ -68,8 +64,8 @@ export const SendMessage = async (req, res) => {
       },
       body: JSON.stringify({
         ...restValue,
-        token_key: process.env.SMS_SERVICE_TOKEN_KEY,
-        dest_phone: destPhone,
+        "token_key": process.env.SMS_SERVICE_TOKEN_KEY,
+        "dest_phone": destPhone,
         // "token_key": 문서 서식 작업시 "" 삭제 됨 필히 확인 요함
       }),
     });
@@ -77,20 +73,17 @@ export const SendMessage = async (req, res) => {
     // API 응답 상태에 따른 전체 상태 결정
     const overallStatus = response.ok ? "success" : "fail";
     const now = Timestamp.now();
-    // **상위 문서 ID를 uuidv4로 생성**
-    const smsLogId = uuidv4();
 
-    // **Batch Writes 시작**
-    const batch = writeBatch(db);
+    const batch = db.batch(); // Batch 인스턴스 생성
 
-    // **1. 상위 문서 참조 가져오기 (uuidv4로 생성된 ID 사용)**
-    const parentDocRef = doc(db, "smsLogs", smsLogId);
+    // **1. 상위 문서 참조 가져오기
+    const parentDocRef = db.collection("smsLogs").doc();
 
     // **2. Batch에 상위 문서 생성 (set) 작업 추가**
     const parentData = {
       // id 필드는 굳이 저장하지 않아도 되지만, 쿼리 편의를 위해 저장하는 경우가 많습니다.
-      id: smsLogId,
-      senderId: decodedToken.uid,
+      id: parentDocRef.id, // 문서 ID (자동 생성된 ID)
+      senderId: decodedToken.uid, // 발신자 ID (Firebase Auth UID)
       type: value.smsLogType, // 문자 유형
       message: value.msg_body, // 메시지 내용
       sendPhone: value.send_phone, // 발신자 번호
@@ -130,7 +123,6 @@ export const SendMessage = async (req, res) => {
     if (response.ok) {
       res.status(201).json({
         message: "SMS 발신 성공 및 이력 저장 완료",
-        smsLogId: smsLogId, // 생성된 상위 문서 ID 반환
       });
     } else {
       // API 호출은 실패했지만 이력 저장은 시도했음
@@ -138,8 +130,6 @@ export const SendMessage = async (req, res) => {
       console.error("SMS API 호출 실패:", response.status, errorBody);
       res.status(response.status).json({
         message: "SMS API 호출 실패 (이력 저장 완료)",
-        smsLogId: smsLogId, // 실패 로그도 ID 반환
-        apiError: errorBody, // API에서 받은 에러 메시지 포함
       });
     }
   } catch (err) {
