@@ -1,68 +1,90 @@
-// 🔧 직원용 Chat.jsx (입력 중 표시까지 포함된 전체 코드)
 import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-
+import {
+  collection,
+  doc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../config/firebase'; // Firebase config 경로에 맞게 조정 필요
 
 const ChatWrapper = styled.div`
   display: flex;
   height: 100vh;
 `;
+
 const ChatList = styled.div`
-  width: 200px;
+  width: 220px;
   background: #f7f7f7;
   border-right: 1px solid #ccc;
+  overflow-y: auto;
 `;
+
 const ChatRoom = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
 `;
+
 const ChatHeader = styled.div`
   background: #fff;
-  padding: 10px;
+  padding: 10px 16px;
   font-weight: bold;
   border-bottom: 1px solid #ddd;
 `;
+
 const ChatMessages = styled.div`
   flex: 1;
-  padding: 10px;
+  padding: 16px;
   overflow-y: auto;
   background: #e9edf5;
 `;
+
 const Message = styled.div`
   background: ${(props) => (props.type === 'staff' ? '#cfe2ff' : '#fff3cd')};
-  padding: 8px;
+  padding: 10px;
   margin: 6px 0;
   border-radius: 6px;
   max-width: 60%;
 `;
+
 const TypingBubble = styled.div`
   font-style: italic;
   color: #888;
-  margin-left: 10px;
+  margin: 8px 0 0 12px;
 `;
+
 const ChatInput = styled.div`
   display: flex;
   border-top: 1px solid #ccc;
-  padding: 10px;
+  padding: 12px;
 `;
+
 const Input = styled.input`
   flex: 1;
-  padding: 8px;
-  margin-right: 10px;
+  padding: 10px;
+  margin-right: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 `;
+
 const Button = styled.button`
-  padding: 8px 12px;
+  padding: 10px 16px;
   background-color: #2f80ed;
   color: white;
   border: none;
   border-radius: 4px;
+  font-weight: bold;
 `;
+
 const ChatItem = styled.div`
-  padding: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid #ddd;
   cursor: pointer;
-
   &:hover {
     background: #eee;
   }
@@ -74,11 +96,10 @@ const Chat = () => {
   const [userList, setUserList] = useState([]);
   const [chatData, setChatData] = useState({});
   const [isTyping, setIsTyping] = useState(false);
-  const [staffUid] = useState('STAFF_UID'); // TODO: 실제 로그인 정보로 교체
+  const [staffUid] = useState('STAFF_UID'); // 실제 로그인된 직원 ID로 교체 필요
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
 
-  // 상담 목록 구독
   useEffect(() => {
     const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
     const unsub = onSnapshot(q, (snapshot) => {
@@ -92,7 +113,6 @@ const Chat = () => {
     return () => unsub();
   }, []);
 
-  // 메시지 구독
   useEffect(() => {
     if (!activeUser) return;
     const msgRef = collection(db, `consultations/${activeUser}/messages`);
@@ -104,7 +124,6 @@ const Chat = () => {
     return () => unsub();
   }, [activeUser]);
 
-  // 입력 중 상태 구독
   useEffect(() => {
     if (!activeUser) return;
     const unsub = onSnapshot(doc(db, 'consultations', activeUser), (docSnap) => {
@@ -143,10 +162,10 @@ const Chat = () => {
   return (
     <ChatWrapper>
       <ChatList>
-        <h3 style={{ padding: '10px' }}>상담 목록</h3>
+        <h3 style={{ padding: '16px', margin: 0 }}>상담 목록</h3>
         {userList.map(user => (
           <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
-            <span>{user.name}</span>
+            {user.name}
           </ChatItem>
         ))}
       </ChatList>
@@ -155,12 +174,14 @@ const Chat = () => {
         <ChatHeader>
           {activeUser ? `${userList.find(u => u.id === activeUser)?.name} 상담 중` : '상담 선택 대기 중'}
         </ChatHeader>
+
         <ChatMessages>
           {messages.map((msg, idx) => (
             <Message key={idx} type={msg.senderType}>{msg.content}</Message>
           ))}
           {isTyping && <TypingBubble>입력 중...</TypingBubble>}
         </ChatMessages>
+
         <ChatInput>
           <Input
             type="text"

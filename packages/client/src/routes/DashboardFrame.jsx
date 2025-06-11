@@ -1,27 +1,36 @@
-import { useEffect, useRef } from 'react';
+import React, {  useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { useUserInfo } from '../contexts/UserInfoContext';
 import NoticeModal from '../components/Notice/NoticeModal';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 
 function DashboardFrame() {
-  const { userInfo } = useUserInfo();
+  const { userInfo, isLogin } = useUserInfo();
 
-  const noticeRef = useRef(); // ⬅️ ref 생성
-  const todayKey = new Date().toISOString().split('T')[0];
+  const [showNotice, setShowNotice] = useState(false);
+  const [notices, setNotices] = useState([]);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
 
-  // ✅ 처음 진입 시 자동으로 공지 표시
-  useEffect(() => {
-    const skipDate = sessionStorage.getItem('noticeSkipDate');
-    if (skipDate !== todayKey) {
-      noticeRef.current?.open(); // ref 통해 open 메서드 호출
+  const handleAdd = () => {
+    if (!title.trim()) return alert('제목을 입력하세요.');
+    const newNotice = { title: title.trim(), body: body.trim() };
+
+    if (editIndex !== null) {
+      const updated = [...notices];
+      updated[editIndex] = newNotice;
+      setNotices(updated);
+    } else {
+      setNotices([...notices, newNotice]);
     }
-  }, []);
 
-  setTitle('');
-  setBody('');
-  setEditIndex(null);
-  setShowForm(false);
+    setTitle('');
+    setBody('');
+    setEditIndex(null);
+    setShowForm(false);
+  };
 
   const handleDelete = (idx) => {
     setNotices(notices.filter((_, i) => i !== idx));

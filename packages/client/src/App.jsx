@@ -88,6 +88,8 @@ function App() {
           <Route path="patients" element={<PatientList />} />
           {/* 문자발송(스태프, 관리자) */}
           <Route path="sms" element={<Sms />} />
+          {/* 현장 접수 */}
+          <Route path="onsite-register" element={<Register />} />
           {/* 후기(매니저, 관리자) */}
           <Route path="feedback" element={<Feedback />} />
           {/* 챗봇설정, 채팅(관리자) */}
