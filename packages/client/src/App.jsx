@@ -32,22 +32,21 @@ import LiveChat from './routes/web/nev/booking/LiveChat';
 // 고객지원
 import ClinicNews from './routes/web/nev/support/ClinicNews';
 import Faq from './routes/web/nev/support/Faq';
-
-// 후기: app 경로에서 관리
-import Reviews from './app/reviews';
+import Reviews from './routes/web/nev/support/Reviews';
 
 // 관리자 대시보드 프레임
 import DashboardFrame from './routes/DashboardFrame';
 
-// 대시보드 기능별 페이지 (app)
-import Dashboard from './app/dashboard';
-import Patients from './app/patients';
-import Reservations from './app/reservations';
-import Waiting from './app/waiting';
-import Sms from './app/sms';
-import StaffSchedule from './app/StaffSchedule';
-import Settings from './app/settings';
-import Chatbot from './app/chatbot';
+// 대시보드 기능별 페이지 (components/app)
+import Dashboard from './components/app/dashboard/DashboardPage';
+import Patients from './components/app/patients/PatientPage';
+import Reservations from './components/app/reservations/ReservationsPage';
+import Waiting from './components/app/waiting/WaitingPage';
+import Sms from './components/app/sms/SmsPage';
+import StaffSchedule from './components/app/StaffSchedule/ScheduleList';
+import Settings from './components/app/settings/GeneralSettings';
+import Chatbot from './components/app/chatbot/Chat';
+import ReviewsManager from './components/app/reviews/reviews-manager';
 
 // 공통
 import NotFound from './components/NotFound';
@@ -99,7 +98,7 @@ function App() {
         <Route path="schedule" element={<StaffSchedule />} />
         <Route path="settings" element={<Settings />} />
         <Route path="chatbot" element={<Chatbot />} />
-        <Route path="reviews" element={<Reviews />} />
+        <Route path="reviews-manager" element={<ReviewsManager />} />
       </Route>
 
       {/* 404 */}
