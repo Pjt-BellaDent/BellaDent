@@ -37,7 +37,7 @@ function TreatmentInfo_1_1() {
               <strong className="text-[24px] mt-16 mb-3">신경치료</strong>
             </p>
             <p className="text-[18px]">
-              신경 조직 제거: 치아 내부의 신경 조직을 제거합니다.{' '}
+              신경 조직 제거: 치아 내부의 신경 조직을 제거합니다.
             </p>
             <p>
               <h3 className="text-[18px]">

@@ -34,7 +34,7 @@ function TreatmentInfo_1_3() {
         <img src={laugh} alt="laugh" />
         <img src={laug} alt="laug" />
       </div>
-       <div className="flex justify-center gap-2 mb-[165px] mx-5"></div>
+      
     </div>
   );
 }
