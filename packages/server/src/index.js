@@ -8,6 +8,8 @@ import userRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
 import reviewsRouter from "./routes/reviews.js";
 import smsLogsRouter from "./routes/smsLogs.js";
+import noticesRouter from "./routes/notices.js";
+import faqsRouter from "./routes/faqs.js";
 import appointmentsRouter from "./routes/appointments.js";
 import procedureRouter from "./routes/procedure.js";
 import staffSchedulesRouter from "./routes/staffSchedules.js";
@@ -34,6 +36,8 @@ app.use("/users", userRouter);
 app.use("/consultations", consultationsRouter);
 app.use("/reviews", reviewsRouter);
 app.use("/sms", smsLogsRouter);
+app.use("/notices", noticesRouter);
+app.use("/faqs", faqsRouter);
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/appointments", appointmentsRouter);

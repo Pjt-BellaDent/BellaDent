@@ -24,9 +24,7 @@ export const createOrAddMessage = async (req, res) => {
 
   if (error) {
     console.error("createOrAddMessage Validation Error:", error.details);
-    return res
-      .status(400)
-      .json({ message: "Validation Error", details: error.details });
+    return res.status(400).json({ message: "Validation Error" });
   }
 
   // Joi 검증 통과한 value에서 정보 추출
@@ -151,7 +149,7 @@ export const createOrAddMessage = async (req, res) => {
 // ai 답변 등록 및 상담 갱신
 export const aiChatBotReply = async (req, res) => {
   const authenticatedUser = req.user; // 요청한 사용자의 정보
-  const userId = authenticatedUser.uid; // 사용자의 UID
+  const consultationId = authenticatedUser.uid; // 사용자의 UID
 
   // ** Joi 유효성 검사 **
   const { value, error } = aiChatBotReplySchema.validate(req.body, {
@@ -160,9 +158,7 @@ export const aiChatBotReply = async (req, res) => {
 
   if (error) {
     console.error("aiChatBot Validation Error:", error.details);
-    return res
-      .status(400)
-      .json({ message: "Validation Error", details: error.details });
+    return res.status(400).json({ message: "Validation Error" });
   }
 
   // Joi 검증 통과한 value에서 데이터 추출
@@ -210,7 +206,7 @@ export const aiChatBotReply = async (req, res) => {
     const now = Timestamp.now(); // 현재 시각 Firestore Timestamp
 
     const aiUid = "aiChatBot"; // 시스템에서 사용하는 ai UID (상수로 분리 고려)
-    const consultationRef = db.collection("consultations").doc(userId);
+    const consultationRef = db.collection("consultations").doc(consultationId);
 
     // Batch에 상담 내역 문서 update 작업 추가
     batch.update(consultationRef, {
@@ -247,23 +243,18 @@ export const aiChatBotReply = async (req, res) => {
     if (error.response) {
       res.status(error.response.status).json({
         message: error.response.data?.message || "AI 서비스 응답 오류", // AI 응답의 에러 메시지 사용 시도
-        details: error.response.data, // AI 응답 본문 전체 포함 (디버깅 용이)
       });
     } else if (error.message && error.message.includes("Batch commit failed")) {
       // Batch 쓰기 작업 중 Firestore 오류 발생
       console.error("Firestore Batch Commit 에러 (aiChatBot):", error);
       res.status(500).json({
         message: "AI 답변 저장 중 오류 발생",
-        error: "Firestore 쓰기 작업 실패",
-        details: error.message,
       });
     } else {
       // 네트워크 오류, 코드 내부 오류 등 기타 예상치 못한 오류
       console.error("Unexpected aiChatBot Error:", error);
       res.status(500).json({
         message: "내부 서버 오류 발생",
-        error: "AI 서비스 통신 또는 내부 처리 실패",
-        details: error.message,
       });
     }
   }
@@ -274,7 +265,7 @@ export const staffReply = async (req, res) => {
   const authenticatedUser = req.user; // 답변을 등록하는 스태프/관리자 정보 (decodedToken)
   const staffId = authenticatedUser.uid; // 답변하는 스태프/관리자의 UID
   const consultationId = req.params.id; // URL 파라미터에서 상담 ID 추출
-  
+
   // ** Joi 유효성 검사 **
   const { value, error } = staffReplySchema.validate(req.body, {
     abortEarly: false,
@@ -282,9 +273,7 @@ export const staffReply = async (req, res) => {
 
   if (error) {
     console.error("staffReplyConsultation Validation Error:", error.details);
-    return res
-      .status(400)
-      .json({ message: "Validation Error", details: error.details });
+    return res.status(400).json({ message: "Validation Error" });
   }
 
   // Joi 검증 통과한 value에서 데이터 추출 (staffId는 req.user에서 가져옴)
@@ -295,6 +284,7 @@ export const staffReply = async (req, res) => {
       .collection("consultations")
       .doc(consultationId)
       .get();
+
     if (!consultationDoc.exists) {
       return res
         .status(404)
@@ -344,29 +334,36 @@ export const staffReply = async (req, res) => {
       );
       res.status(500).json({
         message: "답변 저장 중 오류 발생",
-        error: "Firestore 쓰기 작업 실패",
-        details: error.message,
       });
     } else {
       // Firestore 조회 실패 등 기타 예상치 못한 오류
       console.error("Unexpected staffReplyConsultation Error:", error);
-      res
-        .status(500)
-        .json({ message: "내부 서버 오류 발생", error: error.message });
+      res.status(500).json({ message: "내부 서버 오류 발생" });
     }
   }
 };
 
+// 전체 상담 조회
 export const getAllConsultations = async (req, res) => {
   try {
-    const snapshot = await db.collection("consultations").get();
-    const consultations = snapshot.docs.map((doc) => doc.data());
-    res.status(200).json({ consultations });
+    const consultationsDoc = await db.collection("consultations").get();
+
+    if (consultationsDoc.empty) {
+      return res.status(404).json({ message: "조회된 상담 정보가 없습니다." });
+    }
+
+    const consultationsData = consultationsDoc.docs.map((doc) => doc.data());
+
+    res.status(200).json({
+      consultations: consultationsData,
+      message: "전체 상담 조회 성공",
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+// 상담 ID로 메시지 조회
 export const getMessagesById = async (req, res) => {
   const consultationId = req.params.id; // URL 파라미터에서 상담 ID 추출
   try {
@@ -375,16 +372,15 @@ export const getMessagesById = async (req, res) => {
       .doc(consultationId)
       .get();
 
-    if (consultationDoc.empty) {
+    if (consultationDoc.exists) {
       return res.status(404).json({ message: "조회된 상담 정보가 없습니다." });
     }
 
     const consultationData = consultationDoc.data();
     const messagesDoc = await consultationDoc.ref.collection("messages").get();
 
-    let messageData = null;
     const messagePromises = messagesDoc.docs.map(async (messageDoc) => {
-      messageData = messageDoc.data();
+    const messageData = messageDoc.data();
 
       // ** 3. 상위 문서 데이터와 하위 문서 데이터를 조합하여 사용자 정보 객체 구성 **
       const messageInfo = {
@@ -412,6 +408,7 @@ export const getMessagesById = async (req, res) => {
   }
 };
 
+// 상담 메시지 활성화
 export const enableMessage = async (req, res) => {
   // ** Joi 유효성 검사 **
   const { value, error } = activeMessageSchema.validate(req.body, {
@@ -436,6 +433,11 @@ export const enableMessage = async (req, res) => {
       .collection("messages")
       .doc(messageId);
 
+    const messageDoc = await messageRef.get();
+    if (!messageDoc.exists) {
+      return res.status(404).json({ message: "메시지를 찾을 수 없습니다." });
+    }
+
     await messageRef.update({ isActive: true });
     console.log(`메시지 ${messageId} 활성화 완료: 상담 ID ${consultationId}`);
 
@@ -445,6 +447,7 @@ export const enableMessage = async (req, res) => {
   }
 };
 
+// 상담 메시지 비활성화
 export const disabledMessage = async (req, res) => {
   // ** Joi 유효성 검사 **
   const { value, error } = activeMessageSchema.validate(req.body, {
@@ -469,6 +472,12 @@ export const disabledMessage = async (req, res) => {
       .collection("messages")
       .doc(messageId);
 
+    const messageDoc = await messageRef.get();
+    if (!messageDoc.exists) {
+      return res.status(404).json({ message: "메시지를 찾을 수 없습니다." });
+    }
+    // 메시지 활성화 상태를 false로 업데이트
+
     await messageRef.update({ isActive: false });
     console.log(`메시지 ${messageId} 비활성화 완료: 상담 ID ${consultationId}`);
 
@@ -478,21 +487,31 @@ export const disabledMessage = async (req, res) => {
   }
 };
 
+// 상담 삭제
 export const deleteConsultation = async (req, res) => {
   const consultationId = req.params.id;
   try {
+    const consultationRef = db.collection("consultations").doc(consultationId);
+    const consultationDoc = await consultationRef.get();
+
+    if( !consultationDoc.exists) {
+      return res.status(404).json({ message: "상담을 찾을 수 없습니다." });
+    }
+
     // 하위 messages 컬렉션의 모든 문서 삭제
     const messagesRef = db
       .collection("consultations")
       .doc(consultationId)
       .collection("messages");
     const messagesSnap = await messagesRef.get();
-    const batch = db.batch();
-    messagesSnap.forEach((doc) => batch.delete(doc.ref));
-    await batch.commit();
+    if (!messagesSnap.empty) {
+      const batch = db.batch();
+      messagesSnap.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+    }
 
     // 상담 문서 삭제
-    await db.collection("consultations").doc(consultationId).delete();
+    await consultationRef.delete();
 
     res.status(200).json({ message: "상담 삭제 성공" });
   } catch (err) {
