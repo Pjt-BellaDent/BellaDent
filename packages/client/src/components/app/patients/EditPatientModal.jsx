@@ -39,8 +39,9 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+      <div className="relative bg-white p-6 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold mb-4">환자 정보 수정</h3>
 
         <label className="font-semibold">이름</label>
@@ -67,7 +68,16 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
         <input className="w-full p-2 border rounded mb-3" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
 
         <label className="font-semibold">진료과</label>
-        <input className="w-full p-2 border rounded mb-3" value={form.dept || ''} onChange={e => setForm({ ...form, dept: e.target.value })} />
+        <select
+          className="w-full p-2 border rounded mb-3"
+          value={form.dept || ''}
+          onChange={e => setForm({ ...form, dept: e.target.value })}
+        >
+          <option value="">선택</option>
+          <option value="보철과">보철과</option>
+          <option value="교정과">교정과</option>
+          <option value="치주과">치주과</option>
+        </select>
 
         <label className="font-semibold">상태</label>
         <select

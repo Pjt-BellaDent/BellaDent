@@ -13,36 +13,40 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
             <th className="px-4 py-2">전화번호</th>
             <th className="px-4 py-2">진료과</th>
             <th className="px-4 py-2">최근 방문</th>
-            <th className="px-4 py-2">기능</th>
+            <th className="px-4 py-2">관리</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 text-center">
           {data && data.length > 0 ? data.map(p => (
-            <tr key={p.id || `${p.name}_${p.birth}`}>
-              <td
-                className="text-blue-600 font-medium cursor-pointer hover:underline"
-                onClick={() => onProcedureClick(p.name, p.birth)}
-              >
-                {p.name}
+            <tr key={p.id || `${p.name}_${p.phone}`}>
+              <td>
+                <span 
+                  className="text-blue-600 font-medium cursor-pointer hover:underline"
+                  onClick={() => onProcedureClick && onProcedureClick(p.name, p.birth)}
+                >
+                  {p.name}
+                </span>
               </td>
               <td>{p.gender}</td>
-              <td>{p.birth || '-'}</td>
+              <td>{p.birth}</td>
               <td>{p.phone}</td>
               <td>{p.dept}</td>
               <td>{p.lastVisit}</td>
               <td>
-                <button
-                  onClick={() => onEditClick(p.name, p.birth)}
-                  className="bg-yellow-400 text-white px-3 py-1 rounded mr-2 hover:bg-yellow-500"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => onDeleteClick(p.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                >
-                  삭제
-                </button>
+                <div className="flex justify-center gap-2">
+                  <button 
+                    className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+                    onClick={() => onEditClick && onEditClick(p.name, p.birth)}
+                  >
+                    수정
+                  </button>
+                  <button 
+                    className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                    onClick={() => onDeleteClick && onDeleteClick(p.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
               </td>
             </tr>
           )) : (

@@ -20,6 +20,7 @@ import messagesRouter from "./routes/messages.js";
 import activitiesRouter from './routes/activities.js';
 import statsRouter from './routes/stats.js';
 import waitingRouter from './routes/waiting.js';
+import patientsRouter from "./routes/patients.js";
 
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/messages", messagesRouter);
 app.use('/activities', activitiesRouter);
 app.use('/stats', statsRouter);
 app.use('/waiting', waitingRouter);
+app.use("/patients", patientsRouter);
 
 // ===== 404 핸들러 =====
 app.use((req, res) => {
