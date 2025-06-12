@@ -55,7 +55,7 @@ export const readAllReviews = async (req, res) => {
     const reviewsDoc = await db.collection("reviews").get();
     const reviewsData = reviewsDoc.docs.map((doc) => doc.data());
 
-    if (!reviewsDoc.exists) {
+    if (reviewsDoc.empty) {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
 
@@ -72,10 +72,13 @@ export const readReviewById = async (req, res) => {
   const reviewId = req.params.id;
 
   try {
-    const reviewsDoc = await db.collection("reviews").doc(reviewId).get();
+    const reviewsDoc = await db
+      .collection("reviews")
+      .where("authorId", "==", reviewId)
+      .get();
     const reviewsData = reviewsDoc.docs.map((doc) => doc.data());
 
-    if (!reviewsDoc.exists) {
+    if (reviewsDoc.empty) {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
 
@@ -99,7 +102,7 @@ export const readDisabledReviewsByAuthorId = async (req, res) => {
       .where("isPublic", "==", false) // isPublic이 false인 조건 추가
       .get(); // 조건에 맞는 모든 문서 가져오기
 
-    if (!reviewDoc.exists) {
+    if (disabledReviewsData.empty) {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
 
@@ -125,7 +128,7 @@ export const readPendingReviews = async (req, res) => {
       .where("approved", "==", false) // approved 필드가 false인 조건 추가
       .get();
 
-    if (!reviewDoc.exists) {
+    if (pendingReviewsData.empty) {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
 
@@ -278,7 +281,6 @@ export const disabledReview = async (req, res) => {
     const now = Timestamp.now();
 
     await docRef.update({
-      ...value,
       isPublic: false,
       updatedAt: now,
     });
