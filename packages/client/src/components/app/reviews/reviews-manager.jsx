@@ -53,4 +53,4 @@ const FeedbackList = () => {
   );
 };
 
-export default reveiws;
+export default FeedbackList;

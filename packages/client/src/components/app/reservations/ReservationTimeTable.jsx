@@ -99,7 +99,10 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
           <div className="bg-white rounded-xl p-8 min-w-[340px] max-w-[420px]">
             <h3 className="text-xl font-bold mb-4">환자 상세 정보</h3>
             <div className="mb-2"><b>이름</b>: {detailData.name}</div>
-            <div className="mb-2"><b>생년월일</b>: {detailData.birth || '-'}</div>
+            <div className="mb-2"><b>생년월일</b>: {detailData.birth ? (() => {
+              const [year, month, day] = detailData.birth.split('-');
+              return `${year}년 ${month}월 ${day}일`;
+            })() : '-'}</div>
             <div className="mb-2"><b>연락처</b>: {detailData.phone || '-'}</div>
             <div className="mb-2"><b>성별</b>: {detailData.gender || '-'}</div>
             <div className="mb-2"><b>진료과</b>: {detailData.department}</div>

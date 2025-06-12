@@ -80,8 +80,9 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold mb-4">{patient?.name} ({patient?.birth}) 시술 이력</h3>
 
         {procedures.length === 0 ? (

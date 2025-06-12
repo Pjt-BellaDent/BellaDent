@@ -17,6 +17,7 @@ const StaffSchedule = () => {
   const [popupOpen, setPopupOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [filterRank, setFilterRank] = useState('전체');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const formatKey = (date) =>
@@ -29,14 +30,21 @@ const StaffSchedule = () => {
   };
 
   const loadSchedules = async () => {
-    const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    const data = await fetchSchedulesByMonth(month);
-    const grouped = {};
-    data.forEach((d) => {
-      if (!grouped[d.scheduleDate]) grouped[d.scheduleDate] = [];
-      grouped[d.scheduleDate].push(d);
-    });
-    setScheduleData(grouped);
+    setLoading(true);
+    try {
+      const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      const data = await fetchSchedulesByMonth(month);
+      const grouped = {};
+      data.forEach((d) => {
+        if (!grouped[d.scheduleDate]) grouped[d.scheduleDate] = [];
+        grouped[d.scheduleDate].push(d);
+      });
+      setScheduleData(grouped);
+    } catch (err) {
+      console.error("스케줄 불러오기 실패:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -52,15 +60,19 @@ const StaffSchedule = () => {
     const key = formatKey(selectedDate);
     item.scheduleDate = key;
 
-    if (editData?.id) {
-      await updateSchedule(editData.id, item);
-    } else {
-      await createSchedule(item);
+    try {
+      if (editData?.id) {
+        await updateSchedule(editData.id, item);
+      } else {
+        await createSchedule(item);
+      }
+      setPopupOpen(false);
+      setEditData(null);
+      loadSchedules();
+    } catch (error) {
+      console.error("스케줄 저장 실패:", error);
+      alert("스케줄 저장에 실패했습니다. 다시 시도해주세요.");
     }
-
-    setPopupOpen(false);
-    setEditData(null);
-    loadSchedules();
   };
 
   const handleDeleteSchedule = async (itemId) => {
@@ -78,35 +90,52 @@ const StaffSchedule = () => {
     setPopupOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="p-6 bg-[#f4f7fc] min-h-screen flex items-center justify-center">
+        <div className="text-lg font-medium text-gray-600">로딩 중...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#f4f7fc] min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">📆 의료진 근무 스케줄</h2>
-        <button
-          onClick={() => navigate('/Dashboard/reservations/list')}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-        >
-          전체 목록
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpenPopup}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          >
+            + 새 스케줄
+          </button>
+        </div>
       </div>
 
-      <ScheduleCalendar
-        currentDate={currentDate}
-        scheduleData={scheduleData}
-        onDateClick={handleDateClick}
-        filterRank={filterRank}
-        onPrevMonth={() => changeMonth(-1)}
-        onNextMonth={() => changeMonth(1)}
-        onFilterChange={(e) => setFilterRank(e.target.value)}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <ScheduleCalendar
+            currentDate={currentDate}
+            scheduleData={scheduleData}
+            onDateClick={handleDateClick}
+            filterRank={filterRank}
+            onPrevMonth={() => changeMonth(-1)}
+            onNextMonth={() => changeMonth(1)}
+            onFilterChange={(e) => setFilterRank(e.target.value)}
+          />
+        </div>
 
-      <ScheduleList
-        selectedDate={selectedDate}
-        scheduleData={scheduleData}
-        onDelete={handleDeleteSchedule}
-        onOpenPopup={handleOpenPopup}
-        onEdit={handleEdit}
-      />
+        <div className="lg:col-span-1">
+          <ScheduleList
+            selectedDate={selectedDate}
+            scheduleData={scheduleData}
+            onDelete={handleDeleteSchedule}
+            onOpenPopup={handleOpenPopup}
+            onEdit={handleEdit}
+            filterRank={filterRank}
+          />
+        </div>
+      </div>
 
       <SchedulePopup
         open={popupOpen}

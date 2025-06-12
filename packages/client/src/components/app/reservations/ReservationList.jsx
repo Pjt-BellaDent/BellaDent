@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import ReservationModal from './ReservationModal';
 import {
   fetchAppointments,
-  createAppointment,
+  addAppointment,
   updateAppointment,
   deleteAppointment,
 } from '../../api/appointments';
@@ -74,7 +74,7 @@ const ReservationList = () => {
       if (editData?.id) {
         await updateAppointment(editData.id, formData);
       } else {
-        await createAppointment(formData);
+        await addAppointment(formData);
       }
       fetchReservations();
     } catch (err) {
@@ -150,7 +150,12 @@ const ReservationList = () => {
                 .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
                 .map((r, i) => (
                   <tr key={r.id || i}>
-                    <td className="border px-3 py-2 text-center">{r.date || '-'}</td>
+                    <td className="border px-3 py-2 text-center">
+                      {r.date ? (() => {
+                        const [year, month, day] = r.date.split('-');
+                        return `${year}년 ${month}월 ${day}일`;
+                      })() : '-'}
+                    </td>
                     <td className="border px-3 py-2 text-center">{(r.startTime && r.endTime) ? `${r.startTime}~${r.endTime}` : '-'}</td>
                     <td className="border px-3 py-2 text-center">{r.name || '-'}</td>
                     <td className="border px-3 py-2 text-center">{r.birth || '-'}</td>

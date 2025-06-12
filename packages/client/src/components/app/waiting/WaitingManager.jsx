@@ -1,7 +1,7 @@
 // src/app/waiting/components/WaitingManager.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../../../libs/axiosInstance';
+import axios from '../../../libs/axiosIntance';
 
 const departmentToRoom = {
   '보철과': '1',

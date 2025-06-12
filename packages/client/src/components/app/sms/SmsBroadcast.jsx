@@ -1,6 +1,6 @@
 // src/app/sms/components/SmsBroadcast.jsx
 import React, { useState } from 'react';
-import axios from '../../../libs/axiosInstance';
+import axios from '../../../libs/axiosIntance';
 
 const patientsMock = [
   { id: 1, name: '홍길동', phone: '010-1234-5678' },

@@ -1,10 +1,10 @@
 // src/app/patients/index.jsx
 import React, { useState, useEffect } from 'react';
-import PatientTable from "./components/PatientTable";
-import EditPatientModal from "./components/EditPatientModal";
-import ProcedureModal from "./components/ProcedureModal";
-import SurveyModal from "./components/SurveyModal";
-import Charts from "./components/Charts";
+import PatientTable from "./PatientTable";
+import EditPatientModal from "./EditPatientModal";
+import ProcedureModal from "./ProcedureModal";
+import SurveyModal from "./SurveyModal";
+import Charts from "./Charts";
 import axios from '../../../libs/axiosIntance';
 
 const PatientPage = ({ events }) => {

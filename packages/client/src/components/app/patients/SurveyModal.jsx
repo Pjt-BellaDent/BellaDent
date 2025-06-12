@@ -30,8 +30,9 @@ const SurveyModal = ({ open, onClose, patient }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white p-6 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+      <div className="relative bg-white p-6 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-bold mb-4">
           📝 진료 만족도 조사 - {patient ? `${patient.name} (${patient.birth})` : '환자 정보 없음'}
         </h3>
