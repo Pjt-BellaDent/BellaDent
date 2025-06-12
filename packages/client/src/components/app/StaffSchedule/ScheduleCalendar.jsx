@@ -17,7 +17,7 @@ const ScheduleCalendar = ({
   const cells = [];
 
   for (let i = 0; i < firstDay; i++) {
-    cells.push(<div key={`empty-${i}`} className="border border-gray-200" />);
+    cells.push(<div key={`empty-${i}`} className="bg-white" />);
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -29,21 +29,30 @@ const ScheduleCalendar = ({
     }
 
     const sorted = [...daySchedules].sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
+    const isToday = new Date().toISOString().split('T')[0] === key;
+    const isWeekend = (firstDay + day - 1) % 7 === 0 || (firstDay + day - 1) % 7 === 6;
 
     cells.push(
       <div
         key={key}
         onClick={() => onDateClick(year, month, day)}
-        className="border border-gray-200 p-2 text-sm cursor-pointer flex flex-col items-start hover:bg-gray-50"
+        className={`bg-white min-h-[120px] p-2 cursor-pointer transition-colors ${
+          isToday ? 'bg-blue-50' : ''
+        }`}
       >
-        <div className="font-semibold text-gray-800 mb-1">{day}</div>
-        <div className="overflow-y-auto max-h-[60px] w-full">
+        <div className={`font-medium mb-2 ${
+          isWeekend ? ((firstDay + day - 1) % 7 === 0 ? 'text-red-500' : 'text-blue-500') : 'text-gray-800'
+        }`}>
+          {day}
+        </div>
+        <div className="overflow-y-auto max-h-[80px] space-y-1 scrollbar-hide">
           {sorted.map((e, i) => (
             <div
               key={i}
-              className="text-xs bg-blue-50 text-blue-700 rounded px-2 py-0.5 mb-1 truncate w-full"
+              className="text-xs bg-blue-50 text-blue-700 rounded px-2 py-1 truncate hover:bg-blue-100"
             >
-              • {`${e.time || ''} ${e.rank || ''} ${e.name || ''}`}
+              {e.time} {e.rank} {e.name}
+              {e.off && <span className="ml-1 text-red-500">🌙</span>}
             </div>
           ))}
         </div>
@@ -52,18 +61,33 @@ const ScheduleCalendar = ({
   }
 
   return (
-    <div className="bg-white border border-gray-300 rounded-md">
-      <div className="flex justify-between items-center px-5 py-3 border-b bg-gray-50">
-        <div className="flex items-center gap-2">
-          <button onClick={onPrevMonth} className="text-blue-600 text-sm hover:underline">⬅ 이전</button>
-          <button onClick={onNextMonth} className="text-blue-600 text-sm hover:underline">다음 ➡</button>
+    <div className="bg-white rounded-lg shadow-lg">
+      <style>
+        {`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
+      <div className="flex justify-between items-center px-6 py-4 border-b bg-[#f7fafd]">
+        <div className="flex items-center gap-3">
+          <button onClick={onPrevMonth} className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors">
+            ⬅ 이전
+          </button>
+          <button onClick={onNextMonth} className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors">
+            다음 ➡
+          </button>
         </div>
-        <div className="text-sm font-bold text-gray-800">{year}년 {month + 1}월</div>
+        <div className="text-xl font-bold text-gray-800">{year}년 {month + 1}월</div>
         <div>
           <select
             value={filterRank}
             onChange={onFilterChange}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="전체">전체</option>
             <option value="원장">원장</option>
@@ -76,11 +100,15 @@ const ScheduleCalendar = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 text-center font-bold text-gray-600 bg-gray-100 py-2">
-        {['일', '월', '화', '수', '목', '금', '토'].map(d => <div key={d}>{d}</div>)}
+      <div className="grid grid-cols-7 gap-px bg-gray-200">
+        {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
+          <div key={day} className={`bg-[#f7fafd] text-center py-3 font-medium ${i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-gray-800'}`}>
+            {day}
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-7 auto-rows-[100px]">
+      <div className="grid grid-cols-7 gap-px bg-gray-200">
         {cells}
       </div>
     </div>

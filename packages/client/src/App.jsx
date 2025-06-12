@@ -43,9 +43,10 @@ import Patients from './components/app/patients/PatientPage';
 import Reservations from './components/app/reservations/ReservationsPage';
 import Waiting from './components/app/waiting/WaitingPage';
 import Sms from './components/app/sms/SmsPage';
-import StaffSchedule from './components/app/StaffSchedule/ScheduleList';
+import StaffSchedule from './components/app/StaffSchedule/StaffSchedule';
 import Settings from './components/app/settings/GeneralSettings';
 import Chatbot from './components/app/chatbot/Chat';
+import ChatbotSettings from './components/app/chatbot/Settings';
 import ReviewsManager from './components/app/reviews/reviews-manager';
 
 // 공통
@@ -89,15 +90,16 @@ function App() {
       </Route>
 
       {/* 관리자/스태프 대시보드 프레임 */}
-      <Route path="/dashboard" element={<DashboardFrame />}>
+      <Route path="/Dashboard" element={<DashboardFrame />}>
         <Route index element={<Dashboard />} />
         <Route path="patients" element={<Patients />} />
         <Route path="reservations" element={<Reservations />} />
-        <Route path="waiting" element={<Waiting />} />
+        <Route path="waiting-manage" element={<Waiting />} />
         <Route path="sms" element={<Sms />} />
         <Route path="schedule" element={<StaffSchedule />} />
         <Route path="settings" element={<Settings />} />
         <Route path="chatbot" element={<Chatbot />} />
+        <Route path="chatbot-settings" element={<ChatbotSettings />} />
         <Route path="reviews-manager" element={<ReviewsManager />} />
       </Route>
 

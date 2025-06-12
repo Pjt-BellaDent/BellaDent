@@ -9,12 +9,13 @@ import ReservationTimeTable from './ReservationTimeTable';
 import ReservationModal from './ReservationModal';
 import {
   fetchAppointments,
-  createAppointment,
+  addAppointment,
   updateAppointment,
   deleteAppointment,
 } from '../../../api/appointments';
 
-const koreanWeekdays = ['일', '월', '화', '수', '목', '금', '토'];
+// ISO 8601 표준 (월요일부터 시작)에 맞는 요일 배열
+const koreanWeekdays = ['월', '화', '수', '목', '금', '토', '일'];
 const departments = [
   { name: '보철과', color: '#3cc441' },
   { name: '교정과', color: '#f5433a' },
@@ -46,13 +47,18 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
 
   return (
     <div>
-      <div className="[&_.react-calendar]:bg-transparent [&_.react-calendar]:border-none [&_.react-calendar__tile--active]:bg-blue-600 [&_.react-calendar__tile--active]:text-white [&_.react-calendar__tile--active]:rounded-md [&_.react-calendar__tile--now]:bg-[#24335a] [&_.react-calendar__tile--now]:text-white [&_.react-calendar__tile--now]:rounded-md">
+      <div className="[&_.react-calendar]:bg-white [&_.react-calendar]:border [&_.react-calendar]:border-gray-200 [&_.react-calendar]:rounded-lg [&_.react-calendar__tile--active]:bg-blue-600 [&_.react-calendar__tile--active]:text-white [&_.react-calendar__tile--active]:rounded-md [&_.react-calendar__tile--now]:bg-blue-100 [&_.react-calendar__tile--now]:text-blue-700 [&_.react-calendar__tile--now]:rounded-md [&_.react-calendar__month-view__weekdays]:text-gray-600 [&_.react-calendar__month-view__days__day]:text-gray-800 [&_.react-calendar__navigation__label]:text-gray-800 [&_.react-calendar__navigation__arrow]:text-gray-800 [&_.react-calendar__month-view__days__day--weekend]:text-red-500 [&_.react-calendar__month-view__days__day--neighboringMonth]:text-gray-400 [&_.react-calendar__tile]:rounded-md [&_.react-calendar__tile:enabled:hover]:bg-gray-100 [&_.react-calendar__tile:enabled:hover]:text-gray-900 [&_.react-calendar__navigation__label]:hover:bg-transparent [&_.react-calendar__navigation__arrow]:hover:bg-transparent [&_.react-calendar__month-view__weekdays__weekday]:text-center [&_.react-calendar__month-view__weekdays__weekday]:py-2 [&_.react-calendar__month-view__days__day]:p-2 [&_.react-calendar__month-view__days__day]:h-12 [&_.react-calendar__month-view__days__day]:flex [&_.react-calendar__month-view__days__day]:justify-center [&_.react-calendar__month-view__days__day]:items-center [&_.react-calendar__month-view__weekdays__weekday:last-child]:text-red-500">
         <Calendar
           value={selectedDate}
           onChange={onDateChange}
-          locale="en-US"
+          locale="ko-KR"
+          calendarType="ISO 8601"
           formatMonthYear={(locale, date) => `${date.getFullYear()}년 ${date.getMonth() + 1}월`}
-          formatShortWeekday={(locale, date) => koreanWeekdays[date.getDay()]}
+          formatShortWeekday={(locale, date) => koreanWeekdays[date.getDay() === 0 ? 6 : date.getDay() - 1]}
+          tileClassName={({ date, view }) => {
+            const day = date.getDay();
+            return view === 'month' && (day === 0 || day === 6) ? 'text-red-500' : null;
+          }}
           tileContent={({ date, view }) => {
             if (view !== 'month') return null;
             const dateKey = getDateStr(date);
@@ -96,7 +102,9 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
           </span>
         ))}
       </div>
-      <div className="font-bold text-[17px] my-2">{dateStr || '일자 선택'}</div>
+      <div className="font-bold text-[17px] my-2">
+        {dateStr ? `${selectedDate.getFullYear()}년 ${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일` : '일자 선택'}
+      </div>
       <ul className="list-none p-0 m-0">
         {todayEvents.length === 0 ? (
           <li className="text-gray-400">예약 없음</li>
@@ -105,18 +113,18 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
             .map(e => (
               <li
                 key={e.id || (e.name + e.birth + e.startTime)}
-                className="text-[15px] bg-[#232438] mb-1.5 rounded-lg px-3 py-2 flex items-center gap-2"
+                className="text-[15px] bg-gray-100 mb-1.5 rounded-lg px-3 py-2 flex items-center gap-2"
               >
-                <span className="dot w-[9px] h-[9px] rounded-full inline-block bg-[#41c5f2]" />
+                <span className="dot w-[9px] h-[9px] rounded-full inline-block bg-blue-500" />
                 {e.startTime}
                 {e.endTime && e.startTime !== e.endTime ? `~${e.endTime}` : ''}
                 <span className="ml-1">
                   {e.name}
                   {e.birth && (
-                    <span className="text-[13px] text-gray-400 ml-1">({e.birth})</span>
+                    <span className="text-[13px] text-gray-500 ml-1">({e.birth})</span>
                   )}
                 </span>
-                <span className="text-[13px] text-blue-400">{e.department}</span>
+                <span className="text-[13px] text-blue-600">{e.department}</span>
               </li>
         ))}
       </ul>
@@ -163,7 +171,7 @@ const ReservationManager = () => {
       if (editData?.id) {
         await updateAppointment(editData.id, formData);
       } else {
-        await createAppointment(formData);
+        await addAppointment(formData);
       }
       setModalOpen(false);
       setEditData(null);
@@ -202,7 +210,7 @@ const ReservationManager = () => {
 
   return (
     <div className="flex gap-8 items-start">
-      <div className="w-[320px] bg-[#1a1b1d] text-white rounded-[13px] p-[18px] shadow-md">
+      <div className="w-[320px] bg-white text-gray-800 rounded-[13px] p-[18px] shadow-md">
         <CalendarPanel
           selectedDate={selectedDate}
           onDateChange={setSelectedDate}

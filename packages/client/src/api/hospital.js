@@ -1,4 +1,4 @@
-import axios from '@/libs/axiosInstance';
+import axios from '../libs/axiosIntance';
 
 // 병원 정보 업데이트 API
 export const updateHospitalInfo = (data) => {
