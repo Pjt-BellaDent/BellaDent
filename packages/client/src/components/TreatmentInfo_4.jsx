@@ -36,8 +36,8 @@ function TreatmentInfo_4() {
           <h3 className="text-[24px] mx-5">
             <b>치아교정 치료의 주요 목적</b>
           </h3>
-          <hr className="my-2 mt-[80px] mx-10" />
-          <div className="flex gap-7 mt-[80px] mx-5">
+          <hr className="my-20  " />
+          <div className="flex gap-7 mx-5">
             <img src={teeth1} alt="teeth1" />
 
             <p className="text-[24px] text-blue-600 dark:text-sky-400 line-clamp-15 text-justify">
@@ -58,8 +58,8 @@ function TreatmentInfo_4() {
               
             </p>
           </div>
-          <hr className="my-2 mt-[80px] mb-6 mx-5" />
-          <h3 className="flex justify-center md:text-balance text-[24px] mt-[80px] mb-6 mx-5">
+          <hr className="my-20 " />
+          <h3 className="flex justify-center md:text-balance text-[24px] mb-6 mx-5">
             <b>미백/라미네이트</b>
           </h3>
           <div className="flex gap-12 flex-row-reverse justify-between mx-5">
@@ -91,7 +91,7 @@ function TreatmentInfo_4() {
             </p>
           </div>
 
-          <hr className="my-2 mt-[60px] mb-15 mx-5" />
+          <hr className=" mt-[60px] mb-15 " />
         </div>
         
         <div className="w-full relative">
@@ -126,9 +126,10 @@ function TreatmentInfo_4() {
               장비로는 PHL-15 레이저가 있습니다.
             </p>
 
-            <img src={intelieo} alt="intelieo" />
-            <hr className="my-2 mt-[60px] mb-6 mx-5" />
+            <img src={intelieo} alt="intelieo" className='mt-8'/>
+            
           </div>
+          <hr className="my-16" />
           <dir className="flex  gap-7 mx-5">
             <img src={picture} alt="picture" />
             <div>
@@ -153,7 +154,7 @@ function TreatmentInfo_4() {
          
         </div>
 
-        <div className="w-full relative my-2 mt-[60px] mb-6 mx-5" >
+        <div className="w-full relative mt-[65px] mb-6 " >
           <img src={chair} alt="chair" className="w-full object-cover h-[px]" />
           <div className="text  absolute inset-0 left-[50%] top-[50%]">
             <p className="text-[24px] ">
@@ -172,7 +173,7 @@ function TreatmentInfo_4() {
         </div>
 
         <div className="max-w-300 mx-auto">
-          <hr className="my-2 mt-[60px] mb-6 mx-5" />
+          <hr className=" my-16 " />
           <div>
             <p className="text-center mt-23 mb-8 text-[24px]" mx-5>장비와 시스템</p>
             <div className="flex justify-center gap-2 mb-10 mx-5">
