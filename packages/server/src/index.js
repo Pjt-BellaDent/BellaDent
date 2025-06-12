@@ -20,7 +20,7 @@ import messagesRouter from "./routes/messages.js";
 import activitiesRouter from './routes/activities.js';
 import statsRouter from './routes/stats.js';
 import waitingRouter from './routes/waiting.js';
-import noticeRoutes from './routes/notice.js';
+
 import smsRoutes from './routes/sms.js';
 import onsiteRoutes from './routes/onsite.js';
 import feedbackRoutes from './routes/feedback.js';
@@ -45,7 +45,7 @@ app.use("/reviews", reviewsRouter);
 app.use("/sms", smsLogsRouter);
 app.use("/notices", noticesRouter);
 app.use("/faqs", faqsRouter);
-app.use('/api/notice', noticeRoutes);
+
 app.use('/api/sms', smsRoutes);
 app.use('/api/onsite', onsiteRoutes);
 app.use('/api/feedback', feedbackRoutes);
