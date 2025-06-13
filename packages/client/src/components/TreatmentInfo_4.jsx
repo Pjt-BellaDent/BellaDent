@@ -150,7 +150,7 @@ function TreatmentInfo_4() {
         <div className="max-w-300 mx-auto">
           <hr className=" my-16 " />
           <div>
-            <p className="text-center mt-23 mb-8 text-[24px]" mx-5>
+            <p className="text-center mt-23 mb-8 text-[24px] mx-5" >
               장비와 시스템
             </p>
             <div className="flex justify-center gap-2 mb-10 mx-5">

@@ -16,7 +16,7 @@ function TreatmentInfo_1_3() {
       </h3>
       <hr className="max-w-300 mx-auto mt-4.5" />
 
-      <p className="text-center mt-23 mb-8 text-[24px]" mx-5>
+      <p className="text-center mt-23 mb-8 text-[24px] mx-5" >
         하얀 치아 교정
       </p>
       <div className="flex justify-center gap-2 mx-5">
