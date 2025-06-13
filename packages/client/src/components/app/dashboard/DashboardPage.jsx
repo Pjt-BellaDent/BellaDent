@@ -116,16 +116,35 @@ const DashboardPage = () => {
         </div>
       </div>
 
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <h4 className="font-semibold mb-3">구글 애널리틱스</h4>
+        <iframe
+          src="https://datastudio.google.com/embed/reporting/1k2d3e4f5g6h7i8j9k/page/1M"
+          title="Google Analytics"
+          width="100%"
+          height="400"
+          frameBorder="0"
+          style={{ border: 0 }}
+          allowFullScreen
+        ></iframe>
+      </div>
+
       <div className="bg-white p-4 rounded shadow">
-        <h4 className="font-semibold mb-3">최근 활동</h4>
-        <ul className="text-sm text-gray-700 space-y-1">
-          {recentActivities.map((act, i) => (
-            <li key={i} className="flex justify-between border-b pb-1">
-              <span>{act.type} - <strong>{act.target}</strong></span>
-              <span className="text-gray-400 text-xs">{act.time}</span>
-            </li>
-          ))}
-        </ul>
+        <h4 className="font-semibold mb-3">만족도 조사</h4>
+        <iframe
+          src="https://datastudio.google.com/embed/reporting/1k2d3e4f5g6h7i8j9k/page/2M"
+          title="만족도 조사 차트"
+          width="100%"
+          height="400"
+          frameBorder="0"
+          style={{ border: 0 }}
+          allowFullScreen
+        ></iframe>
+        <div className="flex gap-2 mt-2">
+          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">주간</button>
+          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">월간</button>
+          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">일간</button>
+        </div>
       </div>
 
       {modalData.visible && (

@@ -1,8 +1,18 @@
 // ReservationTimeTable.jsx (Tailwind 버전)
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const departments = ['보철과', '교정과', '치주과'];
+const DOCTOR_MAP = {
+  '보철과': ['김치과 원장', '이보철 선생'],
+  '교정과': ['박교정 원장', '정교정 선생'],
+  '치주과': ['최치주 원장', '한치주 선생'],
+};
 const times = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+// 모든 의사 목록 추출
+const allDoctors = Object.entries(DOCTOR_MAP).flatMap(([dept, doctors]) =>
+  doctors.map(name => ({ name, department: dept }))
+);
 
 const isTimeInReservation = (res, time) => {
   if (!res.startTime) return false;
@@ -15,9 +25,11 @@ const isTimeInReservation = (res, time) => {
 function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
   const [detailData, setDetailData] = useState(null);
   const dayEvents = events[date] || [];
+  const navigate = useNavigate();
 
-  const getReservation = (dept, time) =>
-    dayEvents.find(res => res.department === dept && isTimeInReservation(res, time));
+  // 의사별 예약 찾기
+  const getReservation = (doctorName, time) =>
+    dayEvents.find(res => res.doctor === doctorName && isTimeInReservation(res, time));
 
   if (!date) return <div className="text-gray-500 mt-10">왼쪽 달력에서 날짜를 선택하세요.</div>;
 
@@ -26,7 +38,7 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
       <div className="flex justify-end gap-2 mb-4">
         <button
           className="bg-[#f2f4f8] text-[#2071e5] rounded-md px-4 py-2 font-semibold text-sm"
-          onClick={() => window.location.href = "/Dashboard/reservations/list"}
+          onClick={() => navigate('/Dashboard/reservations-list')}
         >
           예약 목록
         </button>
@@ -41,9 +53,10 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
         <thead>
           <tr>
             <th className="bg-[#f7fafd] text-[#2071e5] font-bold border border-[#e8e8e8] px-3 py-2">시간</th>
-            {departments.map(dept => (
-              <th key={dept} className="bg-[#f7fafd] text-[#2071e5] font-bold border border-[#e8e8e8] px-3 py-2">
-                {dept}
+            {allDoctors.map(doc => (
+              <th key={doc.name} className="bg-[#f7fafd] text-[#2071e5] font-bold border border-[#e8e8e8] px-3 py-2">
+                {doc.name}<br />
+                <span className="text-xs text-gray-500">{doc.department}</span>
               </th>
             ))}
           </tr>
@@ -52,10 +65,10 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
           {times.map(time => (
             <tr key={time}>
               <td className="border border-[#e8e8e8] px-3 py-2 text-center">{time}</td>
-              {departments.map(dept => {
-                const res = getReservation(dept, time);
+              {allDoctors.map(doc => {
+                const res = getReservation(doc.name, time);
                 return (
-                  <td key={dept} className="border border-[#e8e8e8] px-3 py-2 text-center">
+                  <td key={doc.name} className="border border-[#e8e8e8] px-3 py-2 text-center">
                     {res ? (
                       <div className="inline-flex items-center justify-center gap-1 flex-wrap text-[14px]">
                         <span
@@ -81,7 +94,7 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
                     ) : (
                       <span
                         className="text-gray-400 text-[13px] underline cursor-pointer"
-                        onClick={() => onAdd({ department: dept, startTime: time, endTime: time })}
+                        onClick={() => onAdd({ department: doc.department, doctor: doc.name, startTime: time, endTime: time })}
                       >
                         예약 없음
                       </span>

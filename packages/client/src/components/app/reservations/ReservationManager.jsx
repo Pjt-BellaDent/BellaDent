@@ -15,7 +15,7 @@ import {
 } from '../../../api/appointments';
 
 // ISO 8601 표준 (월요일부터 시작)에 맞는 요일 배열
-const koreanWeekdays = ['월', '화', '수', '목', '금', '토', '일'];
+const koreanWeekdays = ['일', '월', '화', '수', '목', '금', '토'];
 const departments = [
   { name: '보철과', color: '#3cc441' },
   { name: '교정과', color: '#f5433a' },
@@ -52,9 +52,9 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
           value={selectedDate}
           onChange={onDateChange}
           locale="ko-KR"
-          calendarType="ISO 8601"
+          calendarType="gregory"
           formatMonthYear={(locale, date) => `${date.getFullYear()}년 ${date.getMonth() + 1}월`}
-          formatShortWeekday={(locale, date) => koreanWeekdays[date.getDay() === 0 ? 6 : date.getDay() - 1]}
+          formatShortWeekday={(locale, date) => koreanWeekdays[date.getDay()]}
           tileClassName={({ date, view }) => {
             const day = date.getDay();
             return view === 'month' && (day === 0 || day === 6) ? 'text-red-500' : null;
@@ -138,10 +138,18 @@ const ReservationManager = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  const getDateStr = (date) =>
-    date
-      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-      : '';
+  // 안전하게 날짜를 설정하는 함수
+  const handleDateChange = (date) => {
+    if (!date) {
+      setSelectedDate(new Date());
+    } else if (Array.isArray(date)) {
+      setSelectedDate(new Date(date[0]));
+    } else if (date instanceof Date && !isNaN(date)) {
+      setSelectedDate(date);
+    } else {
+      setSelectedDate(new Date(date));
+    }
+  };
 
   const getMonthStr = (date) =>
     date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` : '';
@@ -212,8 +220,8 @@ const ReservationManager = () => {
     <div className="flex gap-8 items-start">
       <div className="w-[320px] bg-white text-gray-800 rounded-[13px] p-[18px] shadow-md">
         <CalendarPanel
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
+          selectedDate={selectedDate instanceof Date && !isNaN(selectedDate) ? selectedDate : new Date()}
+          onDateChange={handleDateChange}
           events={events}
         />
       </div>
