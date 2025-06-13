@@ -14,9 +14,9 @@ export const createSchedule = async (data) => {
   try {
     const scheduleData = {
       ...data,
-      staffId: data.staffId || null,
+      uid: data.uid || data.staffId || data.id,
       scheduleDate: data.scheduleDate,
-      rank: data.rank,
+      position: data.position || data.rank,
       name: data.name,
       time: data.time || '',
       memo: data.memo || '',
@@ -34,9 +34,9 @@ export const updateSchedule = async (id, data) => {
   try {
     const scheduleData = {
       ...data,
-      staffId: data.staffId || null,
+      uid: data.uid || data.staffId || data.id,
       scheduleDate: data.scheduleDate,
-      rank: data.rank,
+      position: data.position || data.rank,
       name: data.name,
       time: data.time || '',
       memo: data.memo || '',
@@ -57,5 +57,15 @@ export const deleteSchedule = async (id) => {
   } catch (error) {
     console.error('스케줄 삭제 실패:', error);
     throw error;
+  }
+};
+
+export const fetchAllStaff = async () => {
+  try {
+    const res = await axios.get('/users/staff');
+    return res.data.staffInfo;
+  } catch (error) {
+    console.error('직원 목록 조회 실패:', error);
+    return [];
   }
 };

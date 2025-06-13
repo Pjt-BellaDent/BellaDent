@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdit, filterRank }) => {
+const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdit, filterStaffId }) => {
   if (!selectedDate) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6 h-full flex items-center justify-center">
@@ -12,8 +12,8 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
   const key = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
   let list = scheduleData[key] || [];
 
-  if (filterRank !== '전체') {
-    list = list.filter(e => e.rank === filterRank);
+  if (filterStaffId !== '전체') {
+    list = list.filter(e => (e.uid === filterStaffId));
   }
 
   return (
@@ -33,10 +33,10 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
       ) : (
         <div className="space-y-3">
           {list.map((item) => (
-            <div key={item.id} className="flex justify-between items-start bg-gray-50 rounded-lg p-4 hover:bg-gray-100">
+            <div key={item.uid} className="flex justify-between items-start bg-gray-50 rounded-lg p-4 hover:bg-gray-100">
               <div>
                 <p className="text-gray-900">
-                  <span className="font-semibold">{item.rank}</span> {item.name}
+                  <span className="font-semibold">{item.position}</span> {item.name}
                   <span className="mx-2">|</span>
                   <span className="text-blue-600">{item.time}</span>
                   {item.off && <span className="ml-2 text-red-500">🌙 휴무</span>}
@@ -55,7 +55,7 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
                   수정
                 </button>
                 <button
-                  onClick={() => onDelete(item.id)}
+                  onClick={() => onDelete(item.uid)}
                   className="px-3 py-1 bg-red-500 text-white rounded text-sm font-medium hover:bg-red-600"
                 >
                   삭제

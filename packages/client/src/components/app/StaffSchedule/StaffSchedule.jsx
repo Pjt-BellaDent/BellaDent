@@ -8,6 +8,7 @@ import {
   createSchedule,
   updateSchedule,
   deleteSchedule,
+  fetchAllStaff,
 } from '../../../api/scheduleApi';
 
 const StaffSchedule = () => {
@@ -16,7 +17,8 @@ const StaffSchedule = () => {
   const [scheduleData, setScheduleData] = useState({});
   const [popupOpen, setPopupOpen] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [filterRank, setFilterRank] = useState('전체');
+  const [filterStaffId, setFilterStaffId] = useState('전체');
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -36,8 +38,13 @@ const StaffSchedule = () => {
       const data = await fetchSchedulesByMonth(month);
       const grouped = {};
       data.forEach((d) => {
+        const schedule = {
+          ...d,
+          uid: d.uid || d.staffId || d.id,
+          position: d.position || d.rank,
+        };
         if (!grouped[d.scheduleDate]) grouped[d.scheduleDate] = [];
-        grouped[d.scheduleDate].push(d);
+        grouped[d.scheduleDate].push(schedule);
       });
       setScheduleData(grouped);
     } catch (err) {
@@ -50,6 +57,19 @@ const StaffSchedule = () => {
   useEffect(() => {
     loadSchedules();
   }, [currentDate]);
+
+  useEffect(() => {
+    const loadStaff = async () => {
+      const staff = await fetchAllStaff();
+      setStaffList(staff.map(s => ({
+        ...s,
+        uid: s.uid || s.id || s.staffId,
+        position: s.staffInfo?.position || s.position || s.rank,
+        department: s.staffInfo?.department || s.department,
+      })));
+    };
+    loadStaff();
+  }, []);
 
   const handleDateClick = (year, month, day) => {
     const selected = new Date(year, month, day);
@@ -118,10 +138,11 @@ const StaffSchedule = () => {
             currentDate={currentDate}
             scheduleData={scheduleData}
             onDateClick={handleDateClick}
-            filterRank={filterRank}
+            filterStaffId={filterStaffId}
+            staffList={staffList}
             onPrevMonth={() => changeMonth(-1)}
             onNextMonth={() => changeMonth(1)}
-            onFilterChange={(e) => setFilterRank(e.target.value)}
+            onFilterChange={(e) => setFilterStaffId(e.target.value)}
           />
         </div>
 
@@ -132,7 +153,7 @@ const StaffSchedule = () => {
             onDelete={handleDeleteSchedule}
             onOpenPopup={handleOpenPopup}
             onEdit={handleEdit}
-            filterRank={filterRank}
+            filterStaffId={filterStaffId}
           />
         </div>
       </div>
