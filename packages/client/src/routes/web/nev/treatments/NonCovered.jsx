@@ -1,8 +1,9 @@
 import React from 'react'
+import TreatmentInfo_2 from "../../../../components/TreatmentInfo_2"
 
 function NonCovered() {
   return (
-    <div>NonCovered</div>
+    <TreatmentInfo_2 />
   )
 }
 
