@@ -8,9 +8,12 @@ import orthod5 from '../assets/orthod5.png';
 import orthod6 from '../assets/orthod6.png';
 import chia6 from '../assets/chia6.png';
 import alqor from '../assets/alqor.png';
-import alqorr from '../assets/alqorr.png';
+
+import chia12 from '../assets/chia12.png';
 import chia9 from '../assets/chia9.png';
+
 import ch10 from '../assets/ch10.png';
+
 import ca6 from '../assets/ca6.png';
 import ca7 from '../assets/ca7.png';
 import ca5 from '../assets/ca5.png';
@@ -56,9 +59,12 @@ function TreatmentInfo_6() {
           <img src={orthod6} alt="orthod6" />
           <img src={chia6} alt="chia6" />
           <img src={alqor} alt="alqor" />
-          <img src={alqorr} alt="alqorr" />
+          
+           <img src={chia12} alt="chia12" />
           <img src={chia9} alt="chia9" />
+          
           <img src={ch10} alt="ch10" />
+         
           <img src={ca6} alt="ca6" />
           <img src={ca7} alt="ca7" />
           <img src={ca5} alt="ca5" />

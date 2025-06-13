@@ -39,12 +39,12 @@ function TreatmentInfo_1_1() {
             <p className="text-[18px]">
               신경 조직 제거: 치아 내부의 신경 조직을 제거합니다.
             </p>
-            <p>
-              <h3 className="text-[18px]">
+            <p className="text-[18px]">
+              
                 치아 신경 치료의 과정: 치아 검사: 충치나 손상 정도, 신경의 염증
                 상태를 확인합니다. 치아 접근: 충치 부분을 제거하고 치아 내부로
                 치료 도구가 들어갈 수 있도록 통로를 만듭니다.
-              </h3>
+              
             </p>
           </div>
         </div>
