@@ -21,7 +21,7 @@ function TreatmentInfo_5() {
         <h3 className="text-center text-[48px] mt-15 mx-30">
           <b>하얀치아 미백/라미네이트</b>
         </h3>
-        <p className="text-center text-[24px] mt-15 mb-15" mx-5>
+        <p className="text-center text-[24px] mt-15 mb-15 mx-5" >
           <b> 미백 / 라미네이트</b>
         </p>
         <div className="flex justify-center gap-2 mx-5">
@@ -33,7 +33,7 @@ function TreatmentInfo_5() {
             <p className="line-clamp-15 text-justify text-[18px]">
               미백 치료는 치아 색을 밝히는 효과가 있습니다 미백 효과는 개인의
               치아 상태나 변색 정도에 따라 다를 수 있습니다.
-              <p> 미백 효과는 3~5년 정도 유지될 수 있습니다.</p>
+               미백 효과는 3~5년 정도 유지될 수 있습니다.
             </p>
           </div>
           <div className="flex flex-col flex-1">
