@@ -34,11 +34,16 @@ function TreatmentInfo_6() {
         </p>
       </div>
       <div className="max-w-300 mx-auto">
-        <h3 className="text-center text-[48px] mt-10 mb-6"><b>Before & After</b> </h3>
+        <h3 className="text-center text-[48px] mt-10 mb-6">
+          <b>Before & After</b>{' '}
+        </h3>
         <div className="flex flex-wrap ">
           <div className="text-[24px] mt-6 mx-auto">
-            <p className='text-[24px] mb-4'> 병원의 진료 과정을 소개하기 위해 전후 사진을 게재합니다.</p>
-            <p  className='text-[24px] mb-8'>
+            <p className="text-[24px] mb-4">
+              {' '}
+              병원의 진료 과정을 소개하기 위해 전후 사진을 게재합니다.
+            </p>
+            <p className="text-[24px] mb-8">
               많은 치과 병원이 치료 전후 사진을 환자들에게 진료 사례를
               보여줍니다.
             </p>
@@ -59,7 +64,7 @@ function TreatmentInfo_6() {
           <img src={ca5} alt="ca5" />
           <img src={cav} alt="cav" />
           <img src={ca4} alt="ca4" />
-          
+
           <img src={cav3} alt="cav3" />
           <img src={cav2} alt="cav2" />
         </div>
