@@ -1,12 +1,9 @@
-import React from 'react';
-import TreatmentInfo_5 from '../components/TreatmentInfo_5';
+import React from 'react'
 
 function TeethWhitening() {
   return (
-    <div>
-      <TreatmentInfo_5 />
-    </div>
-  );
+    <div>TeethWhitening</div>
+  )
 }
 
-export default TeethWhitening;
+export default TeethWhitening
