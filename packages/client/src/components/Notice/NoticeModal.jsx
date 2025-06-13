@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import axios from 'axios'; // axios 인스턴스 사용 안 하고 직접 baseURL 지정
+import { getAuth } from 'firebase/auth';
 import NoticeDetailModal from './NoticeDetailModal';
 
 // ===== 스타일 =====
@@ -90,7 +82,6 @@ const Button = styled.button`
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
-
   &:hover {
     background: ${({ color }) =>
       color === '#dc3545' ? '#c82333' :
@@ -99,7 +90,13 @@ const Button = styled.button`
   }
 `;
 
-// ===== 컴포넌트 =====
+const EmptyMessage = styled.div`
+  text-align: center;
+  color: #999;
+  margin: 20px 0;
+  font-size: 14px;
+`;
+
 const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [notices, setNotices] = useState([]);
   const [detailShow, setDetailShow] = useState(false);
@@ -110,10 +107,16 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [showOnMain, setShowOnMain] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  const baseURL = 'http://localhost:3000/api/notice';
+
   const fetchNotices = async () => {
-    const snapshot = await getDocs(collection(db, 'notices'));
-    const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setNotices(list);
+    try {
+      const res = await axios.get(baseURL);
+      setNotices(res.data.notices || []);
+    } catch (err) {
+      alert('공지사항 불러오기 실패');
+      setNotices([]);
+    }
   };
 
   useEffect(() => {
@@ -124,42 +127,64 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
     setTitle('');
     setBody('');
     setShowOnMain(false);
-    setEditId(null);
     setDetailNotice(null);
-    // setShowForm(false); 🔥 이 줄은 제거됨
   };
 
   const handleSubmit = async () => {
-    const data = {
-      title: title.trim(),
-      content: body.trim(),
-      showOnMain,
-      author: '관리자',
-      createdAt: serverTimestamp(),
-    };
-
-    if (!data.title || !data.content) {
+    if (!title.trim() || !body.trim()) {
       alert('제목과 내용을 입력하세요.');
       return;
     }
 
     try {
+      const user = getAuth().currentUser;
+      const token = await user.getIdToken();
+
+      const data = editId
+        ? {
+            title,
+            content: body,
+            isPublic: !!showOnMain  // ✅ boolean 강제 처리
+          }
+        : {
+            title,
+            content: body,
+            authorId: user.uid,
+            isPublic: !!showOnMain
+          };
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      };
+
       if (editId) {
-        await updateDoc(doc(db, 'notices', editId), data);
+        await axios.put(`${baseURL}/${editId}`, data, config);
       } else {
-        await addDoc(collection(db, 'notices'), data);
+        await axios.post(baseURL, data, config);
       }
+
+      setEditId(null);
       resetForm();
-      setShowForm(false); // ✅ 제출 후에만 폼 닫기
+      setShowForm(false);
       fetchNotices();
+
     } catch (err) {
+      console.error('공지 저장 실패:', err.response?.data || err.message);
       alert('저장 실패');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await deleteDoc(doc(db, 'notices', id));
+      const user = getAuth().currentUser;
+      const token = await user.getIdToken();
+
+      await axios.delete(`${baseURL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       setDetailShow(false);
       fetchNotices();
     } catch (err) {
@@ -176,25 +201,30 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
     setEditId(notice.id);
     setTitle(notice.title);
     setBody(notice.content);
-    setShowOnMain(notice.showOnMain || false);
+    setShowOnMain(Boolean(notice.isPublic));  // ✅ boolean 보장
     setShowForm(true);
     setDetailShow(false);
   };
 
   return (
     <>
-      <Overlay show={show}>
-        <Container>
+      <Overlay show={show} onClick={onClose}>
+        <Container onClick={(e) => e.stopPropagation()}>
           <Title>📢 직원 공지사항</Title>
-
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {!showForm &&
-              Array.isArray(notices) &&
-              notices.map((n) => (
-                <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
-                  <strong>{n.title}</strong>
-                </NoticeItem>
-              ))}
+            {!showForm && (
+              <>
+                {Array.isArray(notices) && notices.length > 0 ? (
+                  notices.map((n) => (
+                    <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
+                      <strong>{n.title}</strong>
+                    </NoticeItem>
+                  ))
+                ) : (
+                  <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
+                )}
+              </>
+            )}
 
             {showForm && (
               <NoticeItem>
@@ -242,15 +272,14 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
               <ButtonRow>
                 <Button
                   onClick={() => {
+                    setEditId(null);
                     resetForm();
-                    setShowForm(true); // ✅ 순서 중요
+                    setShowForm(true);
                   }}
                 >
                   추가
                 </Button>
-                <Button onClick={onClose} color="#343a40">
-                  닫기
-                </Button>
+                <Button onClick={onClose} color="#343a40">닫기</Button>
               </ButtonRow>
               <div style={{ marginTop: '6px', fontSize: '13px', textAlign: 'right', color: '#555' }}>
                 <label>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
 
@@ -73,9 +73,10 @@ const HalfWidth = styled.div`
 `;
 
 const SectionTitle = styled.h3`
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   margin: 40px 0 16px;
+  text-align: center;
 `;
 
 const Button = styled.button`
@@ -121,39 +122,74 @@ const OnsiteRegister = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const fetchPatients = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/onsite");
+      const sorted = res.data.patients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // 오래된 순
+      setPatients(sorted);
+    } catch (err) {
+      console.error("접수 리스트 불러오기 실패:", err.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.birth || !form.gender || !form.phone) {
-      alert('모든 필수 정보를 입력해주세요.');
-      return;
-    }
+    setLoading(true);
+
+    const {
+      name,
+      birth,
+      gender,
+      phone,
+      address,
+      insuranceNumber,
+      firstVisitDate,
+      lastVisitDate
+    } = form;
+
+    const payload = {
+      name,
+      birth,
+      gender,
+      phone,
+      address,
+      insuranceNumber,
+      firstVisitDate,
+      lastVisitDate
+    };
 
     try {
-      setLoading(true);
-      const response = await axios.post('http://localhost:3000/api/onsite/register', form);
-      if (response.data.success) {
-        alert('접수가 완료되었습니다.');
-        setPatients((prev) => [...prev, response.data.patient]);
-        setForm({
-          name: '', birth: '', gender: '', phone: '', address: '',
-          insuranceNumber: '', firstVisitDate: '', lastVisitDate: ''
-        });
-      } else {
-        alert('접수에 실패했습니다. 다시 시도해주세요.');
-      }
-    } catch (error) {
-      console.error('접수 중 오류:', error);
-      alert('서버 오류로 접수에 실패했습니다.');
+      await axios.post("http://localhost:3000/api/onsite", payload);
+      alert("접수가 완료되었습니다.");
+      fetchPatients(); // 등록 후 목록 갱신
+      setForm({
+        name: '',
+        birth: '',
+        gender: '',
+        phone: '',
+        address: '',
+        insuranceNumber: '',
+        firstVisitDate: '',
+        lastVisitDate: ''
+      });
+    } catch (err) {
+      console.error("접수 중 오류:", err.response?.data || err.message);
+      alert("서버 오류로 접수에 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPatients();
+  }, []);
 
   return (
     <AppContainer>
       <Wrapper>
         <Title>현장 접수</Title>
         <Description>기본 정보를 입력해 주세요. <span style={{ color: '#dc3545' }}>*</span> 표시는 필수 항목입니다.</Description>
+        
         <form onSubmit={handleSubmit}>
           <TwoColumnRow>
             <HalfWidth>
@@ -209,12 +245,16 @@ const OnsiteRegister = () => {
           </Button>
         </form>
 
+        <SectionTitle>접수 목록</SectionTitle>
+
         {patients.length === 0 ? (
           <EmptyMessage>접수된 환자가 아직 없습니다.</EmptyMessage>
         ) : (
-          <ul style={{ marginTop: '20px' }}>
+          <ul style={{ marginTop: '20px', listStyle: 'none', padding: 0, textAlign: 'center' }}>
             {patients.map((p, idx) => (
-              <li key={idx}>{p.name} ({p.birth})</li>
+              <li key={idx} style={{ marginBottom: '10px', fontSize: '16px' }}>
+                {p.name} ({p.birth})
+              </li>
             ))}
           </ul>
         )}
