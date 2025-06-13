@@ -1,5 +1,5 @@
 import React from 'react'
-import TreatmentInfo_6 from "../components/TreatmentInfo_6"
+import TreatmentInfo_6 from "../../../../components/TreatmentInfo_6"
 
 function gallery() {
   return (
