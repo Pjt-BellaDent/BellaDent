@@ -1,12 +1,13 @@
 // ReservationList.jsx (Tailwind 버전)
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReservationModal from './ReservationModal';
 import {
   fetchAppointments,
   addAppointment,
   updateAppointment,
   deleteAppointment,
-} from '../../api/appointments';
+} from '../../../api/appointments';
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
@@ -17,6 +18,7 @@ const ReservationList = () => {
   const [editData, setEditData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const getCurrentMonth = () => {
     const today = new Date();
@@ -71,8 +73,8 @@ const ReservationList = () => {
 
   const handleSave = async (formData) => {
     try {
-      if (editData?.id) {
-        await updateAppointment(editData.id, formData);
+      if (editData?.appointmentId) {
+        await updateAppointment(editData.appointmentId, formData);
       } else {
         await addAppointment(formData);
       }
@@ -86,100 +88,115 @@ const ReservationList = () => {
   };
 
   return (
-    <div className="p-8 font-sans">
-      <h2 className="text-xl font-bold mb-4">📋 전체 예약 목록</h2>
+    <div className="min-h-screen bg-[#f7fafd] font-sans">
+      {/* 상단 고정 헤더 */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 flex items-center justify-between px-6 py-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <button
+            className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 rounded px-3 py-1 text-base font-semibold transition"
+            onClick={() => navigate('/Dashboard/reservations')}
+          >
+            <span className="text-2xl">←</span>
+            <span className="hidden sm:inline">예약 관리로</span> 돌아가기
+          </button>
+          <h2 className="text-2xl font-bold ml-2">전체 예약 목록</h2>
+        </div>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2 text-base font-semibold shadow transition"
+          onClick={() => {
+            setEditData(null);
+            setModalOpen(true);
+          }}
+        >
+          <span className="text-lg font-bold mr-1">＋</span> 새 예약
+        </button>
+      </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-2 items-center">
-          <label>기간:</label>
+      {/* 필터/검색 영역 */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 bg-white border-b border-gray-100">
+        <div className="flex flex-wrap gap-2 items-center">
+          <label className="text-gray-700 font-medium">기간</label>
           <input
             type="date"
-            className="border px-3 py-2 rounded text-sm"
+            className="border px-3 py-2 rounded text-sm focus:ring-2 focus:ring-blue-200"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
           <span>~</span>
           <input
             type="date"
-            className="border px-3 py-2 rounded text-sm"
+            className="border px-3 py-2 rounded text-sm focus:ring-2 focus:ring-blue-200"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
           <input
             type="text"
-            className="border px-3 py-2 rounded text-sm w-[200px]"
+            className="border px-3 py-2 rounded text-sm w-[180px] focus:ring-2 focus:ring-blue-200"
             placeholder="이름 또는 진료과 검색"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button
-          className="bg-blue-500 text-white rounded px-4 py-2 text-sm font-semibold"
-          onClick={() => {
-            setEditData(null);
-            setModalOpen(true);
-          }}
-        >
-          + 새 예약
-        </button>
       </div>
 
       {loading ? (
-        <p>🔄 예약 불러오는 중...</p>
+        <p className="text-center py-10 text-lg text-blue-600 font-semibold">🔄 예약 불러오는 중...</p>
       ) : error ? (
-        <p className="text-red-500">⚠️ {error}</p>
+        <p className="text-center py-10 text-lg text-red-500 font-semibold">⚠️ {error}</p>
       ) : (
-        <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border px-3 py-2">예약일</th>
-              <th className="border px-3 py-2">시간</th>
-              <th className="border px-3 py-2">이름</th>
-              <th className="border px-3 py-2">생년월일</th>
-              <th className="border px-3 py-2">진료과</th>
-              <th className="border px-3 py-2">상태</th>
-              <th className="border px-3 py-2 text-left">메모</th>
-              <th className="border px-3 py-2">관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan="8" className="text-center py-4">일치하는 예약이 없습니다.</td></tr>
-            ) : (
-              filtered
-                .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
-                .map((r, i) => (
-                  <tr key={r.id || i}>
-                    <td className="border px-3 py-2 text-center">
-                      {r.date ? (() => {
-                        const [year, month, day] = r.date.split('-');
-                        return `${year}년 ${month}월 ${day}일`;
-                      })() : '-'}
-                    </td>
-                    <td className="border px-3 py-2 text-center">{(r.startTime && r.endTime) ? `${r.startTime}~${r.endTime}` : '-'}</td>
-                    <td className="border px-3 py-2 text-center">{r.name || '-'}</td>
-                    <td className="border px-3 py-2 text-center">{r.birth || '-'}</td>
-                    <td className="border px-3 py-2 text-center">{r.department || '-'}</td>
-                    <td className="border px-3 py-2 text-center">{r.status || '-'}</td>
-                    <td className="border px-3 py-2 text-left">{r.notes || r.memo || '-'}</td>
-                    <td className="border px-3 py-2 text-center">
-                      <button
-                        className="text-sm text-blue-500 hover:underline mr-2"
-                        onClick={() => {
-                          setEditData(r);
-                          setModalOpen(true);
-                        }}
-                      >수정</button>
-                      <button
-                        className="text-sm text-red-500 hover:underline"
-                        onClick={() => handleDelete(r.id)}
-                      >삭제</button>
-                    </td>
-                  </tr>
-                ))
-            )}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto px-2 py-6">
+          <table className="min-w-[900px] w-full border-separate border-spacing-0 rounded-lg bg-white shadow text-[15px]">
+            <thead>
+              <tr className="bg-blue-50 text-blue-700">
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">예약일</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">시간</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">이름</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">생년월일</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">진료과</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">상태</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">메모</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan="8" className="text-center py-8 text-gray-400">일치하는 예약이 없습니다.</td></tr>
+              ) : (
+                filtered
+                  .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
+                  .map((r, i) => (
+                    <tr key={r.appointmentId || i} className="hover:bg-blue-50 transition">
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.date ? (() => {
+                          const [year, month, day] = r.date.split('-');
+                          return `${year}년 ${month}월 ${day}일`;
+                        })() : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">{(r.startTime && r.endTime) ? `${r.startTime}~${r.endTime}` : '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.name || '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.birth || '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.department || '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.status || '-'}</td>
+                      <td className="px-4 py-3 text-left border-b border-gray-100">{r.memo || '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        <button
+                          className="text-xs bg-yellow-100 text-yellow-800 rounded px-3 py-1 font-semibold mr-2 hover:bg-yellow-200 transition"
+                          onClick={() => {
+                            setEditData(r);
+                            setModalOpen(true);
+                          }}
+                        >수정</button>
+                        <button
+                          className="text-xs bg-red-100 text-red-700 rounded px-3 py-1 font-semibold hover:bg-red-200 transition"
+                          onClick={() => handleDelete(r.appointmentId)}
+                        >삭제</button>
+                      </td>
+                    </tr>
+                  ))
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <ReservationModal

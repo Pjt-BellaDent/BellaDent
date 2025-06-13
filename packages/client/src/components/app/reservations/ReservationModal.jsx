@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import axios from '../../../libs/axiosIntance';
 
 const HOUR_MAP = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 const splitAmPm = (list) => ({
@@ -62,10 +63,15 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     if (form.name && form.birth) {
       const currentFetch = Date.now();
       latestFetch.current = currentFetch;
-      fetch(`/users/userId?name=${encodeURIComponent(form.name)}&birth=${encodeURIComponent(form.birth)}`)
-        .then(res => res.json())
-        .then(data => { if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: data.userId || '' })); })
-        .catch(() => { if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: '' })); });
+      axios.get('/users/patients/find', {
+        params: { name: form.name, birth: form.birth }
+      })
+      .then(res => {
+        if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: res.data.userId || '' }));
+      })
+      .catch(() => {
+        if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: '' }));
+      });
     } else {
       setForm(prev => ({ ...prev, userId: '' }));
     }

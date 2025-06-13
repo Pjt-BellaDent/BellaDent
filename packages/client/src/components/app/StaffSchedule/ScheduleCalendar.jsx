@@ -4,7 +4,8 @@ const ScheduleCalendar = ({
   currentDate,
   scheduleData,
   onDateClick,
-  filterRank = '전체',
+  filterStaffId = '전체',
+  staffList = [],
   onPrevMonth,
   onNextMonth,
   onFilterChange,
@@ -24,8 +25,8 @@ const ScheduleCalendar = ({
     const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     let daySchedules = scheduleData[key] || [];
 
-    if (filterRank !== '전체') {
-      daySchedules = daySchedules.filter(e => e.rank === filterRank);
+    if (filterStaffId !== '전체') {
+      daySchedules = daySchedules.filter(e => e.uid === filterStaffId);
     }
 
     const sorted = [...daySchedules].sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''));
@@ -51,7 +52,7 @@ const ScheduleCalendar = ({
               key={i}
               className="text-xs bg-blue-50 text-blue-700 rounded px-2 py-1 truncate hover:bg-blue-100"
             >
-              {e.time} {e.rank} {e.name}
+              {e.time} {e.position} {e.name}
               {e.off && <span className="ml-1 text-red-500">🌙</span>}
             </div>
           ))}
@@ -85,17 +86,14 @@ const ScheduleCalendar = ({
         <div className="text-xl font-bold text-gray-800">{year}년 {month + 1}월</div>
         <div>
           <select
-            value={filterRank}
+            value={filterStaffId}
             onChange={onFilterChange}
             className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="전체">전체</option>
-            <option value="원장">원장</option>
-            <option value="부원장">부원장</option>
-            <option value="과장">과장</option>
-            <option value="상담사">상담사</option>
-            <option value="수납">수납</option>
-            <option value="치위생사">치위생사</option>
+            <option value="전체" key="all">전체</option>
+            {staffList.map(staff => (
+              <option key={staff.uid} value={staff.uid}>{staff.name}</option>
+            ))}
           </select>
         </div>
       </div>

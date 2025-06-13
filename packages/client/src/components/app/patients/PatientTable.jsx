@@ -18,7 +18,7 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
         </thead>
         <tbody className="divide-y divide-gray-100 text-center">
           {data && data.length > 0 ? data.map(p => (
-            <tr key={p.id || `${p.name}_${p.phone}`}>
+            <tr key={p.userId || `${p.name}_${p.phone}`}>
               <td>
                 <span 
                   className="text-blue-600 font-medium cursor-pointer hover:underline"
@@ -30,7 +30,7 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
               <td>{p.gender}</td>
               <td>{p.birth}</td>
               <td>{p.phone}</td>
-              <td>{p.dept}</td>
+              <td>{p.department}</td>
               <td>{p.lastVisit}</td>
               <td>
                 <div className="flex justify-center gap-2">
@@ -42,7 +42,7 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
                   </button>
                   <button 
                     className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                    onClick={() => onDeleteClick && onDeleteClick(p.id)}
+                    onClick={() => onDeleteClick && onDeleteClick(p.userId)}
                   >
                     삭제
                   </button>

@@ -19,7 +19,7 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`/patients/${form.id}`, {
+      await axios.put(`/patients/${form.userId}`, {
         ...form,
         procedures: editedProcedures.map(proc => ({
           ...proc,
@@ -70,8 +70,8 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
         <label className="font-semibold">진료과</label>
         <select
           className="w-full p-2 border rounded mb-3"
-          value={form.dept || ''}
-          onChange={e => setForm({ ...form, dept: e.target.value })}
+          value={form.department || ''}
+          onChange={e => setForm({ ...form, department: e.target.value })}
         >
           <option value="">선택</option>
           <option value="보철과">보철과</option>

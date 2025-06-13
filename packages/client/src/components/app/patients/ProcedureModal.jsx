@@ -24,7 +24,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
   const [procedures, setProcedures] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    title: '', date: '', doctor: '', note: '', department: '', time: ''
+    title: '', date: '', doctor: '', doctorId: '', memo: '', department: '', time: ''
   });
 
   const reservedTimes = useMemo(() => {
@@ -49,7 +49,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
   }, [open, patient]);
 
   const handleAdd = async () => {
-    const { title, date, doctor, department, time, note } = formData;
+    const { title, date, doctor, department, time, memo } = formData;
     if (!title || !date || !doctor || !department || !time) return alert('모든 필수 입력값을 채워주세요!');
 
     const newEntry = { ...formData, name: patient.name, birth: patient.birth };
@@ -62,13 +62,13 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
         time,
         department,
         doctor,
-        memo: note,
+        memo,
         phone: patient.phone || '-',
         gender: patient.gender || '-',
         status: '대기'
       });
       setProcedures([newEntry, ...procedures]);
-      setFormData({ title: '', date: '', doctor: '', note: '', department: '', time: '' });
+      setFormData({ title: '', date: '', doctor: '', doctorId: '', memo: '', department: '', time: '' });
       setShowForm(false);
       fetchEvents?.();
     } catch (err) {
@@ -100,7 +100,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
                   <p>시술일자: {p.date ? new Date(p.date).toLocaleDateString('ko-KR') : '-'}</p>
                   <p>등록일자: {p.createdAt ? new Date(p.createdAt).toLocaleString('ko-KR') : '-'}</p>
                 </div>
-                {p.note && <p className="bg-gray-50 text-sm mt-2 p-2 rounded">{p.note}</p>}
+                {p.memo && <p className="bg-gray-50 text-sm mt-2 p-2 rounded">{p.memo}</p>}
               </li>
             ))}
           </ul>
@@ -200,8 +200,8 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
             <textarea
               className="w-full p-2 border rounded"
               placeholder="시술 메모 또는 설명"
-              value={formData.note}
-              onChange={e => setFormData({ ...formData, note: e.target.value })}
+              value={formData.memo}
+              onChange={e => setFormData({ ...formData, memo: e.target.value })}
             />
             <div className="flex justify-end gap-2">
               <button onClick={handleAdd} className="px-4 py-2 bg-blue-600 text-white rounded">추가</button>

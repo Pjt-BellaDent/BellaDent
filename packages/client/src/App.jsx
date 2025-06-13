@@ -41,6 +41,7 @@ import DashboardFrame from './routes/DashboardFrame';
 import Dashboard from './components/app/dashboard/DashboardPage';
 import Patients from './components/app/patients/PatientPage';
 import Reservations from './components/app/reservations/ReservationsPage';
+import ReservationList from './components/app/reservations/ReservationList';
 import Waiting from './components/app/waiting/WaitingPage';
 import Sms from './components/app/sms/SmsPage';
 import StaffSchedule from './components/app/StaffSchedule/StaffSchedule';
@@ -93,7 +94,9 @@ function App() {
       <Route path="/Dashboard" element={<DashboardFrame />}>
         <Route index element={<Dashboard />} />
         <Route path="patients" element={<Patients />} />
-        <Route path="reservations" element={<Reservations />} />
+        <Route path="reservations" element={<Reservations />}>
+          <Route path="list" element={null} />
+        </Route>
         <Route path="waiting-manage" element={<Waiting />} />
         <Route path="sms" element={<Sms />} />
         <Route path="schedule" element={<StaffSchedule />} />
@@ -102,6 +105,9 @@ function App() {
         <Route path="chatbot-settings" element={<ChatbotSettings />} />
         <Route path="reviews-manager" element={<ReviewsManager />} />
       </Route>
+
+      {/* 예약 목록 전체화면 라우트 */}
+      <Route path="/Dashboard/reservations-list" element={<ReservationList />} />
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
