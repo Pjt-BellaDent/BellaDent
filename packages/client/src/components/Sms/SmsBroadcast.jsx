@@ -183,19 +183,6 @@ const DarkCalendarWrapper = styled.div`
   }
 `;
 // 날짜 관련
-const getKoreanDay = (dateStr) => {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  const date = new Date(dateStr);
-  return days[date.getDay()];
-};
-
-const formatDate = (date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
 const SmsBroadcast = () => {
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -247,19 +234,62 @@ const SmsBroadcast = () => {
     setCalendarShow(true);
   };
 
+  const getKoreanDay = (dateStr) => {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const date = new Date(dateStr);
+    return days[date.getDay()];
+  };
+
+  const formatDate = (date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const handleDateSelect = (date) => {
-    const formatted = formatDate(date); // fix timezone bug
+    const formatted = formatDate(date);
     const day = getKoreanDay(formatted);
     const content = `안녕하세요! BellaDent 치과입니다!\n${formatted} (${day})요일은 님의 재진일입니다!`;
     setMessage(content);
     setCalendarShow(false);
   };
 
-  const sendSms = () => {
+  const sendSms = async () => {
     if (!message.trim()) return alert('메시지를 입력하세요.');
     if (selected.length === 0) return alert('수신 대상을 선택하세요.');
-    alert(`총 ${selected.length}명에게 문자 발송 완료.\n내용: ${message}`);
-    setMessage('');
+
+    try {
+      const selectedPatients = patients.filter((p) => selected.includes(p.id));
+      const destPhones = selectedPatients.map((p) => p.phone);
+      const destIds = selectedPatients.map((p) => p.id);
+
+      const smsData = {
+        senderId: 'admin',
+        smsLogType: message.includes('(광고)') ? '광고' : '진료알림',
+        destId: destIds,
+        dest_phone: destPhones,
+        send_phone: '010-1234-5678',
+        msg_body: message,
+        msg_ad: message.includes('(광고)') ? 'Y' : 'N',
+      };
+
+      const response = await axios.post('http://localhost:3000/sms/send', smsData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.status === 201) {
+        alert(`총 ${selected.length}명에게 문자 발송 완료`);
+        setMessage('');
+      } else {
+        alert('발송 실패: ' + response.data?.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('오류 발생: ' + err.message);
+    }
   };
 
   return (
