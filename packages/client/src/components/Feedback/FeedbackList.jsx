@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
-import axios from 'axios';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 
 const Container = styled.div`
   padding: 30px;
@@ -37,23 +38,32 @@ const Card = styled.div`
 `;
 
 const FeedbackList = () => {
+  const [reviews, setReviews] = useState([]);
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState('latest');
 
-  const reviews = [
-    { id: 1, content: '병원 분위기가 편안하고 좋아요.', date: '2024-05-03' },
-    { id: 2, content: '김간호사님 정말 친절하세요!', date: '2024-05-01' },
-    { id: 3, content: '대기 시간이 너무 길어요.', date: '2024-04-30' },
-    { id: 4, content: '진료 예약 시스템이 불편해요.', date: '2024-04-28' },
-  ];
+  useEffect(() => {
+    const fetchReviews = async () => {
+      const snapshot = await getDocs(collection(db, 'reviews'));
+      const data = snapshot.docs.map(doc => doc.data());
+      const publicReviews = data.filter((r) => r.isPublic !== false); // 비공개 제외
+      setReviews(publicReviews);
+    };
+    fetchReviews();
+  }, []);
 
   const filtered = reviews
-    .filter(r => r.content.includes(search))
+    .filter(r => (r.content || '').includes(search))
     .sort((a, b) => {
-      return sortOrder === 'latest'
-        ? new Date(b.date) - new Date(a.date)
-        : new Date(a.date) - new Date(b.date);
+      const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt);
+      const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt);
+      return sortOrder === 'latest' ? bDate - aDate : aDate - bDate;
     });
+
+  const formatDate = (timestamp) => {
+    const d = timestamp?.toDate?.() || new Date(timestamp);
+    return d.toISOString().split('T')[0];
+  };
 
   return (
     <Container>
@@ -78,7 +88,7 @@ const FeedbackList = () => {
         <Card key={f.id}>
           <div>{f.content}</div>
           <div style={{ marginTop: '5px', color: '#888', fontSize: '13px' }}>
-            {f.date}
+            {formatDate(f.createdAt)}
           </div>
         </Card>
       ))}
