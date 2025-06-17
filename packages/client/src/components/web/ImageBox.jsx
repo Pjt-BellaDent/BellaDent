@@ -1,22 +1,17 @@
 import React from 'react';
 
-function ImageBox({ images, CN, setThumbnail }) {
-  const handleImageClick = (image) => {
-    if (images) {
-      setThumbnail(image);
-    }
-  };
-
+function ImageBox({ images, CN, CCN, setThumbnail }) {
   return (
-    <div className={CN}>
+    <div className={CCN}>
       {images.map((image, i) => (
-        <img
-          src={image}
-          alt={image}
-          key={i}
-          onClick={handleImageClick}
-          className="object-cover rounded-2xl"
-        />
+        <div className={CN} key={i}>
+          <img
+            src={image}
+            alt={image}
+            onClick={() => setThumbnail(image)}
+            className="object-cover rounded-2xl"
+          />
+        </div>
       ))}
     </div>
   );
