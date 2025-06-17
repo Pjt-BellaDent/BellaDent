@@ -89,6 +89,16 @@ router.put('/complete-by-name', async (req, res) => {
     userSnap.forEach(doc => {
       doc.ref.update({ lastVisit: today });
     });
+    // waiting 컬렉션의 해당 환자 status도 '진료완료'로 변경
+    const waitingSnap = await db.collection('waiting')
+      .where('name', '==', name)
+      .where('birth', '==', birth)
+      .where('department', '==', department)
+      .get();
+    if (!waitingSnap.empty) {
+      const waitingDocId = waitingSnap.docs[0].id;
+      await db.collection('waiting').doc(waitingDocId).update({ status: '진료완료' });
+    }
     return res.json({ success: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });

@@ -1,6 +1,7 @@
 // src/app/patients/components/ProcedureModal.jsx
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from '../../../libs/axiosIntance';
+import { addWaitingPatient } from '../../../api/appointments';
 
 const PROCEDURE_MAP = {
   '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
@@ -56,16 +57,32 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
     try {
       await axios.post('/procedures', newEntry);
       await axios.post('/appointments', {
+        userId: patient.userId || patient.id || '',
+        doctorId: formData.doctorId || formData.doctor || '',
+        date,
+        startTime: time,
+        endTime: time,
+        chairNumber: '1',
+        status: '대기',
+        department,
         name: patient.name,
         birth: patient.birth,
-        reservationDate: date,
-        time,
-        department,
-        doctor,
-        memo,
+        title,
         phone: patient.phone || '-',
         gender: patient.gender || '-',
-        status: '대기'
+        memo
+      });
+      await addWaitingPatient({
+        name: patient.name,
+        birth: patient.birth,
+        department,
+        doctor,
+        time,
+        status: '대기',
+        phone: patient.phone || '-',
+        gender: patient.gender || '-',
+        memo,
+        procedureTitle: formData.title
       });
       setProcedures([newEntry, ...procedures]);
       setFormData({ title: '', date: '', doctor: '', doctorId: '', memo: '', department: '', time: '' });
@@ -73,7 +90,7 @@ const ProcedureModal = ({ open, onClose, patient, events = {}, fetchEvents }) =>
       fetchEvents?.();
     } catch (err) {
       console.error('시술 추가 실패', err);
-      alert('시술 또는 예약 등록 실패');
+      alert('시술 또는 예약/대기 등록 실패');
     }
   };
 
