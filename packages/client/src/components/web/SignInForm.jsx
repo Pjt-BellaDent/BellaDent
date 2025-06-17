@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
-import axios from 'axios';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  signInWithEmailAndPassword,
+  browserSessionPersistence,
+  setPersistence,
+} from 'firebase/auth';
 import { auth } from '../../config/firebase.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
 
 function SignInForm() {
   const navigate = useNavigate();
-  const { userInfo, setUserInfo, setUserToken } = useUserInfo();
+  const { isLogin, isLoading, userInfo } = useUserInfo();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,33 +27,24 @@ function SignInForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isLogin || isLoading) {
+      return;
+    }
+
     try {
+      await setPersistence(auth, browserSessionPersistence);
       const userCredential = await signInWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      const idToken = await userCredential.user.getIdToken();
-
-      const url = 'http://localhost:3000/users/signIn';
-      const res = await axios.post(
-        url,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-          },
-          withCredentials: true,
-        }
-      );
       setModalType('success'); // 성공 모달 타입 설정
-      setUserToken(res.data.token);
-      setUserInfo(res.data.userInfo);
-      setModalMessage(res.data.message);
+      setModalMessage('로그인에 성공했습니다!'); // 성공 메시지 설정
       setShowModal(true);
     } catch (error) {
-      // 로그인 실패!
+      // 로그인 실패
       const errorCode = error.code;
       const errorMessage = error.message;
 
