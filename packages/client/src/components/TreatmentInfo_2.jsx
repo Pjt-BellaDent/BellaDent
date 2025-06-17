@@ -12,9 +12,7 @@ function TreatmentInfo_2() {
         />
 
         <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20 text-[32px]">
-        
-            <b>비급여 항목 안내</b>
-         
+          <b>비급여 항목 안내</b>
         </p>
         <div className="mt-16 mb-3 mx-5"></div>
       </div>
@@ -118,11 +116,12 @@ function TreatmentInfo_2() {
               <b>비급여항목임플란트</b>
             </h4>
             <table className="my-16,my-3">
-
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-stone-50">구분</th>
-                  <th className="w-180  bg-blue-700 text-stone-50">비급여항목</th>
+                  <th className="w-180  bg-blue-700 text-stone-50">
+                    비급여항목
+                  </th>
                   <th className="w-60 bg-blue-700 text-stone-50">금액</th>
                   <th className="w-60 bg-blue-700 text-stone-50">비고</th>
                 </tr>
@@ -180,17 +179,18 @@ function TreatmentInfo_2() {
             </h5>
 
             <table>
-              
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-stone-50">구분</th>
-                  <th className="w-180  bg-blue-700 text-stone-50">비급여항목</th>
+                  <th className="w-180  bg-blue-700 text-stone-50">
+                    비급여항목
+                  </th>
                   <th className="w-60 bg-blue-700 text-stone-50">금액</th>
                   <th className="w-60 bg-blue-700 text-stone-50">비고</th>
-                </tr> 
-                </thead>
-                <tbody>
-                  <tr>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
                   <td rowSpan={6}>
                     치은이식
                     <br />
@@ -199,33 +199,33 @@ function TreatmentInfo_2() {
                   <td>유리치은 이식술(FGG)</td>
                   <td>500,000원</td>
                   <td>※ 장치값 별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>결합조직 이식술(CTG)</td>
                   <td>500,000원</td>
                   <td>※ 장치값 별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>치은성형 A(치아당)</td>
                   <td>300,000원</td>
                   <td>※ VAT별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>치은성형 B(치아당)</td>
                   <td>500,000원</td>
                   <td>※ 뼈삭제 동반 / VAT 별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>치은착색제거(악당)</td>
                   <td>500,000원</td>
                   <td>&nbsp;</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>치근파개술(치아당)</td>
                   <td>400,000원</td>
                   <td>&nbsp;</td>
-                                </tr>
-                </tbody>
+                </tr>
+              </tbody>
             </table>
           </div>
           <div>
@@ -236,14 +236,15 @@ function TreatmentInfo_2() {
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-stone-50">구분</th>
-                  <th className="w-180  bg-blue-700 text-stone-50">비급여항목</th>
+                  <th className="w-180  bg-blue-700 text-stone-50">
+                    비급여항목
+                  </th>
                   <th className="w-60 bg-blue-700 text-stone-50">금액</th>
                   <th className="w-60 bg-blue-700 text-stone-50">비고</th>
                 </tr>
               </thead>
               <tbody>
-              <tr>
-                
+                <tr>
                   <td rowSpan={6}>레진</td>
                   <td>구치부 1면</td>
                   <td>80,000원</td>
@@ -284,16 +285,17 @@ function TreatmentInfo_2() {
 
             <table>
               <thead>
-                
-                  <tr>
-                    <th className="w-60 bg-blue-700 text-stone-50">구분</th>
-                    <th className="w-180  bg-blue-700 text-stone-50">비급여항목</th>
-                    <th className="w-60 bg-blue-700 text-stone-50">금액</th>
-                    <th className="w-60 bg-blue-700 text-stone-50">비고</th>
-                  </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
+                <tr>
+                  <th className="w-60 bg-blue-700 text-stone-50">구분</th>
+                  <th className="w-180  bg-blue-700 text-stone-50">
+                    비급여항목
+                  </th>
+                  <th className="w-60 bg-blue-700 text-stone-50">금액</th>
+                  <th className="w-60 bg-blue-700 text-stone-50">비고</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
                   <td rowSpan={9}>
                     보존
                     <br />
@@ -302,48 +304,48 @@ function TreatmentInfo_2() {
                   <td>PFM</td>
                   <td>450,000원</td>
                   <td>※ pmma 포함</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>지르코니아</td>
                   <td>550,000원</td>
                   <td>※ pmma 포함</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>테스트치아</td>
                   <td>50,000원</td>
                   <td>※ pmma (레진)</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>전치부 올세라믹</td>
                   <td>600,000원</td>
                   <td>※ VAT 별도 (레진)</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>라미네이트 PT</td>
                   <td>700,000원</td>
                   <td>※ VAT 별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>라미네이트 LS</td>
                   <td>500,000원</td>
                   <td>※ VAT 별도</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>E-MAX 오버레이</td>
                   <td>550,000원</td>
                   <td>&nbsp;</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>레진 코어</td>
                   <td>50,000원</td>
                   <td>&nbsp;</td>
-                                </tr>
-                                <tr>
+                </tr>
+                <tr>
                   <td>Wall Core</td>
                   <td>200,000원</td>
                   <td>&nbsp;</td>
-                                </tr>
-                </tbody>
+                </tr>
+              </tbody>
             </table>
           </div>
           <div>
@@ -355,7 +357,9 @@ function TreatmentInfo_2() {
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-stone-50">구분</th>
-                  <th className="w-180  bg-blue-700 text-stone-50">비급여항목</th>
+                  <th className="w-180  bg-blue-700 text-stone-50">
+                    비급여항목
+                  </th>
                   <th className="w-60 bg-blue-700 text-stone-50">금액</th>
                   <th className="w-60 bg-blue-700 text-stone-50">비고</th>
                 </tr>
@@ -635,9 +639,8 @@ function TreatmentInfo_2() {
                       <td>무통주사</td>
                       <td>30,000원</td>
                       <td>&nbsp;</td>
-                    
-                 </tr> 
-                 </tbody>
+                    </tr>
+                  </tbody>
                 </table>
               </div>
               <div className="flex justify-center gap-2 mb-[165px] mx-5"></div>

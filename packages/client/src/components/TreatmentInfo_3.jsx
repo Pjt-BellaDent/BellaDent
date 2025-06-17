@@ -21,9 +21,7 @@ function TreatmentInfo_3() {
       </div>
       <div className=" max-w-300 mx-auto relative">
         <div className="flex justify-center md:text-balance text-[48px] mt-10 mb-6">
-         
-            <b>충치치료장비 </b>
-         
+          <b>충치치료장비 </b>
         </div>
 
         <div>
@@ -52,11 +50,9 @@ function TreatmentInfo_3() {
               <img src={phl} alt="phl" className="w-full block" />
             </div>
             <div className="text-[24px] mt-10 mb-6 max-w-full flex-1">
-               <b>턱관절물리치료 PHL레이저</b>< br />
+              <b>턱관절물리치료 PHL레이저</b>
+              <br />
               <p className="text-[24px] mt-6 mb-6 line-clamp-15 text-justify">
-              
-                 
-               
                 저주파 물리치료와 열치료로 턱관절통증를 개선할 수 있으며 생체
                 치료의 파장을 갖고 있어 턱관절을 치료 할 수 있습니다. 턱관절
                 물리치료는 어떻게 하나요? 턱관절 물리치료를 위해 사용되는
@@ -100,11 +96,10 @@ function TreatmentInfo_3() {
             <div className="text-[24px] mt-10 mb-6  max-w-full flex-1">
               <b>세척기</b>
               <p className="text-[24px] mt-6 mb-3  line-clamp-15 text-justify">
-                
-                 초음파 세척기
-                물속에서 발생된 진동수 매분 3만~4만의 초음파로 물체를 세척하는
-                장치입니다. 초음파가 액체 입자나 고체를 파괴,분산시키는 작용을
-                응용한 것으로 의료기구의 소독에 사용합니다.
+                초음파 세척기 물속에서 발생된 진동수 매분 3만~4만의 초음파로
+                물체를 세척하는 장치입니다. 초음파가 액체 입자나 고체를
+                파괴,분산시키는 작용을 응용한 것으로 의료기구의 소독에
+                사용합니다.
               </p>
             </div>
           </div>
@@ -116,7 +111,6 @@ function TreatmentInfo_3() {
             <div className="text-[24px] mt-10 mb-6 max-w-full flex-1">
               <b>임플란트</b>
               <p className="text-[24px] mt-6 mb-3 line-clamp-15 text-justify">
-               
                 적은 통증 안전하게 레이저
                 스케일링,잇몸치료,충치치료,신경치료,임플란트 치과 치료 대부분
                 사용되며 치료결과에 대한 만족도를 높입니다.

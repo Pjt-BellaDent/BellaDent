@@ -59,12 +59,12 @@ function TreatmentInfo_6() {
           <img src={orthod6} alt="orthod6" />
           <img src={chia6} alt="chia6" />
           <img src={alqor} alt="alqor" />
-          
-           <img src={chia12} alt="chia12" />
+
+          <img src={chia12} alt="chia12" />
           <img src={chia9} alt="chia9" />
-          
+
           <img src={ch10} alt="ch10" />
-         
+
           <img src={ca6} alt="ca6" />
           <img src={ca7} alt="ca7" />
           <img src={ca5} alt="ca5" />

@@ -22,7 +22,6 @@ function TreatmentInfo_1() {
       <TreatmentInfo_1_2 />
       <TreatmentInfo_1_3 />
     </>
-    
   );
 }
 
