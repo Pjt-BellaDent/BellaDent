@@ -20,10 +20,11 @@ const PROCEDURE_MAP = {
 };
 const DEPARTMENT_TO_CHAIR = { '보철과': '1', '교정과': '2', '치주과': '3' };
 const DOCTOR_MAP = {
-  '보철과': [{ name: '김치과 원장', id: 'doctor1' }, { name: '이보철 선생', id: 'doctor2' }],
-  '교정과': [{ name: '박교정 원장', id: 'doctor3' }, { name: '정교정 선생', id: 'doctor4' }],
-  '치주과': [{ name: '최치주 원장', id: 'doctor5' }, { name: '한치주 선생', id: 'doctor6' }]
+  '보철과': ['김치과 원장', '이보철 선생'],
+  '교정과': ['박교정 원장', '정교정 선생'],
+  '치주과': ['최치주 원장', '한치주 선생'],
 };
+const times = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
 const INITIAL_FORM = {
   name: '',
@@ -47,6 +48,9 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
   const [selectedTimes, setSelectedTimes] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [nameMatches, setNameMatches] = useState([]);
+  const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const latestFetch = useRef(0);
 
   const reservedTimes = useMemo(() => {
@@ -60,18 +64,15 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   }, [form.department, form.date, eventsForDate]);
 
   useEffect(() => {
+    axios.get('/patients').then(res => setPatients(res.data));
+  }, []);
+
+  useEffect(() => {
     if (form.name && form.birth) {
       const currentFetch = Date.now();
       latestFetch.current = currentFetch;
-      axios.get('/users/patients/find', {
-        params: { name: form.name, birth: form.birth }
-      })
-      .then(res => {
-        if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: res.data.userId || '' }));
-      })
-      .catch(() => {
-        if (latestFetch.current === currentFetch) setForm(prev => ({ ...prev, userId: '' }));
-      });
+      // axios.get('/users/patients/find', { params: { name: form.name, birth: form.birth } })
+      // ... existing code ...
     } else {
       setForm(prev => ({ ...prev, userId: '' }));
     }
@@ -83,7 +84,12 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
       setForm({
         ...INITIAL_FORM,
         ...initialData,
-        chairNumber: initialData.chairNumber || DEPARTMENT_TO_CHAIR[initialData.department] || '',
+        doctorId: initialData.doctor
+          ? (DOCTOR_MAP[initialData.department]?.find(d => d.name === initialData.doctor)?.id || '')
+          : '',
+        chairNumber: initialData.department
+          ? (DEPARTMENT_TO_CHAIR[initialData.department] || '')
+          : '',
         memo: initialData.memo || initialData.notes || ''
       });
       setBirthYear(yy || '');
@@ -112,19 +118,83 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
   }, [birthYear, birthMonth, birthDay]);
 
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setForm(prev => ({ ...prev, name: value }));
+    if (!value) {
+      setNameMatches([]);
+      setShowPhoneDropdown(false);
+      setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
+      setBirthYear(''); setBirthMonth(''); setBirthDay('');
+      return;
+    }
+    const matches = patients.filter(p => p.name === value);
+    setNameMatches(matches);
+    if (matches.length === 1) {
+      const found = matches[0];
+      setForm(prev => ({
+        ...prev,
+        userId: found.id || found.userId || '',
+        phone: found.phone || '',
+        gender: found.gender || '',
+        ...(found.birth ? (() => {
+          let y = '', m = '', d = '';
+          if (found.birth.includes('-')) {
+            [y, m, d] = found.birth.split('-');
+          } else if (found.birth.length === 8) {
+            y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
+          }
+          setBirthYear(y); setBirthMonth(m); setBirthDay(d);
+          return { birth: `${y}-${m}-${d}` };
+        })() : {})
+      }));
+      setShowPhoneDropdown(false);
+    } else if (matches.length > 1) {
+      setShowPhoneDropdown(true);
+      setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
+      setBirthYear(''); setBirthMonth(''); setBirthDay('');
+    } else {
+      setShowPhoneDropdown(false);
+      setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
+      setBirthYear(''); setBirthMonth(''); setBirthDay('');
+    }
+  };
+
+  const handlePhoneSelect = (phone) => {
+    setForm(prev => ({ ...prev, phone }));
+    const found = nameMatches.find(p => p.phone === phone);
+    if (found) {
+      setForm(prev => ({
+        ...prev,
+        userId: found.id || found.userId || '',
+        phone: found.phone || '',
+        gender: found.gender || '',
+        ...(found.birth ? (() => {
+          let y = '', m = '', d = '';
+          if (found.birth.includes('-')) {
+            [y, m, d] = found.birth.split('-');
+          } else if (found.birth.length === 8) {
+            y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
+          }
+          setBirthYear(y); setBirthMonth(m); setBirthDay(d);
+          return { birth: `${y}-${m}-${d}` };
+        })() : {})
+      }));
+      setShowPhoneDropdown(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'doctor') {
-      const found = DOCTOR_MAP[form.department]?.find(d => d.name === value);
-      setForm(prev => ({ ...prev, doctor: value, doctorId: found?.id || '' }));
+      setForm(prev => ({ ...prev, doctor: value }));
     } else if (name === 'department') {
       setForm(prev => ({
         ...prev,
         department: value,
         title: '',
         doctor: '',
-        doctorId: '',
-        chairNumber: DEPARTMENT_TO_CHAIR[value] || ''
+        chairNumber: DEPARTMENT_TO_CHAIR[value] || '',
       }));
       setSelectedTimes([]);
     } else {
@@ -142,17 +212,66 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     return idx.every((v, i, a) => i === 0 || v === a[i - 1] + 1);
   };
 
+  const handleNameBlur = (e) => {
+    const value = e.target.value;
+    const found = patients.find(p => p.name === value);
+    if (found && (!form.userId || form.userId !== found.id)) {
+      setForm(prev => ({
+        ...prev,
+        userId: found.id || found.userId || ''
+      }));
+    }
+  };
+
   const handleSubmit = () => {
-    if (!form.name || !form.date || !selectedTimes.length || !form.department || !form.title) {
-      alert('필수 항목을 모두 입력해주세요.');
+    let userId = form.userId;
+    if (!userId) {
+      const found = patients.find(p => p.name === form.name && (!showPhoneDropdown || p.phone === form.phone));
+      if (found) userId = found.id || found.userId || '';
+    }
+    const missing = [];
+    if (!form.title) missing.push('시술명');
+    if (!form.date) missing.push('예약일');
+    if (!form.name) missing.push('이름');
+    if (!form.department) missing.push('진료과');
+    if (!form.doctor) missing.push('담당의');
+    if (!form.chairNumber) missing.push('체어번호');
+    if (!userId) missing.push('환자');
+    if (!selectedTimes.length) missing.push('시간');
+    if (missing.length > 0) {
+      alert(`${missing.join(', ')} 정보를 모두 선택해 주세요.`);
       return;
     }
     if (!isContinuous(selectedTimes)) {
       alert('시간은 연속으로 선택되어야 합니다.');
       return;
     }
-    const [startTime, endTime] = [selectedTimes[0], selectedTimes[selectedTimes.length - 1]];
-    onSave({ ...form, startTime, endTime });
+    let doctor = form.doctor || initialData?.doctor || '';
+    let department = form.department || initialData?.department || '';
+    let startTime = times.find(t => t === selectedTimes[0]) || selectedTimes[0];
+    let endTime = times.find(t => t === selectedTimes[selectedTimes.length - 1]) || selectedTimes[selectedTimes.length - 1];
+    if (department && doctor) {
+      const validDoctors = DOCTOR_MAP[department];
+      if (validDoctors && !validDoctors.includes(doctor)) {
+        doctor = validDoctors[0];
+      }
+    }
+    const payload = {
+      ...form,
+      userId,
+      chairNumber: Number(form.chairNumber),
+      doctor,
+      department,
+      startTime,
+      endTime,
+      doctorId: doctor,
+      status: form.status || '대기'
+    };
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === '' || payload[key] === undefined) delete payload[key];
+    });
+    console.log('예약 등록 payload:', payload);
+    onSave(payload);
   };
 
   const { am, pm } = splitAmPm(HOUR_MAP);
@@ -184,19 +303,66 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
             `}
           </style>
 
-          {[['이름', 'name'], ['연락처', 'phone'], ['예약일', 'date']].map(([label, name]) => (
-            <div className="mb-4" key={name}>
-              <label className="block text-sm text-gray-700 mb-1">{label}</label>
+          <div className="mb-4">
+            <label className="block text-sm text-gray-700 mb-1">이름</label>
+            <input
+              name="name"
+              list="patient-names"
+              value={form.name || ''}
+              onChange={handleNameChange}
+              onBlur={handleNameBlur}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              placeholder="이름(을) 입력하세요"
+              autoComplete="off"
+            />
+            <datalist id="patient-names">
+              {patients.map(p => (
+                <option key={p.id} value={p.name} />
+              ))}
+            </datalist>
+          </div>
+
+          {showPhoneDropdown && (
+            <div className="mb-4">
+              <label className="block text-sm text-gray-700 mb-1">연락처 선택</label>
+              <select
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                value={form.phone}
+                onChange={e => handlePhoneSelect(e.target.value)}
+              >
+                <option value="">연락처를 선택하세요</option>
+                {nameMatches.map(p => (
+                  <option key={p.phone} value={p.phone}>{p.phone}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {!showPhoneDropdown && (
+            <div className="mb-4">
+              <label className="block text-sm text-gray-700 mb-1">연락처</label>
               <input
-                name={name}
-                type={name === 'date' ? 'date' : 'text'}
-                value={form[name] || ''}
+                name="phone"
+                type="text"
+                value={form.phone || ''}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                placeholder={`${label}을(를) 입력하세요`}
+                placeholder="연락처(를) 입력하세요"
               />
             </div>
-          ))}
+          )}
+
+          <div className="mb-4">
+            <label className="block text-sm text-gray-700 mb-1">예약일</label>
+            <input
+              name="date"
+              type="date"
+              value={form.date || ''}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              placeholder="예약일을 입력하세요"
+            />
+          </div>
 
           <div className="mb-4">
             <label className="block text-sm text-gray-700 mb-1">생년월일</label>
@@ -224,7 +390,7 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
           {[
             ['성별', 'gender', ['남', '여']],
             ['진료과', 'department', Object.keys(DOCTOR_MAP)],
-            ['담당의', 'doctor', DOCTOR_MAP[form.department]?.map(d => d.name) || []],
+            ['담당의', 'doctor', DOCTOR_MAP[form.department] || []],
             ['시술명', 'title', PROCEDURE_MAP[form.department] || []]
           ].map(([label, name, options]) => (
             (!['담당의', '시술명'].includes(label) || form.department) && (

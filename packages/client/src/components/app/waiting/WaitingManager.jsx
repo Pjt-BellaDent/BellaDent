@@ -28,14 +28,26 @@ const WaitingManager = () => {
 
   const fetchWaitingList = async () => {
     try {
-      const { data: roomsObj } = await axios.get('/waiting/status');
+      const { data } = await axios.get('/waiting/status');
+      let roomsObj = data;
+
+      // 배열이면 진료과 기준으로 객체 변환
+      if (Array.isArray(roomsObj)) {
+        roomsObj = { 1: { inTreatment: null, waiting: [] }, 2: { inTreatment: null, waiting: [] }, 3: { inTreatment: null, waiting: [] } };
+        data.forEach(item => {
+          const roomKey = departmentToRoom[item.department];
+          if (roomKey) {
+            roomsObj[roomKey].waiting.push(item);
+          }
+        });
+      }
+
       let result = [];
       Object.entries(roomsObj).forEach(([roomKey, value]) => {
         if (value.inTreatment && value.inTreatment.name) {
           result.push({
             ...value.inTreatment,
             department: roomToDepartment[roomKey],
-            status: '진료중',
           });
         }
         value.waiting.forEach(waitObj => {
@@ -43,7 +55,6 @@ const WaitingManager = () => {
             result.push({
               ...waitObj,
               department: roomToDepartment[roomKey],
-              status: '대기',
             });
           }
         });
@@ -67,8 +78,8 @@ const WaitingManager = () => {
     if (status !== '대기') return;
     const room = departmentToRoom[department];
     try {
-      await axios.post('/api/call', { name, birth, room });
-      fetchWaitingList();
+      await axios.post('/api/call', { name, birth, room, department });
+      await fetchWaitingList();
     } catch (error) {
       alert('환자 호출 실패: ' + error.message);
     }
@@ -144,7 +155,7 @@ const WaitingManager = () => {
                 <p>진료과: {appt.department}</p>
                 <p>상태: {appt.status}</p>
                 <p>담당의: {appt.doctor}</p>
-                <p>시술명: {appt.procedureTitle}</p>
+                <p>시술명: {appt.procedureTitle || appt.title || '-'}</p>
                 {appt.memo && <p>메모: {appt.memo}</p>}
               </div>
               <div className="flex flex-col gap-2 ml-4">

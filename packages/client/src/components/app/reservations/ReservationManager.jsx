@@ -207,9 +207,10 @@ const ReservationManager = () => {
   const handleAdd = (prefill = {}) => {
     setEditData({
       department: prefill.department || '',
-      date: getDateStr(selectedDate),
+      doctor: prefill.doctor || '',
       startTime: prefill.startTime || '',
       endTime: prefill.endTime || '',
+      date: getDateStr(selectedDate),
     });
     setModalOpen(true);
   };

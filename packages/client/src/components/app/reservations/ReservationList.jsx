@@ -87,6 +87,25 @@ const ReservationList = () => {
     }
   };
 
+  // 전체 예약 삭제 함수
+  const handleDeleteAll = async () => {
+    if (!window.confirm('정말 모든 예약을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    setLoading(true);
+    try {
+      for (const r of reservations) {
+        if (r.appointmentId) await deleteAppointment(r.appointmentId);
+        if (r.id) await deleteAppointment(r.id);
+      }
+      await fetchReservations();
+      alert('모든 예약이 삭제되었습니다.');
+    } catch (err) {
+      alert('일부 예약 삭제에 실패했습니다.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f7fafd] font-sans">
       {/* 상단 고정 헤더 */}
@@ -101,15 +120,24 @@ const ReservationList = () => {
           </button>
           <h2 className="text-2xl font-bold ml-2">전체 예약 목록</h2>
         </div>
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2 text-base font-semibold shadow transition"
-          onClick={() => {
-            setEditData(null);
-            setModalOpen(true);
-          }}
-        >
-          <span className="text-lg font-bold mr-1">＋</span> 새 예약
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-5 py-2 text-base font-semibold shadow transition"
+            onClick={handleDeleteAll}
+            disabled={loading || reservations.length === 0}
+          >
+            전체 예약 삭제
+          </button>
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2 text-base font-semibold shadow transition"
+            onClick={() => {
+              setEditData(null);
+              setModalOpen(true);
+            }}
+          >
+            <span className="text-lg font-bold mr-1">＋</span> 새 예약
+          </button>
+        </div>
       </div>
 
       {/* 필터/검색 영역 */}

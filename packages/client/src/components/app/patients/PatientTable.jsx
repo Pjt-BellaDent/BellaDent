@@ -42,7 +42,7 @@ const PatientTable = ({ data, onProcedureClick, onEditClick, onDeleteClick }) =>
                   </button>
                   <button 
                     className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-                    onClick={() => onDeleteClick && onDeleteClick(p.userId)}
+                    onClick={() => onDeleteClick && onDeleteClick(p.id)}
                   >
                     삭제
                   </button>
