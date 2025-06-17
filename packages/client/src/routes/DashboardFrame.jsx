@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import React, {  useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import NoticeModal from '../components/Notice/NoticeModal';
+import Sidebar from '../layout/Sidebar';
+import NoticeModal from '../components/modals/NoticeModal.jsx';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 
 function DashboardFrame() {
-  // ✅ 임시 로그인 사용자 정보
-  const currentUser = {
-    name: '최나영',
-    role: 'super_admin',
-  };
+  const { userInfo, isLogin } = useUserInfo();
 
   const [showNotice, setShowNotice] = useState(false);
   const [notices, setNotices] = useState([]);
@@ -47,12 +44,16 @@ function DashboardFrame() {
     setShowForm(true);
   };
 
+  if (!userInfo) {
+    return <div>로그인이 필요합니다.</div>;
+  }
+
   return (
     <>
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar
-          role={currentUser.role}
-          name={currentUser.name}
+          role={userInfo.role}
+          name={userInfo.name}
           onOpenNotice={() => setShowNotice(true)}
         />
         <main style={{ flex: 1, padding: '30px', background: '#f4f7fc' }}>
