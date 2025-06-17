@@ -27,6 +27,8 @@ const ChartBox = styled.div`
 const Charts = ({ proceduresData }) => {
   const procedureRef = useRef(null);
   const surveyRef = useRef(null);
+  const procedureChartRef = useRef(null);
+  const surveyChartRef = useRef(null);
 
   useEffect(() => {
     const counts = {};
@@ -35,8 +37,12 @@ const Charts = ({ proceduresData }) => {
         counts[item.title] = (counts[item.title] || 0) + 1;
       }
     }
+    // 기존 차트 제거
+    if (procedureChartRef.current) {
+      procedureChartRef.current.destroy();
+    }
 
-    new Chart(procedureRef.current, {
+    procedureChartRef.current = new Chart(procedureRef.current, {
       type: 'bar',
       data: {
         labels: Object.keys(counts),
@@ -58,7 +64,11 @@ const Charts = ({ proceduresData }) => {
         (surveys.reduce((sum, s) => sum + Number(s[q]), 0) / surveys.length).toFixed(2)
       );
 
-      new Chart(surveyRef.current, {
+      if (surveyChartRef.current) {
+        surveyChartRef.current.destroy();
+      }
+
+      surveyChartRef.current = new Chart(surveyRef.current, {
         type: 'bar',
         data: {
           labels: ['설명 만족', '대기 시간', '전반적 만족'],
@@ -74,6 +84,16 @@ const Charts = ({ proceduresData }) => {
         }
       });
     }
+
+    // 컴포넌트 unmount 시 차트 제거
+    return () => {
+      if (procedureChartRef.current) {
+        procedureChartRef.current.destroy();
+      }
+      if (surveyChartRef.current) {
+        surveyChartRef.current.destroy();
+      }
+    };
   }, [proceduresData]);
 
   return (
