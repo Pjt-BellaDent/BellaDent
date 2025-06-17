@@ -373,3 +373,192 @@ export const getStaffById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// 전체 직원 정보 조회
+export const getAllStaff = async (req, res) => {
+  try {
+    // 테스트용 더미 데이터 (ERD 구조에 맞게 수정)
+    const dummyStaff = [
+      {
+        uid: "staff1",
+        email: "doctor1@belladent.com",
+        role: "staff",
+        name: "김치과 원장",
+        phone: "010-1234-5678",
+        address: "서울시 강남구",
+        gender: "남",
+        birth: "1980-01-01",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "원장",
+          department: "보철과",
+          joinDate: "2020-01-01",
+          isRetired: false,
+          licenseNumber: "12345",
+          memo: "보철 전문"
+        }
+      },
+      {
+        uid: "staff2",
+        email: "doctor2@belladent.com",
+        role: "staff",
+        name: "이보철 선생",
+        phone: "010-2345-6789",
+        address: "서울시 서초구",
+        gender: "여",
+        birth: "1985-02-02",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "선생",
+          department: "보철과",
+          joinDate: "2021-03-01",
+          isRetired: false,
+          licenseNumber: "23456",
+          memo: "임플란트 전문"
+        }
+      },
+      {
+        uid: "staff3",
+        email: "doctor3@belladent.com",
+        role: "staff",
+        name: "박교정 원장",
+        phone: "010-3456-7890",
+        address: "서울시 송파구",
+        gender: "남",
+        birth: "1982-03-03",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "원장",
+          department: "교정과",
+          joinDate: "2019-06-01",
+          isRetired: false,
+          licenseNumber: "34567",
+          memo: "교정 전문"
+        }
+      },
+      {
+        uid: "staff4",
+        email: "doctor4@belladent.com",
+        role: "staff",
+        name: "정교정 선생",
+        phone: "010-4567-8901",
+        address: "서울시 강서구",
+        gender: "여",
+        birth: "1987-04-04",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "선생",
+          department: "교정과",
+          joinDate: "2022-01-01",
+          isRetired: false,
+          licenseNumber: "45678",
+          memo: "투명교정 전문"
+        }
+      },
+      {
+        uid: "staff5",
+        email: "doctor5@belladent.com",
+        role: "staff",
+        name: "최치주 원장",
+        phone: "010-5678-9012",
+        address: "서울시 마포구",
+        gender: "남",
+        birth: "1983-05-05",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "원장",
+          department: "치주과",
+          joinDate: "2018-09-01",
+          isRetired: false,
+          licenseNumber: "56789",
+          memo: "치주 전문"
+        }
+      },
+      {
+        uid: "staff6",
+        email: "doctor6@belladent.com",
+        role: "staff",
+        name: "한치주 선생",
+        phone: "010-6789-0123",
+        address: "서울시 용산구",
+        gender: "여",
+        birth: "1988-06-06",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        staffInfo: {
+          position: "선생",
+          department: "치주과",
+          joinDate: "2021-12-01",
+          isRetired: false,
+          licenseNumber: "67890",
+          memo: "치은성형 전문"
+        }
+      }
+    ];
+
+    // 실제 DB 조회 대신 더미 데이터 반환
+    res.status(200).json({
+      staffInfo: dummyStaff,
+      message: "전체 직원 정보 조회 성공",
+    });
+
+    // 실제 DB 조회 코드는 주석 처리
+    /*
+    const staffSnapshot = await db
+      .collection("users")
+      .where("role", "in", ["staff", "manager", "admin"])
+      .get();
+
+    if (staffSnapshot.empty) {
+      return res.status(404).json({ message: "조회된 직원 정보가 없습니다." });
+    }
+
+    const staffPromises = staffSnapshot.docs.map(async (userDoc) => {
+      const userData = userDoc.data();
+      const userId = userData.id;
+
+      const staffDoc = await userDoc.ref
+        .collection("staffs")
+        .doc(userId)
+        .get();
+
+      let staffData = null;
+      if (staffDoc.exists) {
+        staffData = staffDoc.data();
+      }
+
+      const userInfo = {
+        id: userId,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+        phone: userData.phone,
+        address: userData.address,
+        gender: userData.gender,
+        birth: userData.birth,
+        isActive: userData.isActive,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
+        staffInfo: staffData,
+      };
+
+      return userInfo;
+    });
+
+    const allStaff = await Promise.all(staffPromises);
+
+    res.status(200).json({
+      staffInfo: allStaff,
+      message: "전체 직원 정보 조회 성공",
+    });
+    */
+  } catch (err) {
+    console.error("전체 직원 정보 조회 에러:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -1,51 +1,71 @@
-const BASE_URL = 'http://localhost:3000/staff-schedules';
+import axios from '../libs/axiosIntance';
 
-// 월별 스케줄 조회
 export const fetchSchedulesByMonth = async (month) => {
   try {
-    const res = await fetch(`${BASE_URL}?month=${month}`);
-    return await res.json();
-  } catch (err) {
-    console.error('📥 스케줄 불러오기 실패:', err);
+    const res = await axios.get(`/staff-schedules?month=${month}`);
+    return res.data;
+  } catch (error) {
+    console.error('스케줄 조회 실패:', error);
     return [];
   }
 };
 
-// 스케줄 등록
 export const createSchedule = async (data) => {
   try {
-    const res = await fetch(BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
-  } catch (err) {
-    console.error('➕ 스케줄 등록 실패:', err);
+    const scheduleData = {
+      ...data,
+      uid: data.uid || data.staffId || data.id,
+      scheduleDate: data.scheduleDate,
+      position: data.position || data.rank,
+      name: data.name,
+      time: data.time || '',
+      memo: data.memo || '',
+      off: data.off || false
+    };
+    const res = await axios.post('/staff-schedules', scheduleData);
+    return res.data;
+  } catch (error) {
+    console.error('스케줄 생성 실패:', error);
+    throw error;
   }
 };
 
-// 스케줄 수정
 export const updateSchedule = async (id, data) => {
   try {
-    const res = await fetch(`${BASE_URL}/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return await res.json();
-  } catch (err) {
-    console.error('✏️ 스케줄 수정 실패:', err);
+    const scheduleData = {
+      ...data,
+      uid: data.uid || data.staffId || data.id,
+      scheduleDate: data.scheduleDate,
+      position: data.position || data.rank,
+      name: data.name,
+      time: data.time || '',
+      memo: data.memo || '',
+      off: data.off || false
+    };
+    const res = await axios.patch(`/staff-schedules/${id}`, scheduleData);
+    return res.data;
+  } catch (error) {
+    console.error('스케줄 수정 실패:', error);
+    throw error;
   }
 };
 
-// 스케줄 삭제
 export const deleteSchedule = async (id) => {
   try {
-    await fetch(`${BASE_URL}/${id}`, {
-      method: 'DELETE',
-    });
-  } catch (err) {
-    console.error('🗑️ 스케줄 삭제 실패:', err);
+    const res = await axios.delete(`/staff-schedules/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error('스케줄 삭제 실패:', error);
+    throw error;
+  }
+};
+
+export const fetchAllStaff = async () => {
+  try {
+    const res = await axios.get('/users/staff');
+    return res.data.staffInfo;
+  } catch (error) {
+    console.error('직원 목록 조회 실패:', error);
+    return [];
   }
 };
