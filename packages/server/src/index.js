@@ -21,6 +21,7 @@ import activitiesRouter from './routes/activities.js';
 import statsRouter from './routes/stats.js';
 import waitingRouter from './routes/waiting.js';
 
+import noticeRoutes from './routes/notices.js';
 import smsRoutes from './routes/sms.js';
 import onsiteRoutes from './routes/onsite.js';
 import feedbackRoutes from './routes/feedback.js';
@@ -49,6 +50,7 @@ app.use("/faqs", faqsRouter);
 app.use('/api/sms', smsRoutes);
 app.use('/api/onsite', onsiteRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/notice', noticeRoutes);
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/appointments", appointmentsRouter);
