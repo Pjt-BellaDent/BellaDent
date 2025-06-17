@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
+import {
+  collection,
+  doc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../config/firebase'; // Firebase config 경로에 맞게 조정 필요
 
 const ChatWrapper = styled.div`
   display: flex;
-  flex-direction: row;
-  height: 100%;
+  height: 100vh;
 `;
 
 const ChatList = styled.div`
-  width: 250px;
-  background: #fff;
+  width: 220px;
+  background: #f7f7f7;
   border-right: 1px solid #ccc;
-  padding: 20px;
   overflow-y: auto;
 `;
 
@@ -19,119 +28,170 @@ const ChatRoom = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #e9edf5;
 `;
 
 const ChatHeader = styled.div`
-  padding: 15px;
   background: #fff;
-  border-bottom: 1px solid #ddd;
+  padding: 10px 16px;
   font-weight: bold;
+  border-bottom: 1px solid #ddd;
 `;
 
 const ChatMessages = styled.div`
   flex: 1;
-  padding: 20px;
+  padding: 16px;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  background: #e9edf5;
 `;
 
 const Message = styled.div`
-  max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background-color: ${({ type }) => (type === 'user' ? '#007bff' : type === 'ai' ? '#dbe3ef' : '#fff')};
-  color: ${({ type }) => (type === 'user' ? '#fff' : '#333')};
-  align-self: ${({ type }) => (type === 'user' ? 'flex-end' : 'flex-start')};
+  background: ${(props) => (props.type === 'staff' ? '#cfe2ff' : '#fff3cd')};
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  max-width: 60%;
+`;
+
+const TypingBubble = styled.div`
+  font-style: italic;
+  color: #888;
+  margin: 8px 0 0 12px;
 `;
 
 const ChatInput = styled.div`
-  padding: 15px;
-  background: #fff;
-  border-top: 1px solid #ddd;
   display: flex;
-  gap: 10px;
+  border-top: 1px solid #ccc;
+  padding: 12px;
 `;
 
 const Input = styled.input`
   flex: 1;
   padding: 10px;
+  margin-right: 12px;
   border: 1px solid #ccc;
-  border-radius: 20px;
+  border-radius: 4px;
 `;
 
 const Button = styled.button`
-  padding: 10px 18px;
-  background-color: #007bff;
+  padding: 10px 16px;
+  background-color: #2f80ed;
   color: white;
   border: none;
-  border-radius: 20px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
+  border-radius: 4px;
+  font-weight: bold;
 `;
 
 const ChatItem = styled.div`
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  padding: 12px 16px;
+  border-bottom: 1px solid #ddd;
   cursor: pointer;
-
   &:hover {
-    background: #f0f0f5;
+    background: #eee;
   }
 `;
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    { type: 'ai', text: '안녕하세요! 무엇을 도와드릴까요?' }
-  ]);
   const [inputText, setInputText] = useState('');
+  const [activeUser, setActiveUser] = useState(null);
+  const [userList, setUserList] = useState([]);
+  const [chatData, setChatData] = useState({});
+  const [isTyping, setIsTyping] = useState(false);
+  const [staffUid] = useState('STAFF_UID'); // 실제 로그인된 직원 ID로 교체 필요
 
-  const sendMessage = () => {
+  const messages = activeUser ? chatData[activeUser] || [] : [];
+
+  useEffect(() => {
+    const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const users = snapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().userId,
+        status: doc.data().status
+      }));
+      setUserList(users);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!activeUser) return;
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    const q = query(msgRef, orderBy('sentAt'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => doc.data());
+      setChatData(prev => ({ ...prev, [activeUser]: msgs }));
+    });
+    return () => unsub();
+  }, [activeUser]);
+
+  useEffect(() => {
+    if (!activeUser) return;
+    const unsub = onSnapshot(doc(db, 'consultations', activeUser), (docSnap) => {
+      const data = docSnap.data();
+      setIsTyping(data?.typing || false);
+    });
+    return () => unsub();
+  }, [activeUser]);
+
+  const sendMessage = async () => {
     const text = inputText.trim();
-    if (!text) return;
+    if (!text || !activeUser) return;
 
-    const newMessages = [...messages, { type: 'user', text }];
-    setMessages(newMessages);
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    await addDoc(msgRef, {
+      senderId: staffUid,
+      senderType: 'staff',
+      content: text,
+      sentAt: serverTimestamp()
+    });
+
+    await updateDoc(doc(db, 'consultations', activeUser), {
+      updatedAt: serverTimestamp(),
+      handlerId: staffUid,
+      status: 'responded',
+      typing: false,
+    });
+
     setInputText('');
+  };
 
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        type: 'ai',
-        text: `AI 응답: "${text}"에 대한 도움을 드릴게요!`
-      }]);
-    }, 500);
+  const handleChatClick = (consultationId) => {
+    setActiveUser(consultationId);
   };
 
   return (
     <ChatWrapper>
       <ChatList>
-        <h3>고객 채팅 목록</h3>
-        <ChatItem>🧑 김철수</ChatItem>
-        <ChatItem>👩 이은정</ChatItem>
-        <ChatItem>🧠 AI 진료 봇</ChatItem>
+        <h3 style={{ padding: '16px', margin: 0 }}>상담 목록</h3>
+        {userList.map(user => (
+          <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
+            {user.name}
+          </ChatItem>
+        ))}
       </ChatList>
 
       <ChatRoom>
-        <ChatHeader>AI 채팅 상담</ChatHeader>
+        <ChatHeader>
+          {activeUser ? `${userList.find(u => u.id === activeUser)?.name} 상담 중` : '상담 선택 대기 중'}
+        </ChatHeader>
+
         <ChatMessages>
           {messages.map((msg, idx) => (
-            <Message key={idx} type={msg.type}>{msg.text}</Message>
+            <Message key={idx} type={msg.senderType}>{msg.content}</Message>
           ))}
+          {isTyping && <TypingBubble>입력 중...</TypingBubble>}
         </ChatMessages>
+
         <ChatInput>
           <Input
             type="text"
-            placeholder="메시지를 입력하세요..."
+            placeholder="답변을 입력하세요..."
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendMessage()}
+            disabled={!activeUser}
           />
-          <Button onClick={sendMessage}>전송</Button>
+          <Button onClick={sendMessage} disabled={!activeUser}>전송</Button>
         </ChatInput>
       </ChatRoom>
     </ChatWrapper>
