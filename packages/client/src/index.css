@@ -1,1 +1,17 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  --font-BD-serifItalic: 'Playfair Display', 'serif';
+  --font-BD-mont: 'Montserrat', 'sans-serif';
+  --font-BD-sans: 'Noto Sans KR', 'sans-serif';
+  --font-BD-ui: 'Inter', 'sans-serif';
+
+  --color-BD-PureWhite: #f8f8f8;
+  --color-BD-ElegantGold: #c8ab7c;
+  --color-BD-WarmBeige: #f7f4ef;
+  --color-BD-CharcoalBlack: #333333;
+  --color-BD-CoolGray: #888888;
+  --color-BD-ClassicNavy: #2c3e50;
+  --color-BD-DeepForestGreen: #4a5f48;
+  --color-BD-SoftGrayLine: #e0e0e0;
+}

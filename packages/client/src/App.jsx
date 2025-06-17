@@ -1,93 +1,121 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { HospitalProvider } from './contexts/HospitalContext.jsx';
 
+// 웹 전용 프레임 및 라우트
 import Frame from './routes/web/Frame';
-
 import Home from './routes/web/Home';
 import SignIn from './routes/web/users/SignIn';
 import SignUp from './routes/web/users/SignUp';
 import UserInfo from './routes/web/users/UserInfo';
 import UserUpdate from './routes/web/users/UserUpdate';
+
+// 소개 / 클리닉
 import Greeting from './routes/web/nev/clinic/Greeting';
 import Doctors from './routes/web/nev/clinic/Doctors';
 import Tour from './routes/web/nev/clinic/Tour';
 import Location from './routes/web/nev/clinic/Location';
+
+// 진료
 import Services from './routes/web/nev/treatments/Services';
 import NonCovered from './routes/web/nev/treatments/NonCovered';
-import Orthodontics from './routes/web/nev/aesthetics/Orthodontics';
 import Equipment from './routes/web/nev/treatments/Equipment';
+
+// 심미
+import Orthodontics from './routes/web/nev/aesthetics/Orthodontics';
 import Whitening from './routes/web/nev/aesthetics/Whitening';
 import Gallery from './routes/web/nev/aesthetics/Gallery';
+
+// 예약 및 상담
 import Reservation from './routes/web/nev/booking/Reservation';
 import LiveChat from './routes/web/nev/booking/LiveChat';
+
+// 고객지원
 import ClinicNews from './routes/web/nev/support/ClinicNews';
 import Faq from './routes/web/nev/support/Faq';
 import Reviews from './routes/web/nev/support/Reviews';
 
+// 관리자 대시보드 프레임
 import DashboardFrame from './routes/DashboardFrame';
 
-import Dashboard from './components/Dashboard';
-import NoticeModal from './components/Notice/NoticeModal';
-import WaitingStatus from './components/WaitingStatus/WaitingStatus';
-import StaffSchedule from './components/StaffSchedule/StaffSchedule';
-import PatientList from './components/PatientList/PatientList';
-import ReservationManager from './components/ReservationManager/ReservationManager';
-import Chat from './components/Chat';
-import ChatbotSettings from './components/ChatbotSettings';
-import GeneralSettings from './components/GeneralSettings/GeneralSettings.jsx';
-import Sms from './components/Sms/SmsBroadcast';
-import Feedback from './components/Feedback/FeedbackList';
-import UserPermission from './components/GeneralSettings/UserPermission.jsx';
-import HospitalInfo from './components/GeneralSettings/HospitalInfo.jsx';
+// 대시보드 기능별 페이지 (components/app)
+import Dashboard from './components/app/dashboard/DashboardPage';
+import Patients from './components/app/patients/PatientPage';
+import Reservations from './components/app/reservations/ReservationsPage';
+import ReservationList from './components/app/reservations/ReservationList';
+import Waiting from './components/app/waiting/WaitingPage';
+import Sms from './components/app/sms/SmsPage';
+import StaffSchedule from './components/app/StaffSchedule/StaffSchedule';
+import Settings from './components/app/settings/GeneralSettings';
+import Chatbot from './components/app/chatbot/Chat';
+import ChatbotSettings from './components/app/chatbot/Settings';
+import ReviewsManager from './components/app/reviews/reviews-manager';
+import WaitingStatus from './components/app/waiting/WaitingStatus';
+
+// 공통
+import NotFound from './components/NotFound';
 
 function App() {
   return (
-    <>
-      <HospitalProvider>
-        <Routes>
-          <Route path="/" element={<Frame />}>
-            <Route index element={<Home />} />
-            <Route path="SignIn" element={<SignIn />} />
-            <Route path="signup" element={<SignUp />} />
-            <Route path="userinfo" element={<UserInfo />} />
+    <Routes>
+      {/* 사용자용 웹 프레임 */}
+      <Route path="/" element={<Frame />}>
+        <Route index element={<Home />} />
+        <Route path="signIn" element={<SignIn />} />
+        <Route path="signup" element={<SignUp />} />
+        <Route path="userinfo" element={<UserInfo />} />
+        <Route path="user-update" element={<UserUpdate />} />
 
-            <Route path="user-update" element={<UserUpdate />} />
-            <Route path="greeting" element={<Greeting />} />
-            <Route path="tour" element={<Tour />} />
-            <Route path="doctors" element={<Doctors />} />
-            <Route path="location" element={<Location />} />
-            <Route path="services" element={<Services />} />
-            <Route path="non-covered" element={<NonCovered />} />
-            <Route path="equipment" element={<Equipment />} />
-            <Route path="orthodontics" element={<Orthodontics />} />
-            <Route path="whitening" element={<Whitening />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="reservation" element={<Reservation />} />
-            <Route path="live-chat" element={<LiveChat />} />
-            <Route path="clinic-news" element={<ClinicNews />} />
-            <Route path="faq" element={<Faq />} />
-            <Route path="reviews" element={<Reviews />} />
-          </Route>
+        {/* 소개 */}
+        <Route path="greeting" element={<Greeting />} />
+        <Route path="tour" element={<Tour />} />
+        <Route path="doctors" element={<Doctors />} />
+        <Route path="location" element={<Location />} />
 
-          <Route path="/Dashboard" element={<DashboardFrame />}>
-            <Route index element={<Dashboard />} />
-            <Route path="notice" element={<NoticeModal />} />
-            <Route path="waiting" element={<WaitingStatus />} />{' '}
-            <Route path="schedule" element={<StaffSchedule />} />
-            <Route path="patients" element={<PatientList />} />
-            <Route path="reservations" element={<ReservationManager />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="chat-settings" element={<ChatbotSettings />} />
-            <Route path="settings" element={<GeneralSettings />} />
-            <Route path="sms" element={<Sms />} />
-            <Route path="feedback" element={<Feedback />} />
-            <Route path="user-permissions" element={<UserPermission />} />
-            <Route path="hospital-info" element={<HospitalInfo />} />
-          </Route>
-        </Routes>
-      </HospitalProvider>
-    </>
+        {/* 진료 */}
+        <Route path="services" element={<Services />} />
+        <Route path="non-covered" element={<NonCovered />} />
+        <Route path="equipment" element={<Equipment />} />
+
+        {/* 심미 */}
+        <Route path="orthodontics" element={<Orthodontics />} />
+        <Route path="whitening" element={<Whitening />} />
+        <Route path="gallery" element={<Gallery />} />
+
+        {/* 예약/상담 */}
+        <Route path="reservation" element={<Reservation />} />
+        <Route path="live-chat" element={<LiveChat />} />
+
+        {/* 고객지원 */}
+        <Route path="clinic-news" element={<ClinicNews />} />
+        <Route path="faq" element={<Faq />} />
+        <Route path="reviews" element={<Reviews />} />
+      </Route>
+
+      {/* 관리자/스태프 대시보드 프레임 */}
+      <Route path="/Dashboard" element={<DashboardFrame />}>
+        <Route index element={<Dashboard />} />
+        <Route path="patients" element={<Patients />} />
+        <Route path="reservations" element={<Reservations />}>
+          <Route path="list" element={null} />
+        </Route>
+        <Route path="waiting-manage" element={<Waiting />} />
+        <Route path="sms" element={<Sms />} />
+        <Route path="schedule" element={<StaffSchedule />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="chatbot" element={<Chatbot />} />
+        <Route path="chatbot-settings" element={<ChatbotSettings />} />
+        <Route path="reviews-manager" element={<ReviewsManager />} />
+      </Route>
+
+      {/* 예약 목록 전체화면 라우트 */}
+      <Route path="/Dashboard/reservations-list" element={<ReservationList />} />
+
+      {/* 진료 대기 모니터링 전체화면 */}
+      <Route path="/waiting-status" element={<WaitingStatus />} />
+
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
