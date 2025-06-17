@@ -1,9 +1,9 @@
 import React from 'react';
 
-function Container({ children, CN }) {
+function Container({ children, CN, BG }) {
   return (
-    <div className='w-full bg-white'>
-      <div className={`max-w-300 mx-auto ${CN}`}>{children}</div>
+    <div className={`w-full ${BG}`}>
+      <div className={`max-w-320 mx-auto ${CN}`}>{children}</div>
     </div>
   );
 }
