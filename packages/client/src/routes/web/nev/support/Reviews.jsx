@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUserInfo } from '../../../../contexts/UserInfoContext';
 
-import LineBanner from '../../../../components/web/LineBanner';
+import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
 import RowBox from '../../../../components/web/RowBox';
 import Title from '../../../../components/web/Title';
@@ -10,6 +10,8 @@ import Button from '../../../../components/web/Button';
 import Text from '../../../../components/web/Text';
 import Board from '../../../../components/web/Board';
 import ReviewCreateForm from '../../../../components/web/ReviewCreateForm';
+
+import line_banner from '../../../../assets/images/line_banner.png';
 
 function Reviews() {
   const [activeReview, setActiveReview] = useState(false);
@@ -56,10 +58,13 @@ function Reviews() {
 
   return (
     <>
-      <LineBanner CN="w-full h-40 bg-gray-400 flex flex-col justify-center items-center">
+      <LineImageBanner
+        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        image={line_banner}
+      >
         <Title CN="text-4xl text-center">Welcome to Our Clinic</Title>
         <Text CN="text-xl text-center">Your health is our priority</Text>
-      </LineBanner>
+      </LineImageBanner>
       {userInfo && (
         <Container CN="py-40">
           <RowBox CN="justify-start items-center">
