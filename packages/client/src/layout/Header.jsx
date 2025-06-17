@@ -1,94 +1,19 @@
-import { useState, useRef, useContext, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styled from '@emotion/styled';
-import Cookies from 'js-cookie';
-import { UserInfoContext } from '../context/UserInfoContext.jsx';
-import logo from '../assets/logo.png';
+import { useUserInfo } from '../contexts/UserInfoContext.jsx';
+import { useMenuList } from '../contexts/MenuListContext.jsx';
+import LogoSimple from '../components/web/LogoSimple.jsx';
+import Wrapper from '../components/web/Wrapper.jsx';
 
 function Header() {
-  const Header = styled.header`
-  width: 100%;
-  height: 80px;
-  flex-grow: 0;
-  flex-shrink: 0;
-  `;
-  const Container = styled.div`
-    width: 1440px;
-    margin: 0 auto;
-  `;
-  const ImageBox = styled.div`
-    width: 200px;
-    height: 80px;
-    background-color: #f0f0f0;
-  `;
-  const SubMenu = styled.ul`
-    display: ${({ visible }) => (visible ? 'flex' : 'none')};
-    left: 50%;
-    flex-direction: column;
-    gap: 10px;
-    position: absolute;
-    transform: translateX(-50%);
-    background-color: #fff;
-    z-index: 1;
-    transition: all 0.5s ease;
-    min-width: 200px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 10px 0;
-  `;
-
-  const { userInfo, isLogin, setIsLogin } = useContext(UserInfoContext);
+  const { menuList } = useMenuList();
+  const { userInfo, signOutUser } = useUserInfo();
   const [onMenu, setOnMenu] = useState(null);
   const navRef = useRef();
+  const submenuRefs = useRef([]);
   const navigate = useNavigate();
-
-  const menuList = [
-    {
-      label: '병원소개',
-      sub: [
-        { menu: '인사말 / 병원 철학', link: '/greeting' },
-        { menu: '의료진 소개', link: '/doctors' },
-        { menu: '내부 둘러보기', link: '/tour' },
-        { menu: '오시는 길', link: '/location' },
-      ],
-    },
-    {
-      label: '진료 안내',
-      sub: [
-        { menu: '진료 과목 안내', link: '/services' },
-        { menu: '비급여 진료 과목 안내', link: '/non-covered' },
-        { menu: '장비 소개', link: '/equipment' },
-      ],
-    },
-    {
-      label: '교정 / 미용 치료',
-      sub: [
-        {
-          menu: '교정 치료 안내',
-          link: '/orthodontics',
-        },
-        { menu: '미백 / 라미네이트', link: '/whitening' },
-        { menu: '전후 사진 갤러리', link: '/gallery' },
-      ],
-    },
-    {
-      label: '상담 / 예약',
-      sub: [
-        { menu: '온라인 예약', link: '/reservation' },
-        { menu: '실시간 상담', link: '/live-chat' },
-      ],
-    },
-    {
-      label: '커뮤니티 / 고객지원',
-      sub: [
-        {
-          menu: '자주 묻는 질문 (FAQ)',
-          link: '/faq',
-        },
-        { menu: '공지사항', link: '/clinic-news' },
-        { menu: '치료 후기 게시판', link: '/reviews' },
-      ],
-    },
-  ];
+  const [scrolled, setScrolled] = useState(false);
+  const observerRef = useRef();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -103,76 +28,115 @@ function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    const observerTarget = document.getElementById('header-observer');
+    if (!observerTarget) return;
+
+    observerRef.current = new window.IntersectionObserver(
+      ([entry]) => {
+        setScrolled(!entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+    observerRef.current.observe(observerTarget);
+
+    return () => {
+      if (observerRef.current && observerTarget) {
+        observerRef.current.unobserve(observerTarget);
+      }
+    };
+  }, []);
+
   const handleLogout = () => {
-    Cookies.remove('token');
+    signOutUser();
     alert('로그아웃 되었습니다.');
-    setIsLogin(!isLogin);
     navigate(0);
   };
 
   return (
-    <Header>
-      <Container className="flex justify-between items-center">
-        <ImageBox>
-          <img src={logo} alt="logo" />
-        </ImageBox>
-        <nav className="text-center" ref={navRef}>
-          <ul className="list flex gap-10">
-            <li className="menu">
-              <Link to={'/'}>홈</Link>
-            </li>
-            {menuList.map((menu, i) => (
-              <li
-                key={i}
-                className="menu cursor-pointer relative"
-                onClick={() => setOnMenu(onMenu === i ? null : i)}
-              >
-                <p>{menu.label}</p>
-                <SubMenu visible={onMenu === i}>
-                  {menu.sub.map((sub, i) => (
-                    <li
-                      className="sub_menu"
-                      key={i}
-                      onClick={() => setOnMenu(null)}
-                    >
-                      <Link to={sub.link}>{sub.menu}</Link>
-                    </li>
-                  ))}
-                </SubMenu>
+    <>
+      <div id="header-observer" style={{ height: 1 }}></div>
+      <header
+        className={`w-full  grow-0 shrink-0 font-BD-mont  text-lg fixed top-0 left-0 z-5 transition-colors duration-800`}
+        style={{
+          backgroundColor: scrolled ? '#f8f8f8' : '#333333',
+          color: scrolled ? '#333333' : '#c8ab7c',
+          boxShadow: scrolled ? '0 2px 5px rgba(0, 0, 0, 0.2)' : 'none',
+        }}
+      >
+        <Wrapper CN="flex justify-between items-center max-w-360 h-20 mx-auto">
+          <div>
+            <LogoSimple color={scrolled ? '#333333' : '#c8ab7c'} />
+          </div>
+          <nav className="text-center" ref={navRef}>
+            <ul className="list flex gap-10">
+              <li className="menu">
+                <Link to={'/'}>홈</Link>
               </li>
-            ))}
-          </ul>
-        </nav>
-        <div>
-          <ul className="flex gap-5">
-            {userInfo ? (
-              <>
-                <li>
-                  <Link to={'/userinfo'}>회원정보</Link>
-                </li>
-                <li>
-                  <button className="cursor-pointer" onClick={handleLogout}>
-                    로그아웃
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link to={'/signin'}>로그인</Link>
-                </li>
-                <li>
-                  <Link to={'/signup'}>회원가입</Link>
-                </li>
-              </>
-            )}
-            <li className="login_menu">
-              <Link to={'/Dashboard'}>대시보드</Link>
-            </li>
-          </ul>
-        </div>
-      </Container>
-    </Header>
+              {Array.isArray(menuList) &&
+                menuList.map((menu, i) => (
+                  <li
+                    key={i}
+                    className="menu cursor-pointer relative"
+                    onClick={() => setOnMenu(onMenu === i ? null : i)}
+                  >
+                    <p>{menu.label}</p>
+                    <ul
+                      ref={(el) => (submenuRefs.current[i] = el)}
+                      className="flex flex-col absolute top-[120%] left-1/2 -translate-x-1/2 min-w-50 shadow-lg  py-2 transition-all duration-500 gap-2 z-10"
+                      style={{
+                        maxHeight:
+                          onMenu === i && submenuRefs.current[i]
+                            ? submenuRefs.current[i].scrollHeight + 'px'
+                            : '0',
+                        opacity: onMenu === i ? 1 : 0,
+                        overflow: 'hidden',
+                        pointerEvents: onMenu === i ? 'auto' : 'none',
+                        backgroundColor: scrolled ? '#f8f8f8' : '#333333',
+                      }}
+                    >
+                      {menu.sub.map((sub, i) => (
+                        <li
+                          className="sub_menu"
+                          key={i}
+                          onClick={() => setOnMenu(null)}
+                        >
+                          <Link to={`/${sub.link}`}>{sub.menu}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+            </ul>
+          </nav>
+          <div>
+            <ul className="flex gap-5">
+              {userInfo ? (
+                <>
+                  <li>
+                    <Link to={'/userinfo'}>회원정보</Link>
+                  </li>
+                  <li>
+                    <button className="cursor-pointer" onClick={handleLogout}>
+                      로그아웃
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to={'/signin'}>로그인</Link>
+                  </li>
+                  <li>
+                    <Link to={'/signup'}>회원가입</Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </Wrapper>
+      </header>
+    </>
   );
 }
 

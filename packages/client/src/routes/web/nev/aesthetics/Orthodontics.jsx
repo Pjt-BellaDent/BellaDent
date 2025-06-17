@@ -1,8 +1,9 @@
 import React from 'react'
+import TreatmentInfo_4 from "../../../../components/TreatmentInfo_4"
 
 function Orthodontics() {
   return (
-    <div>Orthodontics</div>
+    <TreatmentInfo_4 />
   )
 }
 
