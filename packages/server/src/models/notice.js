@@ -8,7 +8,6 @@ export const noticeSchema = Joi.object({
 });
 
 export const updateNoticeSchema = Joi.object({
-  id: Joi.string().required(),
   title: Joi.string().optional(),
   content: Joi.string().optional(),
   authorId: Joi.string().optional(),
