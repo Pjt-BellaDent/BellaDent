@@ -49,6 +49,7 @@ import Settings from './components/app/settings/GeneralSettings';
 import Chatbot from './components/app/chatbot/Chat';
 import ChatbotSettings from './components/app/chatbot/Settings';
 import ReviewsManager from './components/app/reviews/reviews-manager';
+import WaitingStatus from './components/app/waiting/WaitingStatus';
 
 // 공통
 import NotFound from './components/NotFound';
@@ -108,6 +109,9 @@ function App() {
 
       {/* 예약 목록 전체화면 라우트 */}
       <Route path="/Dashboard/reservations-list" element={<ReservationList />} />
+
+      {/* 진료 대기 모니터링 전체화면 */}
+      <Route path="/waiting-status" element={<WaitingStatus />} />
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />

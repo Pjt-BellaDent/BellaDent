@@ -30,3 +30,13 @@ export const deleteAppointment = async (id) => {
   await axios.delete(`/appointments/${id}`);
   return true;
 };
+
+export const fetchAllAppointments = async () => {
+  const { data } = await axios.get('/appointments');
+  return data;
+};
+
+export const addWaitingPatient = async (payload) => {
+  const { data } = await axios.post('/waiting', payload);
+  return data;
+};

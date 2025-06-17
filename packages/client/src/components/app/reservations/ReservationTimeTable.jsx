@@ -27,9 +27,18 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
   const dayEvents = events[date] || [];
   const navigate = useNavigate();
 
-  // 의사별 예약 찾기
-  const getReservation = (doctorName, time) =>
-    dayEvents.find(res => res.doctor === doctorName && isTimeInReservation(res, time));
+  const normalize = v => (v || '').toString().trim().toLowerCase();
+  const getReservation = (doctorName, time, department) => {
+    const reservation = dayEvents.find(res => {
+      const doctorMatch = normalize(res.doctor) === normalize(doctorName) || normalize(res.doctorId) === normalize(doctorName);
+      const departmentMatch = normalize(res.department) === normalize(department);
+      const timeMatch = isTimeInReservation(res, time);
+      
+      return doctorMatch && departmentMatch && timeMatch;
+    });
+    
+    return reservation;
+  };
 
   if (!date) return <div className="text-gray-500 mt-10">왼쪽 달력에서 날짜를 선택하세요.</div>;
 
@@ -66,7 +75,7 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
             <tr key={time}>
               <td className="border border-[#e8e8e8] px-3 py-2 text-center">{time}</td>
               {allDoctors.map(doc => {
-                const res = getReservation(doc.name, time);
+                const res = getReservation(doc.name, time, doc.department);
                 return (
                   <td key={doc.name} className="border border-[#e8e8e8] px-3 py-2 text-center">
                     {res ? (
@@ -108,7 +117,7 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
       </table>
 
       {detailData && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-[2000] flex items-center justify-center">
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black/30 z-[2000] flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 min-w-[340px] max-w-[420px]">
             <h3 className="text-xl font-bold mb-4">환자 상세 정보</h3>
             <div className="mb-2"><b>이름</b>: {detailData.name}</div>
@@ -119,7 +128,11 @@ function ReservationTimeTable({ date, events = {}, onEdit, onDelete, onAdd }) {
             <div className="mb-2"><b>연락처</b>: {detailData.phone || '-'}</div>
             <div className="mb-2"><b>성별</b>: {detailData.gender || '-'}</div>
             <div className="mb-2"><b>진료과</b>: {detailData.department}</div>
-            <div className="mb-2"><b>의사</b>: {detailData.doctor}</div>
+            <div className="mb-2"><b>의사</b>: {
+              detailData.doctor && detailData.doctor !== ''
+                ? detailData.doctor
+                : (DOCTOR_MAP[detailData.department]?.[0] || '-')
+            }</div>
             <div className="mb-2"><b>시술</b>: {detailData.title}</div>
             <div className="mb-2"><b>상태</b>: {detailData.status}</div>
             <div className="mb-2"><b>메모</b>: {detailData.memo || '-'}</div>
