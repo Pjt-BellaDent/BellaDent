@@ -1,10 +1,12 @@
 import React from 'react';
 
-import LineBanner from '../../../../components/web/LineBanner';
+import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
 import Title from '../../../../components/web/Title';
 import Text from '../../../../components/web/Text';
 import Board from '../../../../components/web/Board';
+
+import line_banner from '../../../../assets/images/line_banner.png';
 
 function ClinicNews() {
   const posts = [
@@ -23,10 +25,13 @@ function ClinicNews() {
   ];
   return (
     <>
-      <LineBanner CN="w-full h-40 bg-gray-400 flex flex-col justify-center items-center">
+      <LineImageBanner
+        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        image={line_banner}
+      >
         <Title CN="text-4xl text-center">Welcome to Our Clinic</Title>
         <Text CN="text-xl text-center">Your health is our priority</Text>
-      </LineBanner>
+      </LineImageBanner>
       <Container CN="py-40">
         <Title CN="text-4xl">Welcome to Our Clinic</Title>
         <hr className="my-4" />
