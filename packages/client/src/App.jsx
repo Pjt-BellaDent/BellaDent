@@ -50,6 +50,7 @@ import Chatbot from './components/app/chatbot/Chat';
 import ChatbotSettings from './components/app/chatbot/Settings';
 import ReviewsManager from './components/app/reviews/reviews-manager';
 import WaitingStatus from './components/app/waiting/WaitingStatus';
+import OnsiteRegister from './components/OnsiteRegister';
 
 // 공통
 import NotFound from './components/NotFound';
@@ -105,6 +106,7 @@ function App() {
         <Route path="chatbot" element={<Chatbot />} />
         <Route path="chatbot-settings" element={<ChatbotSettings />} />
         <Route path="reviews-manager" element={<ReviewsManager />} />
+        <Route path="onsite-register" element={<OnsiteRegister />} />
       </Route>
 
       {/* 예약 목록 전체화면 라우트 */}
