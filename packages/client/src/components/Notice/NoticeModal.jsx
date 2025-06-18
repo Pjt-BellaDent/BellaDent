@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import axios from 'axios'; // axios 인스턴스 사용 안 하고 직접 baseURL 지정
+import axios from 'axios';
 import { getAuth } from 'firebase/auth';
 import NoticeDetailModal from './NoticeDetailModal';
 
-// ===== 스타일 =====
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -144,7 +143,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
         ? {
             title,
             content: body,
-            isPublic: !!showOnMain  // ✅ boolean 강제 처리
+            isPublic: !!showOnMain
           }
         : {
             title,
@@ -201,7 +200,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
     setEditId(notice.id);
     setTitle(notice.title);
     setBody(notice.content);
-    setShowOnMain(Boolean(notice.isPublic));  // ✅ boolean 보장
+    setShowOnMain(Boolean(notice.isPublic));
     setShowForm(true);
     setDetailShow(false);
   };
@@ -213,17 +212,15 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
           <Title>📢 직원 공지사항</Title>
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {!showForm && (
-              <>
-                {Array.isArray(notices) && notices.length > 0 ? (
-                  notices.map((n) => (
-                    <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
-                      <strong>{n.title}</strong>
-                    </NoticeItem>
-                  ))
-                ) : (
-                  <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
-                )}
-              </>
+              Array.isArray(notices) && notices.length > 0 ? (
+                notices.map((n) => (
+                  <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
+                    <strong>{n.title}</strong>
+                  </NoticeItem>
+                ))
+              ) : (
+                <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
+              )
             )}
 
             {showForm && (
