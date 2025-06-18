@@ -30,7 +30,9 @@ function ClinicNews() {
         );
         setPosts(res.data.notices);
       } catch (error) {
-        console.error('Error fetching notices:', error);
+        if (error.status !== 404) {
+          console.error('Error fetching notices:', error);
+        }
       }
     };
     readPosts();
