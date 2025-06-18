@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
+import Modal from '../web/Modal.jsx';
+import Title from '../web/Title.jsx';
 
-function ReviewCreateForm({ activeReviewAdd, setActiveReviewAdd }) {
+function ReviewCreateForm({ activeReview, setActiveReview }) {
   const navigate = useNavigate();
   const { userInfo, userToken } = useUserInfo();
   const [inputData, setInputData] = useState({
     review: '',
   });
   const [images, setImages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('');
 
   const handleChange = (e) => {
     setInputData({ ...inputData, [e.target.name]: e.target.value });
@@ -44,16 +49,20 @@ function ReviewCreateForm({ activeReviewAdd, setActiveReviewAdd }) {
         withCredentials: true,
       });
       if (response.status === 201) {
-        alert('이용 후기가 등록되었습니다.');
-        navigate('/reviews');
+        setModalType('success');
+        setModalMessage('이용 후기가 등록되었습니다.');
+        setShowModal(true);
       }
     } catch (err) {
       console.error(err);
+      setModalType('error');
+      setModalMessage('err');
+      setShowModal(true);
     }
   };
 
   const handleCancel = () => {
-    setActiveReviewAdd(!activeReviewAdd);
+    setActiveReview(!activeReview);
   };
 
   return (
@@ -115,20 +124,44 @@ function ReviewCreateForm({ activeReviewAdd, setActiveReviewAdd }) {
           <div className="flex gap-4 justify-end">
             <button
               type="submit"
-              className="flex w-40 justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="flex items-center justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
             >
               등록
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="flex w-40 justify-center rounded-md bg-gray-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="flex items-center justify-center rounded-md bg-BD-CoolGray text-BD-SoftGrayLine outline-2 -outline-offset-2 outline-BD-CoolGray px-6 py-3 shadow-xs hover:bg-BD-SoftGrayLine  hover-visible:outline-BD-SoftGrayLine hover:text-BD-CoolGray focus:bg-BD-SoftGrayLine  focus-visible:outline-BD-SoftGrayLine focus:text-BD-CoolGray duration-300"
             >
               취소
             </button>
           </div>
         </form>
       </div>
+      {modalType === 'success' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate('/reviews');
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
+      {modalType === 'error' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
     </>
   );
 }

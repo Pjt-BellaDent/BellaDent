@@ -16,13 +16,5 @@
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev",
     "function": "yarn workspace functions run deploy"
-  },
-  "dependencies": {
-    "@googlemaps/js-api-loader": "^1.16.8",
-    "firebase": "^11.9.1",
-    "multer": "^2.0.1"
-  },
-  "devDependencies": {
-    "vite": "^6.3.5"
   }
 }

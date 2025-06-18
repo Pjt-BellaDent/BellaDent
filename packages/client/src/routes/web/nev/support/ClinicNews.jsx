@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '../../../../config/firebase';
+import { useState, useEffect } from 'react';
+import { useUserInfo } from '../../../../contexts/UserInfoContext';
+import axios from 'axios';
 
 import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
@@ -12,24 +12,30 @@ import line_banner from '../../../../assets/images/line_banner.png';
 
 function ClinicNews() {
   const [posts, setPosts] = useState([]);
+  const { userToken } = useUserInfo();
 
   useEffect(() => {
-    const fetchNotices = async () => {
+    const url = 'http://localhost:3000/notices';
+    const readPosts = async () => {
       try {
-        const q = query(collection(db, 'notices'), where('isPublic', '==', true));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({
-          id: doc.id,
-          title: doc.data().title,
-          text: doc.data().content, // 내용이 body가 아닌 content일 가능성 있음
-        }));
-        setPosts(data);
-      } catch (err) {
-        console.error('공지사항 불러오기 실패:', err);
+        const res = await axios.get(
+          url,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+        setPosts(res.data.notices);
+      } catch (error) {
+        if (error.status !== 404) {
+          console.error('Error fetching notices:', error);
+        }
       }
     };
-
-    fetchNotices();
+    readPosts();
   }, []);
 
   return (
@@ -47,7 +53,8 @@ function ClinicNews() {
         <Text CN="text-2xl text-center my-4">제목</Text>
         <Board
           posts={posts}
-          UL="mt-4 text-2xl cursor-pointer select-none"
+          CN="border-y divide-y border-gray-300 divide-gray-300"
+          UL="my-4 text-2xl cursor-pointer select-none"
           LI="my-4 text-lg duration-500 ease-in-out"
         />
       </Container>
