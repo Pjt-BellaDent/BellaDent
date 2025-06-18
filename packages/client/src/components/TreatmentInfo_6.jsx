@@ -43,7 +43,7 @@ function TreatmentInfo_6() {
         <div className="flex flex-wrap ">
           <div className="text-[24px] mt-6 mx-auto">
             <p className="text-[24px] mb-4">
-              {' '}
+              
               병원의 진료 과정을 소개하기 위해 전후 사진을 게재합니다.
             </p>
             <p className="text-[24px] mb-8">
