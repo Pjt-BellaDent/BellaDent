@@ -26,13 +26,15 @@ function Reviews() {
         const res = await axios.get(url);
         setPosts(res.data.reviews);
       } catch (error) {
-        console.error('Error fetching reviews:', error);
+        if (error.status !== 404) {
+          console.error('Error fetching reviews:', error);
+        }
       }
     };
     readPosts();
   }, []);
 
-  if (userInfo !== undefined) {
+  if (userInfo !== null) {
     useEffect(() => {
       const url = `http://localhost:3000/reviews/${userInfo.id}`;
       const readDisabledPosts = async () => {
@@ -49,7 +51,9 @@ function Reviews() {
           );
           setDisabledPosts(res.data.reviews);
         } catch (error) {
-          console.error('Error fetching reviews:', error);
+          if (error.status !== 404) {
+            console.error('Error fetching reviews:', error);
+          }
         }
       };
       readDisabledPosts();

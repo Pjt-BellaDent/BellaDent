@@ -30,7 +30,9 @@ function faq() {
         );
         setPosts(res.data.faqs);
       } catch (error) {
-        console.error('Error fetching faqs:', error);
+        if (error.status !== 404) {
+          console.error('Error fetching faqs:', error);
+        }
       }
     };
     readPosts();
