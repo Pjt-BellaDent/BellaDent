@@ -4,6 +4,8 @@ import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 import { useMenuList } from '../contexts/MenuListContext.jsx';
 import LogoSimple from '../components/web/LogoSimple.jsx';
 import Wrapper from '../components/web/Wrapper.jsx';
+import Modal from '../components/web/Modal.jsx';
+import Title from '../components/web/Title.jsx';
 
 function Header() {
   const { menuList } = useMenuList();
@@ -14,6 +16,9 @@ function Header() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const observerRef = useRef();
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -49,15 +54,16 @@ function Header() {
 
   const handleLogout = () => {
     signOutUser();
-    alert('로그아웃 되었습니다.');
-    navigate(0);
+    setModalType('success');
+    setModalMessage('로그아웃 되었습니다.');
+    setShowModal(true);
   };
 
   return (
     <>
       <div id="header-observer" style={{ height: 1 }}></div>
       <header
-        className={`w-full  grow-0 shrink-0 font-BD-mont  text-lg fixed top-0 left-0 z-5 transition-colors duration-800`}
+        className={`w-full  grow-0 shrink-0 font-BD-mont text-lg fixed top-0 left-0 z-5 transition-colors duration-800`}
         style={{
           backgroundColor: scrolled ? '#f8f8f8' : '#333333',
           color: scrolled ? '#333333' : '#c8ab7c',
@@ -136,6 +142,30 @@ function Header() {
           </div>
         </Wrapper>
       </header>
+      {modalType === 'success' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
+      {modalType === 'error' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
     </>
   );
 }

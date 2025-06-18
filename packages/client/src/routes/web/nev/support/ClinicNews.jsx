@@ -1,4 +1,6 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { useUserInfo } from '../../../../contexts/UserInfoContext';
+import axios from 'axios';
 
 import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
@@ -9,20 +11,31 @@ import Board from '../../../../components/web/Board';
 import line_banner from '../../../../assets/images/line_banner.png';
 
 function ClinicNews() {
-  const posts = [
-    {
-      title: 'What is the purpose of this board?',
-      text: 'This board',
-    },
-    {
-      title: 'What is the purpose of this board?',
-      text: 'This board',
-    },
-    {
-      title: 'What is the purpose of this board?',
-      text: 'This board',
-    },
-  ];
+  const [posts, setPosts] = useState([]);
+  const { userToken } = useUserInfo();
+
+  useEffect(() => {
+    const url = 'http://localhost:3000/notices';
+    const readPosts = async () => {
+      try {
+        const res = await axios.get(
+          url,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
+            withCredentials: true,
+          }
+        );
+        setPosts(res.data.notices);
+      } catch (error) {
+        console.error('Error fetching notices:', error);
+      }
+    };
+    readPosts();
+  }, []);
+
   return (
     <>
       <LineImageBanner
@@ -38,8 +51,8 @@ function ClinicNews() {
         <Text CN="text-2xl text-center my-4">제목</Text>
         <Board
           posts={posts}
-        
-          UL="mt-4 text-2xl cursor-pointer select-none"
+          CN="border-y divide-y border-gray-300 divide-gray-300"
+          UL="my-4 text-2xl cursor-pointer select-none"
           LI="my-4 text-lg duration-500 ease-in-out"
         />
       </Container>

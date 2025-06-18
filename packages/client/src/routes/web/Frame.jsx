@@ -7,7 +7,7 @@ function Frame() {
   return (
     <div className='flex flex-col h-screen'>
       <Header />
-      <main className='w-full flex-grow-1 mt-20'>
+      <main className='w-full flex-grow-1 mt-20 relative'>
         <Outlet />
       </main>
       <Footer />
