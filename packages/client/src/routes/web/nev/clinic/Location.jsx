@@ -41,17 +41,18 @@ function location() {
           address={hospitalInfo.address}
         >
           <div className="border p-4 mb-10">
-            <Title CN="text-6xl">Welcome to Our Clinic</Title>
-            <Title CN="text-4xl">Welcome to Our Clinic</Title>
-            <Text CN="text-xl">Your health is our priority</Text>
+            <Title CN="text-6xl">BellaDent  </Title>
+            <Title CN="text-4xl">PREMIUM DENTAL CARE</Title>
+            <Text CN="text-xl">건강한 치아</Text>
           </div>
 
-          <Title CN="text-4xl">Welcome to Our Clinic</Title>
+          <Title CN="text-4xl">주소: 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층</Title>
           <hr className="my-6" />
-          <Title CN="text-4xl">Welcome to Our Clinic</Title>
+          <Title CN="text-4xl">주차장 안내</Title>
+          <Text CN="mt-6 text-xl">※ 주차비 무료를 위해 원무과에서 확인도장을 꼭 받아가시기 바랍니다.</Text>
           <hr className="my-6" />
-          <Title CN="text-4xl">Welcome to Our Clinic</Title>
-          <Text CN="text-xl">Your health is our priority</Text>
+          <Title CN="text-4xl">버스노선 : 01, 45, 47, 26. . . . .</Title>
+          
         </CardMap>
       </Container>
     </>
