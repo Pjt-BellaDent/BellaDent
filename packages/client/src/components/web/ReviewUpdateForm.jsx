@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
+import Modal from '../web/Modal.jsx';
+import Title from '../web/Title.jsx';
 
 function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
   const navigate = useNavigate();
-  const { userInfo, userToken } = useUserInfo();
+  const { userToken } = useUserInfo();
   const [inputData, setInputData] = useState({
     review: '',
   });
   const [images, setImages] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('');
 
   const handleChange = (e) => {
     setInputData({ ...inputData, [e.target.name]: e.target.value });
@@ -42,11 +47,15 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
         withCredentials: true,
       });
       if (response.status === 201) {
-        alert('이용 후기가 등록되었습니다.');
-        navigate('/reviews');
+        setModalType('success');
+        setModalMessage('이용 후기가 수정되었습니다.');
+        setShowModal(true);
       }
     } catch (err) {
       console.error(err);
+      setModalType('error');
+      setModalMessage('err');
+      setShowModal(true);
     }
   };
 
@@ -126,6 +135,30 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
           </div>
         </form>
       </div>
+      {modalType === 'success' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate('/reviews');
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
+      {modalType === 'error' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
     </>
   );
 }
