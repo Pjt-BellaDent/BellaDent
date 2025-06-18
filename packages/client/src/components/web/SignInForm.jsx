@@ -12,7 +12,7 @@ import Title from '../web/Title.jsx';
 
 function SignInForm() {
   const navigate = useNavigate();
-  const { isLogin, isLoading, userInfo } = useUserInfo();
+  const { isLogin, userInfo } = useUserInfo();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,7 +28,7 @@ function SignInForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (isLogin || isLoading) {
+    if (isLogin) {
       return;
     }
 
@@ -40,11 +40,10 @@ function SignInForm() {
         formData.password
       );
 
-      setModalType('success'); // 성공 모달 타입 설정
-      setModalMessage('로그인에 성공했습니다!'); // 성공 메시지 설정
+      setModalType('success');
+      setModalMessage('로그인에 성공했습니다!');
       setShowModal(true);
     } catch (error) {
-      // 로그인 실패
       const errorCode = error.code;
       const errorMessage = error.message;
 
@@ -95,72 +94,47 @@ function SignInForm() {
   };
   return (
     <>
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="signin-form space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm/6 font-medium text-gray-900"
-            >
-              이메일
-            </label>
-            <div className="mt-2">
-              <input
-                type="email"
-                name="email"
-                id="email"
-                onChange={handleChange}
-                required
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
+      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
+        <form className="w-100" onSubmit={handleSubmit}>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex-2">
+              <label htmlFor="email" className="block text-nowrap">
+                이메일
+              </label>
             </div>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              onChange={handleChange}
+              required
+              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-PureWhite focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+            />
           </div>
-          <div>
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="password"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
+          <div className="flex items-center justify-between mb-12">
+            <div className="flex-2">
+              <label htmlFor="password" className="block text-lg text-nowrap">
                 비밀번호
               </label>
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-semibold text-indigo-600 hover:text-indigo-500"
-                >
-                  비밀번호를 잊어버리셨나요?
-                </a>
-              </div>
             </div>
-            <div className="mt-2">
-              <input
-                type="password"
-                name="password"
-                id="password"
-                onChange={handleChange}
-                required
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
-            </div>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              onChange={handleChange}
+              required
+              className="block w-full rounded-md px-4 py-2 outline-2 -outline-offset-2 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-PureWhite focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+            />
           </div>
-          <div>
+          <div className="flex items-center justify-center">
             <button
               type="submit"
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="w-full flex justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
             >
               로그인
             </button>
           </div>
         </form>
-        <p className="mt-10 text-center text-sm/6 text-gray-500">
-          Not a member?
-          <a
-            href="#"
-            className="font-semibold text-indigo-600 hover:text-indigo-500"
-          >
-            Start a 14 day free trial
-          </a>
-        </p>
       </div>
       {modalType === 'success' && (
         <Modal

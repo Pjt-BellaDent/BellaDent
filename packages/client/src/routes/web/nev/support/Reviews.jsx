@@ -8,7 +8,7 @@ import RowBox from '../../../../components/web/RowBox';
 import Title from '../../../../components/web/Title';
 import Button from '../../../../components/web/Button';
 import Text from '../../../../components/web/Text';
-import Board from '../../../../components/web/Board';
+import BoardAdd from '../../../../components/web/BoardAdd';
 import ReviewCreateForm from '../../../../components/web/ReviewCreateForm';
 
 import line_banner from '../../../../assets/images/line_banner.png';
@@ -26,15 +26,17 @@ function Reviews() {
         const res = await axios.get(url);
         setPosts(res.data.reviews);
       } catch (error) {
-        console.error('Error fetching reviews:', error);
+        if (error.status !== 404) {
+          console.error('Error fetching reviews:', error);
+        }
       }
     };
     readPosts();
   }, []);
 
-  if (userInfo !== undefined) {
+  if (userInfo !== null) {
     useEffect(() => {
-      const url = `http://localhost:3000/reviews/${userInfo._id}`;
+      const url = `http://localhost:3000/reviews/${userInfo.id}`;
       const readDisabledPosts = async () => {
         try {
           const res = await axios.post(
@@ -49,7 +51,9 @@ function Reviews() {
           );
           setDisabledPosts(res.data.reviews);
         } catch (error) {
-          console.error('Error fetching reviews:', error);
+          if (error.status !== 404) {
+            console.error('Error fetching reviews:', error);
+          }
         }
       };
       readDisabledPosts();
@@ -72,7 +76,7 @@ function Reviews() {
           </RowBox>
           <hr className="my-4" />
           <Text CN="text-2xl text-center my-4">제목</Text>
-          <Board
+          <BoardAdd
             posts={disabledPosts}
             UL="mt-4 text-2xl cursor-pointer select-none"
             LI="my-4 text-lg duration-500 ease-in-out"
@@ -83,7 +87,7 @@ function Reviews() {
         <RowBox CN="justify-between items-center">
           <Title CN="text-4xl">이용 후기 목록</Title>
           <Button
-            CN="bg-blue-500 text-white w-40 py-4 rounded-2xl text-lg cursor-pointer"
+            CN="flex items-center justify-center rounded-xl bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
             CLICK={() => {
               if (activeReview == false) {
                 setActiveReview(!activeReview);
@@ -102,7 +106,7 @@ function Reviews() {
         ) : (
           <>
             <Text CN="text-2xl text-center my-4">제목</Text>
-            <Board
+            <BoardAdd
               posts={posts}
               CN="border-y divide-y border-gray-300 divide-gray-300"
               UL="my-4 text-2xl cursor-pointer select-none"
