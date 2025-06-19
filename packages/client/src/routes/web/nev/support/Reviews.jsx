@@ -35,29 +35,27 @@ function Reviews() {
   }, []);
 
   if (userInfo !== null) {
-    useEffect(() => {
-      const url = `http://localhost:3000/reviews/${userInfo.id}`;
-      const readDisabledPosts = async () => {
-        try {
-          const res = await axios.post(
-            url,
-            {},
-            {
-              headers: {
-                Authorization: `Bearer ${userToken}`,
-              },
-              withCredentials: true,
-            }
-          );
-          setDisabledPosts(res.data.reviews);
-        } catch (error) {
-          if (error.status !== 404) {
-            console.error('Error fetching reviews:', error);
+    const url = `http://localhost:3000/reviews/${userInfo.id}`;
+    const readDisabledPosts = async () => {
+      try {
+        const res = await axios.post(
+          url,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
+            withCredentials: true,
           }
+        );
+        setDisabledPosts(res.data.reviews);
+      } catch (error) {
+        if (error.status !== 404) {
+          console.error('Error fetching reviews:', error);
         }
-      };
-      readDisabledPosts();
-    }, []);
+      }
+    };
+    readDisabledPosts();
   }
 
   return (
