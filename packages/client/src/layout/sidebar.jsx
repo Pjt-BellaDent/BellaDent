@@ -12,6 +12,7 @@ const menuItems = [
   { path: '/Dashboard/chatbot-settings', label: '⚙️ 채팅 설정', roles: ['admin', 'manager', 'staff'] },
   { path: '/Dashboard/reviews-manager', label: '📝 후기', roles: ['admin', 'manager'] },
   { path: '/Dashboard/sms', label: '📱 문자 발송', roles: ['admin', 'staff'] },
+  { path: '/Dashboard/onsite-register', label: '📠 현장접수', roles: ['admin'] },
   { path: '/Dashboard/settings', label: '⚙️ 설정', roles: ['admin'] },
 ];
 

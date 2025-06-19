@@ -52,6 +52,7 @@ import ReviewsManager from './components/app/reviews/reviews-manager';
 import WaitingStatus from './components/app/waiting/WaitingStatus';
 import HospitalInfo from './components/app/settings/HospitalInfo';
 import UserPermission from './components/app/settings/UserPermission';
+import OnsiteRegister from './components/OnsiteRegister';
 
 // 공통
 import NotFound from './components/NotFound';
@@ -109,6 +110,7 @@ function App() {
         <Route path="chatbot" element={<Chatbot />} />
         <Route path="chatbot-settings" element={<ChatbotSettings />} />
         <Route path="reviews-manager" element={<ReviewsManager />} />
+        <Route path="onsite-register" element={<OnsiteRegister />} />
       </Route>
 
       {/* 예약 목록 전체화면 라우트 */}
