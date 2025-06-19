@@ -4,6 +4,7 @@ import logger from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { admin } from "./config/firebase.js";
 
 import userRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
@@ -22,6 +23,7 @@ import statsRouter from './routes/stats.js';
 import waitingRouter from './routes/waiting.js';
 import patientsRouter from "./routes/patients.js";
 import callRouter from './routes/call.js';
+import hospitalRouter from './routes/hospital.js';
 
 import noticeRoutes from './routes/notices.js';
 import smsRoutes from './routes/sms.js';
@@ -66,6 +68,7 @@ app.use('/stats', statsRouter);
 app.use('/waiting', waitingRouter);
 app.use("/patients", patientsRouter);
 app.use('/api/call', callRouter);
+app.use('/hospital', hospitalRouter);
 
 // ===== 404 핸들러 =====
 app.use((req, res) => {

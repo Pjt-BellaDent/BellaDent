@@ -50,6 +50,8 @@ import Chatbot from './components/app/chatbot/Chat';
 import ChatbotSettings from './components/app/chatbot/Settings';
 import ReviewsManager from './components/app/reviews/reviews-manager';
 import WaitingStatus from './components/app/waiting/WaitingStatus';
+import HospitalInfo from './components/app/settings/HospitalInfo';
+import UserPermission from './components/app/settings/UserPermission';
 
 // 공통
 import NotFound from './components/NotFound';
@@ -102,6 +104,8 @@ function App() {
         <Route path="sms" element={<Sms />} />
         <Route path="schedule" element={<StaffSchedule />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="hospital-info" element={<HospitalInfo />} />
+        <Route path="user-permissions" element={<UserPermission />} />
         <Route path="chatbot" element={<Chatbot />} />
         <Route path="chatbot-settings" element={<ChatbotSettings />} />
         <Route path="reviews-manager" element={<ReviewsManager />} />
