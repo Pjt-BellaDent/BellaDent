@@ -44,13 +44,13 @@ exports.chatWithGemini = onRequest(async (request, response) => {
 
     try {
       // ... (클라이언트로부터 받은 질문 추출) ...
-      const question = request.body.message;
+      const question = request.body.question;
       if (!question) {
         // <<< 이 if 문의 시작 부분이 50번째 줄일 수 있습니다.
-        console.error("No message received in request body.");
+        console.error("No question received in request body.");
         response
             .status(400)
-            .json({error: "Bad Request: 'message' not found in request body."});
+            .json({error: "Bad Request: 'question' not found in request body."});
         return; // 요청 처리를 중단하고 함수 종료
       }
       console.log("Received question:", question);
@@ -63,13 +63,12 @@ exports.chatWithGemini = onRequest(async (request, response) => {
       // ... (FAQ 컨텍스트 구성) ...
       let faqContext = "";
       if (!snapshot.empty) {
-        // <<< 이 if 문이 65번째 줄 근처일 수 있습니다.
         console.log(`Fetched ${snapshot.size} FAQ documents from Firestore.`);
         faqContext += "병원 FAQ:\n";
         snapshot.forEach((doc) => {
           const faq = doc.data();
-          if (faq.question && faq.answer) {
-            faqContext += `질문: ${faq.question}\n답변: ${faq.answer}\n\n`;
+          if (faq.title && faq.content) {
+            faqContext += `질문: ${faq.title}\n답변: ${faq.content}\n\n`;
           }
         });
         // TODO: 프롬프트 길이 제한 로직 추가
@@ -114,9 +113,7 @@ ${faqContext} // Firestore에서 가져온 FAQ 컨텍스트 포함
       // --- 5. Function 응답 전송 ---
       response.status(200).json({
         status: "success",
-        geminiResponse: {
-          text: geminiResponseText,
-        },
+        answer: geminiResponseText,
       });
       console.log("Function response sent with Gemini data.");
     } catch (error) {
