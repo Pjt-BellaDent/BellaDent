@@ -70,7 +70,7 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
           <div className="flex items-center justify-between">
             <label
               htmlFor="review"
-              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
+              className="block text-sm/6 font-medium text-BD-CharcoalBlack flex-1/4"
             >
               후기
             </label>
@@ -79,14 +79,14 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
                 name="review"
                 id="review"
                 onChange={handleChange}
-                className="block w-full h-120 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                className="block w-full h-120 rounded-md bg-BD-PureWhite px-3 py-1.5 text-base text-BD-CharcoalBlack outline-1 -outline-offset-1 outline-BD-SoftGrayLine placeholder:text-BD-SoftGrayLine focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
               htmlFor="reviewImg"
-              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
+              className="block text-sm/6 font-medium text-BD-CharcoalBlack flex-1/4"
             >
               이미지 첨부
             </label>
@@ -96,7 +96,7 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
                 multiple
                 accept="image/*"
                 onChange={handleAddImages}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                className="block w-full rounded-md bg-BD-PureWhite px-3 py-1.5 text-base text-BD-CharcoalBlack outline-1 -outline-offset-1 outline-BD-SoftGrayLine placeholder:text-BD-SoftGrayLine focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold sm:text-sm/6"
               />
               <div className="flex flex-wrap gap-4 mt-2">
                 {images.map((img, index) => (
@@ -109,9 +109,8 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+                      className="absolute -top-2 -right-2 bg-red-500 text--bg-BD-PureWhite text-xs rounded-full w-5 h-5 flex items-center justify-center"
                     >
-                      ×
                     </button>
                   </div>
                 ))}
@@ -121,14 +120,14 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
           <div className="flex gap-4 justify-end">
             <button
               type="submit"
-              className="flex w-40 justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="px-6 py-2 rounded text-xl bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               등록
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="flex w-40 justify-center rounded-md bg-gray-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="px-6 py-3 rounded text-xl bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               취소
             </button>

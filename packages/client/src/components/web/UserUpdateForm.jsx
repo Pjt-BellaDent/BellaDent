@@ -99,7 +99,7 @@ function UserUpdateForm() {
 
   return (
     <>
-      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
+      <div className="mx-auto max-w-full px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 shadow-xl bg-BD-PureWhite text-BD-CharcoalBlack text-lg">
         <form className="w-120" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
@@ -114,7 +114,7 @@ function UserUpdateForm() {
                 id="email"
                 readOnly
                 value={formData.email || ''}
-                className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
               />
             </div>
           </div>
@@ -132,7 +132,7 @@ function UserUpdateForm() {
                 readOnly
                 value={formData.name || ''}
                 required
-                className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@ function UserUpdateForm() {
                 required
                 placeholder="01X-XXXX-XXXX"
                 onChange={handleChange}
-                className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
               />
             </div>
           </div>
@@ -169,21 +169,21 @@ function UserUpdateForm() {
                 id="address"
                 value={formData.address || ''}
                 onChange={handleChange}
-                className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
               />
             </div>
           </div>
           <div className="flex gap-4">
             <button
               type="submit"
-              className="w-full flex items-center justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
+              className="w-full px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               수정
             </button>
             <button
               type="button"
               onClick={handleCancel}
-              className="w-full flex items-center justify-center rounded-md bg-BD-CoolGray text-BD-SoftGrayLine outline-2 -outline-offset-2 outline-BD-CoolGray py-3 shadow-xs hover:bg-BD-SoftGrayLine  hover-visible:outline-BD-SoftGrayLine hover:text-BD-CoolGray focus:bg-BD-SoftGrayLine  focus-visible:outline-BD-SoftGrayLine focus:text-BD-CoolGray duration-300"
+              className="w-full px-6 py-3 rounded text-xl bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               취소
             </button>

@@ -100,7 +100,7 @@ function ChatForm() {
         <div className="mt-4 flex items-center gap-2">
           <input
             type="text"
-            className="flex-1 px-6 py-2 rounded outline-1 -outline-offset-1 hover:-outline-offset-2 bg-BD-WarmBeige outline-BD-CoolGray hover:outline-BD-CharcoalBlack focus:outline-BD-CharcoalBlack duration-300"
+            className="flex-1 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray hover:-outline-offset-2 hover:outline-BD-CharcoalBlack focus:-outline-offset-2 focus:outline-BD-CharcoalBlack duration-300"
             name="question"
             value={formData.question}
             onChange={handleChange}
@@ -109,7 +109,7 @@ function ChatForm() {
           <button
             type="submit"
             onClick={handleSubmit}
-            className="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300"
+            className="px-6 py-2 rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
           >
             전송
           </button>
