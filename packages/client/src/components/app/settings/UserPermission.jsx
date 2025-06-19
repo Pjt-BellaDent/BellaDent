@@ -1,20 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axiosInstance from '../../../libs/axiosIntance';
 
 const UserPermission = () => {
-  const [users, setUsers] = useState([
-    { name: '정하늘', role: 'super_admin', email: 'sky@bella.com', phone: '010-1111-2222' },
-    { name: '김하나', role: 'consultant', email: 'hana@bella.com', phone: '010-2222-3333' },
-    { name: '박진우', role: 'doctor', email: 'jinwoo@bella.com', phone: '010-3333-4444' },
-    { name: '이서윤', role: 'manager', email: 'seo@bella.com', phone: '010-4444-5555' },
-    { name: '최나영', role: 'consultant', email: 'choi@bella.com', phone: '010-5555-6666' },
-    { name: '조민아', role: 'consultant', email: 'jo@bella.com', phone: '010-6666-7777' },
-  ]);
-
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterKey, setFilterKey] = useState('전체');
   const [keyword, setKeyword] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState('추가');
   const [formData, setFormData] = useState({ name: '', role: '', email: '', phone: '' });
+  const [saving, setSaving] = useState(false);
+
+  // 사용자 목록 조회
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axiosInstance.get('/users/staff');
+      setUsers(response.data);
+    } catch (err) {
+      console.error('사용자 목록 조회 실패:', err);
+      setError('사용자 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const filteredUsers = users.filter(user => {
     if (filterKey === '전체') {
@@ -25,25 +40,79 @@ const UserPermission = () => {
 
   const handleEdit = (target) => {
     setFormMode('수정');
-    setFormData(target);
+    setFormData({
+      name: target.name || '',
+      role: target.role || '',
+      email: target.email || '',
+      phone: target.phone || ''
+    });
     setShowForm(true);
   };
 
-  const handleDelete = (target) => {
+  const handleDelete = async (target) => {
     if (window.confirm(`${target.name} 사용자를 삭제하시겠습니까?`)) {
-      setUsers(prev => prev.filter(u => u !== target));
+      try {
+        await axiosInstance.delete(`/users/${target.id}`);
+        await fetchUsers(); // 목록 새로고침
+      } catch (err) {
+        console.error('사용자 삭제 실패:', err);
+        alert('사용자 삭제에 실패했습니다.');
+      }
     }
   };
 
-  const handleSave = () => {
-    if (formMode === '추가') {
-      setUsers(prev => [...prev, formData]);
-    } else {
-      setUsers(prev => prev.map(u => u.name === formData.name ? formData : u));
+  const handleSave = async () => {
+    if (!formData.name || !formData.email || !formData.role) {
+      alert('필수 정보를 모두 입력해주세요.');
+      return;
     }
-    setShowForm(false);
-    setFormData({ name: '', role: '', email: '', phone: '' });
+
+    try {
+      setSaving(true);
+      
+      if (formMode === '추가') {
+        await axiosInstance.post('/users/staff', formData);
+      } else {
+        // 수정 시에는 기존 사용자 ID가 필요하므로, 현재는 새로고침으로 처리
+        await axiosInstance.put(`/users/staff/${formData.id}`, formData);
+      }
+      
+      await fetchUsers(); // 목록 새로고침
+      setShowForm(false);
+      setFormData({ name: '', role: '', email: '', phone: '' });
+    } catch (err) {
+      console.error('사용자 저장 실패:', err);
+      alert('사용자 정보 저장에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">사용자 목록을 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+        <button
+          onClick={fetchUsers}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -94,18 +163,18 @@ const UserPermission = () => {
           </thead>
           <tbody>
             {filteredUsers.map((user, idx) => (
-              <tr key={idx} className="text-center">
+              <tr key={user.id || idx} className="text-center">
                 <td className="p-3 border">{user.name}</td>
                 <td className="p-3 border">{user.email}</td>
                 <td className="p-3 border">{user.phone}</td>
                 <td className="p-3 border">{user.role}</td>
                 <td className="p-3 border">
                   <button
-                    className="px-2 py-1 text-white bg-blue-500 rounded mr-1"
+                    className="px-2 py-1 text-white bg-blue-500 rounded mr-1 hover:bg-blue-600"
                     onClick={() => handleEdit(user)}
                   >수정</button>
                   <button
-                    className="px-2 py-1 text-white bg-red-500 rounded"
+                    className="px-2 py-1 text-white bg-red-500 rounded hover:bg-red-600"
                     onClick={() => handleDelete(user)}
                   >삭제</button>
                 </td>
@@ -151,13 +220,15 @@ const UserPermission = () => {
             <div className="flex gap-2 mt-2">
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
               >
-                저장
+                {saving ? '저장 중...' : '저장'}
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                disabled={saving}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-400"
               >
                 취소
               </button>

@@ -60,7 +60,69 @@ export const deleteSchedule = async (req, res) => {
 // 스케줄 조회
 export const getSchedules = async (req, res) => {
   try {
-    // 테스트용 더미 데이터
+    // 실제 DB 조회
+    const schedulesSnapshot = await db.collection("staffSchedules").get();
+
+    if (schedulesSnapshot.empty) {
+      // 실제 데이터가 없을 때 테스트용 더미 데이터 반환
+      console.log("실제 스케줄 데이터가 없어서 더미 데이터를 반환합니다.");
+      const dummySchedules = [
+        {
+          id: "schedule1",
+          uid: "staff1",
+          name: "김치과 원장",
+          scheduleDate: "2024-12-20",
+          startTime: "09:00",
+          endTime: "18:00",
+          memo: "정상 근무",
+          off: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: "schedule2",
+          uid: "staff2",
+          name: "이보철 선생",
+          scheduleDate: "2024-12-20",
+          startTime: "09:00",
+          endTime: "18:00",
+          memo: "정상 근무",
+          off: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: "schedule3",
+          uid: "staff3",
+          name: "박교정 원장",
+          scheduleDate: "2024-12-20",
+          startTime: "09:00",
+          endTime: "18:00",
+          memo: "정상 근무",
+          off: false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+
+      return res.status(200).json({
+        schedules: dummySchedules,
+        message: "더미 스케줄 조회 성공",
+      });
+    }
+
+    const schedules = schedulesSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    res.status(200).json({
+      schedules,
+      message: "스케줄 조회 성공",
+    });
+
+    // 테스트용 더미 데이터 - 주석 처리
+    /*
     const dummySchedules = [
       {
         id: "schedule1",
@@ -151,24 +213,6 @@ export const getSchedules = async (req, res) => {
     // 실제 DB 조회 대신 더미 데이터 반환
     res.status(200).json({
       schedules: dummySchedules,
-      message: "스케줄 조회 성공",
-    });
-
-    // 실제 DB 조회 코드는 주석 처리
-    /*
-    const schedulesSnapshot = await db.collection("schedules").get();
-
-    if (schedulesSnapshot.empty) {
-      return res.status(404).json({ message: "조회된 스케줄이 없습니다." });
-    }
-
-    const schedules = schedulesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    res.status(200).json({
-      schedules,
       message: "스케줄 조회 성공",
     });
     */

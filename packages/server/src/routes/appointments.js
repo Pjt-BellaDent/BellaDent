@@ -42,7 +42,7 @@ router.put('/complete', async (req, res) => {
       .where('name', '==', name)
       .where('birth', '==', birth)
       .where('department', '==', department)
-      .where('reservationDate', '==', today)
+      .where('date', '==', today)
       .where('status', 'in', ['진료중', '대기'])
       .get();
     if (snapshot.empty) {
@@ -73,7 +73,7 @@ router.put('/complete-by-name', async (req, res) => {
       .where('name', '==', name)
       .where('birth', '==', birth)
       .where('department', '==', department)
-      .where('reservationDate', '==', today)
+      .where('date', '==', today)
       .where('status', 'in', ['대기', '진료중'])
       .get();
     if (snap.empty) {
@@ -115,7 +115,7 @@ router.put('/back-to-waiting', async (req, res) => {
       .where('name', '==', name)
       .where('birth', '==', birth)
       .where('department', '==', department)
-      .where('reservationDate', '==', today)
+      .where('date', '==', today)
       .where('status', '==', '진료중')
       .get();
     if (snap.empty) {

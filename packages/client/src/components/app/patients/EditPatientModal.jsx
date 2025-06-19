@@ -18,6 +18,10 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
   };
 
   const handleSave = async () => {
+    if (!form.birth || !form.gender) {
+      alert('생년월일과 성별은 필수 입력값입니다.');
+      return;
+    }
     try {
       await axios.put(`/patients/${form.userId}`, {
         ...form,
@@ -26,7 +30,7 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
           name: form.name,
           birth: form.birth,
         })),
-        lastVisit: form.lastVisit || new Date().toISOString().slice(0, 10)
+        lastVisitDate: form.lastVisitDate || new Date().toISOString().slice(0, 10)
       });
       alert('환자 정보가 저장되었습니다.');
       onClose();
@@ -61,49 +65,8 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
           <option value="여">여</option>
         </select>
 
-        <label className="font-semibold">나이</label>
-        <input className="w-full p-2 border rounded mb-3" value={form.age || ''} onChange={e => setForm({ ...form, age: e.target.value })} />
-
         <label className="font-semibold">전화번호</label>
         <input className="w-full p-2 border rounded mb-3" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
-
-        <label className="font-semibold">진료과</label>
-        <select
-          className="w-full p-2 border rounded mb-3"
-          value={form.department || ''}
-          onChange={e => setForm({ ...form, department: e.target.value })}
-        >
-          <option value="">선택</option>
-          <option value="보철과">보철과</option>
-          <option value="교정과">교정과</option>
-          <option value="치주과">치주과</option>
-        </select>
-
-        <label className="font-semibold">상태</label>
-        <select
-          className="w-full p-2 border rounded mb-3"
-          value={form.status || ''}
-          onChange={e => setForm({ ...form, status: e.target.value })}
-        >
-          <option value="">선택</option>
-          <option value="예약">예약</option>
-          <option value="대기">대기</option>
-          <option value="진료완료">진료완료</option>
-        </select>
-
-        <h4 className="text-lg font-bold mt-6 mb-2">과거 시술 이력</h4>
-        {editedProcedures.map((proc, i) => (
-          <div key={i} className="mb-4 border-b pb-4">
-            <label className="font-semibold">시술명</label>
-            <input className="w-full p-2 border rounded mb-2" value={proc.title} onChange={e => updateProcedure(i, 'title', e.target.value)} />
-            <label className="font-semibold">날짜</label>
-            <input className="w-full p-2 border rounded mb-2" type="datetime-local" value={proc.date} onChange={e => updateProcedure(i, 'date', e.target.value)} />
-            <label className="font-semibold">의료진</label>
-            <input className="w-full p-2 border rounded mb-2" value={proc.doctor} onChange={e => updateProcedure(i, 'doctor', e.target.value)} />
-            <label className="font-semibold">비고</label>
-            <textarea className="w-full p-2 border rounded" value={proc.note} onChange={e => updateProcedure(i, 'note', e.target.value)} />
-          </div>
-        ))}
 
         <div className="text-right mt-4">
           <button className="px-4 py-2 bg-gray-400 text-white rounded mr-2" onClick={onClose}>취소</button>
