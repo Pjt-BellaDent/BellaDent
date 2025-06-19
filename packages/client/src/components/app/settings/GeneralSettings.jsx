@@ -17,10 +17,10 @@ const GeneralSettings = () => {
     timezone: 'Asia/Seoul'
   });
   const [activeTab, setActiveTab] = useState('general');
-  const [editQuickSettings, setEditQuickSettings] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
   const [newCard, setNewCard] = useState({ title: '', description: '', icon: '🔧', path: '', color: 'blue' });
   const navigate = useNavigate();
+  const [editQuickSettings, setEditQuickSettings] = useState(false);
 
   // 기본 빠른 설정 카드들
   const [quickSettings, setQuickSettings] = useState([
@@ -72,12 +72,6 @@ const GeneralSettings = () => {
     alert('시스템 설정이 저장되었습니다.');
   };
 
-  // 빠른 설정 편집 관련 함수들
-  const handleEditQuickSettings = () => {
-    setEditQuickSettings(!editQuickSettings);
-    setShowAddCard(false);
-  };
-
   const handleAddCard = () => {
     setShowAddCard(true);
     setNewCard({ title: '', description: '', icon: '🔧', path: '', color: 'blue' });
@@ -110,7 +104,6 @@ const GeneralSettings = () => {
   };
 
   const handleCardClick = (card) => {
-    if (editQuickSettings) return; // 편집 모드에서는 클릭 무시
     navigate(card.path);
   };
 
@@ -134,6 +127,11 @@ const GeneralSettings = () => {
     { id: 'security', label: '보안 설정', icon: '🔒' },
     { id: 'backup', label: '백업/복원', icon: '💾' }
   ];
+
+  const handleEditQuickSettings = () => {
+    setEditQuickSettings(!editQuickSettings);
+    setShowAddCard(false);
+  };
 
   const renderGeneralTab = () => (
     <div className="space-y-6">
@@ -161,17 +159,16 @@ const GeneralSettings = () => {
             </button>
           </div>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickSettings.map((card) => (
-            <div 
+            <div
               key={card.id}
               className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all ${
                 editQuickSettings 
                   ? 'cursor-default' 
                   : 'hover:shadow-md cursor-pointer'
               } ${editQuickSettings ? 'relative' : ''}`}
-              onClick={() => handleCardClick(card)}
+              onClick={() => !editQuickSettings && handleCardClick(card)}
             >
               {editQuickSettings && (
                 <button
@@ -197,7 +194,7 @@ const GeneralSettings = () => {
           ))}
 
           {/* 새 카드 추가 폼 */}
-          {showAddCard && (
+          {editQuickSettings && showAddCard && (
             <div className="bg-white p-4 rounded-lg shadow-sm border-2 border-blue-300">
               <h4 className="font-medium text-gray-900 mb-3">새 카드 추가</h4>
               <div className="space-y-3">
@@ -261,7 +258,6 @@ const GeneralSettings = () => {
             </div>
           )}
         </div>
-
         {editQuickSettings && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">

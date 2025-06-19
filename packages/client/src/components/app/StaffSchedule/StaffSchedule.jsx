@@ -60,13 +60,18 @@ const StaffSchedule = () => {
 
   useEffect(() => {
     const loadStaff = async () => {
-      const staff = await fetchAllStaff();
-      setStaffList(staff.map(s => ({
-        ...s,
-        uid: s.uid || s.id || s.staffId,
-        position: s.staffInfo?.position || s.position || s.rank,
-        department: s.staffInfo?.department || s.department,
-      })));
+      try {
+        const staff = await fetchAllStaff();
+        setStaffList(staff.map(s => ({
+          ...s,
+          uid: s.uid || s.id || s.staffId,
+          position: s.position || s.staffInfo?.position || '',
+          department: s.department || s.staffInfo?.department || '',
+        })));
+      } catch (error) {
+        console.error('직원 목록 로드 실패:', error);
+        setStaffList([]);
+      }
     };
     loadStaff();
   }, []);
@@ -74,6 +79,13 @@ const StaffSchedule = () => {
   const handleDateClick = (year, month, day) => {
     const selected = new Date(year, month, day);
     setSelectedDate(selected);
+    setEditData(null);
+    setPopupOpen(false);
+  };
+
+  const handleScheduleClick = (schedule, dateKey) => {
+    setEditData({ ...schedule, scheduleDate: dateKey });
+    setPopupOpen(true);
   };
 
   const handleAddSchedule = async (item) => {
@@ -138,6 +150,7 @@ const StaffSchedule = () => {
             currentDate={currentDate}
             scheduleData={scheduleData}
             onDateClick={handleDateClick}
+            onScheduleClick={handleScheduleClick}
             filterStaffId={filterStaffId}
             staffList={staffList}
             onPrevMonth={() => changeMonth(-1)}
@@ -166,6 +179,9 @@ const StaffSchedule = () => {
         }}
         onSave={handleAddSchedule}
         initialData={editData}
+        staffList={staffList}
+        selectedStaffId={filterStaffId}
+        selectedDate={selectedDate}
       />
     </div>
   );

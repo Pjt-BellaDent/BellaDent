@@ -63,9 +63,22 @@ export const deleteSchedule = async (id) => {
 export const fetchAllStaff = async () => {
   try {
     const res = await axios.get('/users/staff');
-    return res.data.staffInfo;
+    if (res.data && res.data.staffInfo) {
+      return res.data.staffInfo.map(staff => ({
+        uid: staff.uid,
+        name: staff.name,
+        position: staff.position || staff.staffInfo?.position || '',
+        department: staff.department || staff.staffInfo?.department || '',
+        email: staff.email,
+        phone: staff.phone,
+        role: staff.role,
+        isActive: staff.isActive
+      }));
+    }
+    return [];
   } catch (error) {
     console.error('직원 목록 조회 실패:', error);
+    // 에러 발생 시 빈 배열 반환하여 UI가 깨지지 않도록 함
     return [];
   }
 };
