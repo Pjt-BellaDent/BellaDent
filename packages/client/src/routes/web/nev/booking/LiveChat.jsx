@@ -1,10 +1,10 @@
 import React from 'react'
-import GeminiChat from '../../../../components/ClientChat'
+import ChatForm from '../../../../components/web/ChatForm'
 
 function LiveChat() {
   return (
     <>
-      <GeminiChat/> 
+      <ChatForm/> 
     </>
   )
 }

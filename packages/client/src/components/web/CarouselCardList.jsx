@@ -12,8 +12,7 @@ const CarouselCardList = ({
 
   const gap = 16;
 
-  const cardWidth =
-    (containerWidth - gap * (visibleCount - 1)) / visibleCount;
+  const cardWidth = (containerWidth - gap * (visibleCount - 1)) / visibleCount;
   const cardHeight = containerHeight;
 
   const totalGroups = Math.ceil(cards.length / visibleCount);
@@ -33,7 +32,8 @@ const CarouselCardList = ({
     setGroupIndex(index);
   };
 
-  const translateX = groupIndex * (cardWidth * visibleCount + gap * visibleCount);
+  const translateX =
+    groupIndex * (cardWidth * visibleCount + gap * visibleCount);
 
   return (
     <div
@@ -74,13 +74,13 @@ const CarouselCardList = ({
 
       <button
         onClick={() => slideTo(groupIndex - 1)}
-        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded"
+        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-BD-CharcoalBlack text-BD-PureWhite px-3 py-1 rounded"
       >
         ◀
       </button>
       <button
         onClick={() => slideTo(groupIndex + 1)}
-        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 text-white px-3 py-1 rounded"
+        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-BD-CharcoalBlack text-BD-PureWhite px-3 py-1 rounded"
       >
         ▶
       </button>

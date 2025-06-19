@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
 
 function SignUpForm() {
   const navigate = useNavigate();
-  const { userToken } = useUserInfo();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -41,12 +39,6 @@ function SignUpForm() {
             name: formData.name,
             phone: formData.phone,
             address: formData.address,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-            withCredentials: true,
           }
         )
         .then((res) => {

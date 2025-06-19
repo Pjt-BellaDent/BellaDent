@@ -8,10 +8,10 @@ function Card({ children, image, CN, Scroll }) {
       <div className="flex-shrink-0 flex-1">
         {Scroll === true ? (
           <ScrollFadeIn delay={0.2}>
-            <img src={image} alt={image} className="block rounded-4xl" />
+            <img src={image} alt={image} className="block rounded-xl" />
           </ScrollFadeIn>
         ) : (
-          <img src={image} alt={image} className="block rounded-4xl" />
+          <img src={image} alt={image} className="block rounded-xl" />
         )}
       </div>
     </div>

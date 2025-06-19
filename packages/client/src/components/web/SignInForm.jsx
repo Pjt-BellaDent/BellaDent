@@ -94,7 +94,7 @@ function SignInForm() {
   };
   return (
     <>
-      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
+      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
         <form className="w-100" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
