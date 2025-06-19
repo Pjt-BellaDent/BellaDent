@@ -13,21 +13,21 @@ const Modal = ({ children, show, setShow, activeClick, activeClose }) => {
 
   return (
     <div
-      className="fixed top-0 left-0 w-full h-full items-center justify-center z-50 bg-neutral-950/60"
+      className="fixed top-0 left-0 w-full h-full items-center justify-center z-50 bg-neutral-950/60 font-BD-sans"
       style={{ display: show ? 'flex' : 'none' }}
     >
-      <div className="bg-white px-20 py-15 rounded-lg max-w-200 min-w-120 max-h-[80vh] overflow-y-auto text-2xl ">
+      <div className="bg-BD-PureWhite px-20 py-15 max-w-200 min-w-120 max-h-[80vh] overflow-y-auto shadow-xl text-lg ">
         {children}
         <div className="mt-20 flex justify-center gap-4">
           <button
-            className="flex-1 w-full px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+            className="flex-1 w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             onClick={handleClick}
           >
             확인
           </button>
           {activeClose && (
             <button
-              className="flex-1 w-full px-6 py-3 rounded text-xl bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+              className="flex-1 w-full px-6 py-3 rounded text-lg bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
               onClick={handleClose}
             >
               취소
