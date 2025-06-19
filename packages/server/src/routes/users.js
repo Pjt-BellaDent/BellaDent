@@ -41,8 +41,8 @@ router.post("/signIn", authenticateFirebaseToken, signIn); // 로그인
 // 직원 전체 목록 조회 (항상 :id 라우트보다 위에 위치해야 함)
 router.get("/staff", getAllStaff);
 
-router.get("/:id", authenticateFirebaseToken, patientRoleCheck, getUserById); // 홈페이지 회원 정보 조회
 router.get("/patient", authenticateFirebaseToken, staffRoleCheck, getPatients); // 전체 환자 상세 정보 조회
+router.get("/:id", authenticateFirebaseToken, patientRoleCheck, getUserById); // 홈페이지 회원 정보 조회
 router.get("/patient/:id", authenticateFirebaseToken, staffRoleCheck, getPatientById); // 환자 상세 정보 조회 (id)
 router.get("/patient/name/:id", authenticateFirebaseToken, staffRoleCheck, getPatientByName); // 환자 상세 정보 조회 (name)
 router.get("/staff/:id", authenticateFirebaseToken, staffRoleCheck, getStaffById); // 직원 상세 정보 조회

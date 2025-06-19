@@ -8,13 +8,15 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
+  getDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../../../config/firebase'; // Firebase config 경로에 맞게 조정 필요
+import { db } from '../../../config/firebase';
 
 const ChatWrapper = styled.div`
   display: flex;
-  height: 100vh;
+  height: 100%;
+  overflow: hidden;
 `;
 
 const ChatList = styled.div`
@@ -28,6 +30,7 @@ const ChatRoom = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 `;
 
 const ChatHeader = styled.div`
@@ -39,13 +42,18 @@ const ChatHeader = styled.div`
 
 const ChatMessages = styled.div`
   flex: 1;
-  padding: 16px;
   overflow-y: auto;
+  padding: 16px;
   background: #e9edf5;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 `;
 
 const Message = styled.div`
+  align-self: ${(props) => (props.type === 'staff' ? 'flex-start' : 'flex-end')};
   background: ${(props) => (props.type === 'staff' ? '#cfe2ff' : '#fff3cd')};
+  color: black;  // ✅ 글자가 잘 보이게
   padding: 10px;
   margin: 6px 0;
   border-radius: 6px;
@@ -60,8 +68,12 @@ const TypingBubble = styled.div`
 
 const ChatInput = styled.div`
   display: flex;
-  border-top: 1px solid #ccc;
   padding: 12px;
+  border-top: 1px solid #ccc;
+  background: #fff;
+  height: 60px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 `;
 
 const Input = styled.input`
@@ -96,18 +108,33 @@ const Chat = () => {
   const [userList, setUserList] = useState([]);
   const [chatData, setChatData] = useState({});
   const [isTyping, setIsTyping] = useState(false);
-  const [staffUid] = useState('STAFF_UID'); // 실제 로그인된 직원 ID로 교체 필요
+  const [staffUid] = useState('STAFF_UID');
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
 
+  const getUserNameById = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      return userDoc.exists() ? userDoc.data().name : '(이름 없음)';
+    } catch {
+      return '(조회 실패)';
+    }
+  };
+
   useEffect(() => {
     const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const users = snapshot.docs.map(doc => ({
-        id: doc.id,
-        name: doc.data().userId,
-        status: doc.data().status
-      }));
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const users = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          const name = await getUserNameById(data.userId);
+          return {
+            id: docSnap.id,
+            name,
+            status: data.status,
+          };
+        })
+      );
       setUserList(users);
     });
     return () => unsub();

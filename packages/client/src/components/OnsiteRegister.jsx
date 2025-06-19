@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { getAuth } from 'firebase/auth';
 
 const AppContainer = styled.div`
   background: #f9f9f9;
@@ -44,6 +45,15 @@ const Label = styled.label`
 `;
 
 const Input = styled.input`
+  width: 100%;
+  padding: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+`;
+
+const Textarea = styled.textarea`
   width: 100%;
   padding: 14px;
   border-radius: 4px;
@@ -104,14 +114,8 @@ const EmptyMessage = styled.p`
 
 const OnsiteRegister = () => {
   const [form, setForm] = useState({
-    name: '',
-    birth: '',
-    gender: '',
-    phone: '',
-    address: '',
-    insuranceNumber: '',
-    firstVisitDate: '',
-    lastVisitDate: ''
+    email: '', password: '', name: '', birth: '', gender: '', phone: '', address: '',
+    insuranceNumber: '', firstVisitDate: '', lastVisitDate: '', allergies: '', medications: '', memo: ''
   });
 
   const [patients, setPatients] = useState([]);
@@ -119,13 +123,16 @@ const OnsiteRegister = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const fetchPatients = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/onsite");
-      const sorted = res.data.patients.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); // 오래된 순
+      const token = await getAuth().currentUser.getIdToken();
+      const res = await axios.get("http://localhost:3000/users/patient", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const sorted = res.data.patientsInfo.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
       setPatients(sorted);
     } catch (err) {
       console.error("접수 리스트 불러오기 실패:", err.message);
@@ -136,45 +143,43 @@ const OnsiteRegister = () => {
     e.preventDefault();
     setLoading(true);
 
-    const {
-      name,
-      birth,
-      gender,
-      phone,
-      address,
-      insuranceNumber,
-      firstVisitDate,
-      lastVisitDate
-    } = form;
-
-    const payload = {
-      name,
-      birth,
-      gender,
-      phone,
-      address,
-      insuranceNumber,
-      firstVisitDate,
-      lastVisitDate
-    };
-
     try {
-      await axios.post("http://localhost:3000/api/onsite", payload);
+      const token = await getAuth().currentUser.getIdToken();
+
+      const payload = {
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        phone: form.phone,
+        birth: form.birth, // 문자열로 전송
+        gender: form.gender, // "M" 또는 "F"
+        address: form.address,
+        role: "patient",
+        patientInfo: {
+          insuranceNumber: form.insuranceNumber,
+          allergies: form.allergies,
+          medications: form.medications,
+          memo: form.memo,
+          firstVisitDate: form.firstVisitDate, // 문자열로 전송
+          lastVisitDate: form.lastVisitDate
+        }
+      };
+
+      console.log("제출 데이터:", payload);
+
+      await axios.post("http://localhost:3000/users/patient", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       alert("접수가 완료되었습니다.");
-      fetchPatients(); // 등록 후 목록 갱신
+      fetchPatients();
       setForm({
-        name: '',
-        birth: '',
-        gender: '',
-        phone: '',
-        address: '',
-        insuranceNumber: '',
-        firstVisitDate: '',
-        lastVisitDate: ''
+        email: '', password: '', name: '', birth: '', gender: '', phone: '', address: '',
+        insuranceNumber: '', firstVisitDate: '', lastVisitDate: '', allergies: '', medications: '', memo: ''
       });
     } catch (err) {
       console.error("접수 중 오류:", err.response?.data || err.message);
-      alert("서버 오류로 접수에 실패했습니다.");
+      alert(err.response?.data?.message || "서버 오류로 접수에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -189,30 +194,39 @@ const OnsiteRegister = () => {
       <Wrapper>
         <Title>현장 접수</Title>
         <Description>기본 정보를 입력해 주세요. <span style={{ color: '#dc3545' }}>*</span> 표시는 필수 항목입니다.</Description>
-        
+
         <form onSubmit={handleSubmit}>
+          <FormGroup>
+            <Label>이메일 *</Label>
+            <Input name="email" value={form.email} onChange={handleChange} required />
+          </FormGroup>
+          <FormGroup>
+            <Label>비밀번호 *</Label>
+            <Input type="password" name="password" value={form.password} onChange={handleChange} required />
+          </FormGroup>
+
           <TwoColumnRow>
             <HalfWidth>
-              <Label>이름 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Label>이름 *</Label>
               <Input name="name" value={form.name} onChange={handleChange} required />
             </HalfWidth>
             <HalfWidth>
-              <Label>생년월일 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Label>생년월일 *</Label>
               <Input type="date" name="birth" value={form.birth} onChange={handleChange} required />
             </HalfWidth>
           </TwoColumnRow>
 
           <TwoColumnRow>
             <HalfWidth>
-              <Label>성별 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Label>성별 *</Label>
               <Select name="gender" value={form.gender} onChange={handleChange} required>
                 <option value="">선택</option>
-                <option value="남">남</option>
-                <option value="여">여</option>
+                <option value="M">남</option>
+                <option value="F">여</option>
               </Select>
             </HalfWidth>
             <HalfWidth>
-              <Label>전화번호 <span style={{ color: '#dc3545' }}>*</span></Label>
+              <Label>전화번호 *</Label>
               <Input name="phone" value={form.phone} onChange={handleChange} required />
             </HalfWidth>
           </TwoColumnRow>
@@ -239,6 +253,19 @@ const OnsiteRegister = () => {
               <Input type="date" name="lastVisitDate" value={form.lastVisitDate} onChange={handleChange} />
             </HalfWidth>
           </TwoColumnRow>
+
+          <FormGroup>
+            <Label>알레르기</Label>
+            <Textarea name="allergies" value={form.allergies} onChange={handleChange} />
+          </FormGroup>
+          <FormGroup>
+            <Label>복용 중인 약</Label>
+            <Textarea name="medications" value={form.medications} onChange={handleChange} />
+          </FormGroup>
+          <FormGroup>
+            <Label>메모</Label>
+            <Textarea name="memo" value={form.memo} onChange={handleChange} />
+          </FormGroup>
 
           <Button type="submit" disabled={loading}>
             {loading ? '접수 중...' : '접수'}
