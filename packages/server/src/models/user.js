@@ -6,10 +6,7 @@ export const commonUserFieldsSchema = Joi.object({
   phone: Joi.string().required(), // 연락처 필수
   address: Joi.string().optional().allow(null, ""), // 주소 선택 사항
   gender: Joi.string().valid("M", "F").optional().allow(null), // 성별 선택 사항 (null 허용)
-  birth: Joi.string()
-    .pattern(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .allow(null, ""), // 생년월일 (YYYY-MM-DD) 선택 사항
+  birth: Joi.string().optional().allow(null, ""), // 생년월일 (YYYY-MM-DD) 선택 사항
 });
 
 // 환자 추가 정보 스키마 (users/{uid}/patients/{uid} 문서의 필드 정의)
@@ -47,6 +44,7 @@ export const signUpSchema = Joi.object({
 export const createPatientSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  role: Joi.string().valid("patient").default("patient"),
   name: commonUserFieldsSchema.extract("name").required(),
   phone: commonUserFieldsSchema.extract("phone").required(),
   address: commonUserFieldsSchema.extract("address").optional(),
