@@ -64,8 +64,8 @@ function SignUpForm() {
 
   return (
     <>
-      <div className="mx-auto max-w-full px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
-        <form className="w-120" onSubmit={handleSubmit}>
+      <div className="px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 shadow-xl bg-BD-PureWhite text-BD-CharcoalBlack text-md font-BD-sans">
+        <form className="min-w-140" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
               <label htmlFor="email" className="block text-nowrap">
@@ -79,7 +79,7 @@ function SignUpForm() {
               placeholder="example@email.com"
               required
               onChange={handleChange}
-              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-8">
@@ -207,7 +207,7 @@ function SignUpForm() {
           <div className="flex items-center justify-center mt-4">
             <button
               type="submit"
-              className="w-full px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+              className="w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               등록
             </button>
