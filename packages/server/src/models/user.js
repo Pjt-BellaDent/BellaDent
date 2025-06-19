@@ -53,6 +53,8 @@ export const createPatientSchema = Joi.object({
   gender: commonUserFieldsSchema.extract("gender").optional(),
   birth: commonUserFieldsSchema.extract("birth").optional(),
 
+  role: Joi.string().valid("patient").required(),
+
   // 역할에 따른 추가 정보 필드 (조건부 필수 또는 선택)
   patientInfo: patientInfoSchema.when("role", {
     is: "patient",

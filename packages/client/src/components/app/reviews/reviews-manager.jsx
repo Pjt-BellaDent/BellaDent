@@ -6,11 +6,13 @@ const FeedbackList = () => {
   const [reviews, setReviews] = useState([]);
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState('latest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchReviews = async () => {
       const snapshot = await getDocs(collection(db, 'reviews'));
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const publicReviews = data.filter((r) => r.isPublic !== false);
       setReviews(publicReviews);
     };
@@ -24,6 +26,9 @@ const FeedbackList = () => {
       const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt);
       return sortOrder === 'latest' ? bDate - aDate : aDate - bDate;
     });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const formatDate = (timestamp) => {
     const d = timestamp?.toDate?.() || new Date(timestamp);
@@ -39,12 +44,18 @@ const FeedbackList = () => {
           type="text"
           placeholder="내용 검색"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm"
         />
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
+          onChange={(e) => {
+            setSortOrder(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-4 py-2 border border-gray-300 rounded-md shadow-sm"
         >
           <option value="latest">최신순</option>
@@ -53,7 +64,7 @@ const FeedbackList = () => {
       </div>
 
       <div className="space-y-4">
-        {filtered.map((f) => (
+        {paginated.map((f) => (
           <div
             key={f.id}
             className="bg-white p-5 rounded-xl shadow-md"
@@ -64,6 +75,33 @@ const FeedbackList = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Pagination UI */}
+      <div className="flex justify-center mt-8 gap-2">
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 rounded border bg-gray-100"
+        >
+          이전
+        </button>
+        {Array.from({ length: totalPages }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentPage(i + 1)}
+            className={`px-3 py-1 rounded border ${currentPage === i + 1 ? 'bg-yellow-400 text-white' : 'bg-gray-100'}`}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 rounded border bg-gray-100"
+        >
+          다음
+        </button>
       </div>
     </div>
   );
