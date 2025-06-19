@@ -63,14 +63,14 @@ function Header() {
     <>
       <div id="header-observer" style={{ height: 1 }}></div>
       <header
-        className={`w-full  grow-0 shrink-0 font-BD-mont text-lg fixed top-0 left-0 z-5 transition-colors duration-800`}
+        className={`w-full h-20 grow-0 shrink-0 font-BD-mont text-lg fixed top-0 left-0 z-5 transition-colors duration-800`}
         style={{
           backgroundColor: scrolled ? '#f8f8f8' : '#333333',
           color: scrolled ? '#333333' : '#c8ab7c',
           boxShadow: scrolled ? '0 2px 5px rgba(0, 0, 0, 0.2)' : 'none',
         }}
       >
-        <Wrapper CN="flex justify-between items-center max-w-360 h-20 mx-auto">
+        <Wrapper CN="flex justify-between items-center max-w-360mx-auto">
           <div>
             <LogoSimple color={scrolled ? '#333333' : '#c8ab7c'} />
           </div>

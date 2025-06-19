@@ -80,7 +80,6 @@ export const UserInfoProvider = ({ children }) => {
       console.log('Successfully signed out from Firebase Auth.');
     } catch (error) {
       console.error('Error signing out:', error);
-      alert('로그아웃 중 오류가 발생했습니다.');
     }
   };
 

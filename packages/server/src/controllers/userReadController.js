@@ -32,6 +32,7 @@ export const signIn = async (req, res) => {
     const userInfo = {
       id: userId, // decodedToken.uid 사용
       role: userRole, // decodedToken.role (Auth Custom Claim) 사용
+      isActive: userData.isActive, // Firestore에서 가져옴
       name: userData.name, // Firestore에서 가져옴
     };
 

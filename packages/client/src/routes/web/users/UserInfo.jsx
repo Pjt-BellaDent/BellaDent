@@ -7,23 +7,26 @@ import Title from '../../../components/web/Title.jsx';
 
 function UserInfo() {
   const navigate = useNavigate();
-  const { userInfo, userToken, signOutUser } = useUserInfo;
+  const { userInfo, userToken, signOutUser } = useUserInfo();
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState('');
 
-  const handleDisabled = async () => {
+  const requestDisabled = async () => {
     try {
-      confirm('정말로 회원탈퇴를 진행 하시겠습니까?');
       const url = `http://localhost:3000/users/disabled/${userInfo.id}`;
-      const response = await axios.put(url, {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        url,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+
       if (response.status === 201) {
-        signOutUser();
         setModalType('success');
         setModalMessage('회원탈퇴가 완료되었습니다.');
         setShowModal(true);
@@ -31,9 +34,15 @@ function UserInfo() {
     } catch (err) {
       console.error(err);
       setModalType('error');
-      setModalMessage(err);
+      setModalMessage(err.message);
       setShowModal(true);
     }
+  };
+
+  const handleDisabled = () => {
+    setModalType('choice');
+    setModalMessage('정말로 회원탈퇴를 진행 하시겠습니까?');
+    setShowModal(true);
   };
 
   return (
@@ -47,13 +56,29 @@ function UserInfo() {
       >
         회원탈퇴
       </button>
+      {modalType === 'choice' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            requestDisabled();
+          }}
+          activeClose={() => {
+            setShowModal(false);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
       {modalType === 'success' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            navigate('/');
+            signOutUser();
+            window.location.href = '/'
           }}
         >
           <Title>{modalMessage}</Title>
