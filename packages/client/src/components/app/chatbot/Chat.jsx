@@ -1,62 +1,227 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import styled from '@emotion/styled';
+import {
+  collection,
+  doc,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  getDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '../../../config/firebase';
+
+const ChatWrapper = styled.div`
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+`;
+
+const ChatList = styled.div`
+  width: 220px;
+  background: #f7f7f7;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+`;
+
+const ChatRoom = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+`;
+
+const ChatHeader = styled.div`
+  background: #fff;
+  padding: 10px 16px;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+`;
+
+const ChatMessages = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #e9edf5;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Message = styled.div`
+  align-self: ${(props) => (props.type === 'staff' ? 'flex-start' : 'flex-end')};
+  background: ${(props) => (props.type === 'staff' ? '#cfe2ff' : '#fff3cd')};
+  color: black;  // ✅ 글자가 잘 보이게
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 6px;
+  max-width: 60%;
+`;
+
+const TypingBubble = styled.div`
+  font-style: italic;
+  color: #888;
+  margin: 8px 0 0 12px;
+`;
+
+const ChatInput = styled.div`
+  display: flex;
+  padding: 12px;
+  border-top: 1px solid #ccc;
+  background: #fff;
+  height: 60px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+`;
+
+const Input = styled.input`
+  flex: 1;
+  padding: 10px;
+  margin-right: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const Button = styled.button`
+  padding: 10px 16px;
+  background-color: #2f80ed;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+`;
+
+const ChatItem = styled.div`
+  padding: 12px 16px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  &:hover {
+    background: #eee;
+  }
+`;
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    { from: 'user', text: '진료는 몇 시까지 하나요?' },
-    { from: 'bot', text: '평일 9시~18시 / 토요일 9시~13시 운영, 일요일/공휴일 휴무입니다.' },
-  ]);
-  const [input, setInput] = useState('');
+  const [inputText, setInputText] = useState('');
+  const [activeUser, setActiveUser] = useState(null);
+  const [userList, setUserList] = useState([]);
+  const [chatData, setChatData] = useState({});
+  const [isTyping, setIsTyping] = useState(false);
+  const [staffUid] = useState('STAFF_UID');
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const newMessage = { from: 'user', text: input };
-    setMessages([...messages, newMessage]);
-    setInput('');
+  const messages = activeUser ? chatData[activeUser] || [] : [];
 
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { from: 'bot', text: '문의하신 내용은 확인 후 답변드리겠습니다.' },
-      ]);
-    }, 800);
+  const getUserNameById = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      return userDoc.exists() ? userDoc.data().name : '(이름 없음)';
+    } catch {
+      return '(조회 실패)';
+    }
+  };
+
+  useEffect(() => {
+    const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
+    const unsub = onSnapshot(q, async (snapshot) => {
+      const users = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          const name = await getUserNameById(data.userId);
+          return {
+            id: docSnap.id,
+            name,
+            status: data.status,
+          };
+        })
+      );
+      setUserList(users);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!activeUser) return;
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    const q = query(msgRef, orderBy('sentAt'));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => doc.data());
+      setChatData(prev => ({ ...prev, [activeUser]: msgs }));
+    });
+    return () => unsub();
+  }, [activeUser]);
+
+  useEffect(() => {
+    if (!activeUser) return;
+    const unsub = onSnapshot(doc(db, 'consultations', activeUser), (docSnap) => {
+      const data = docSnap.data();
+      setIsTyping(data?.typing || false);
+    });
+    return () => unsub();
+  }, [activeUser]);
+
+  const sendMessage = async () => {
+    const text = inputText.trim();
+    if (!text || !activeUser) return;
+
+    const msgRef = collection(db, `consultations/${activeUser}/messages`);
+    await addDoc(msgRef, {
+      senderId: staffUid,
+      senderType: 'staff',
+      content: text,
+      sentAt: serverTimestamp()
+    });
+
+    await updateDoc(doc(db, 'consultations', activeUser), {
+      updatedAt: serverTimestamp(),
+      handlerId: staffUid,
+      status: 'responded',
+      typing: false,
+    });
+
+    setInputText('');
+  };
+
+  const handleChatClick = (consultationId) => {
+    setActiveUser(consultationId);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] max-w-2xl mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4">💬 AI 챗봇 상담</h2>
-
-      <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow p-4 space-y-3">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-[80%] text-sm px-4 py-2 rounded-lg whitespace-pre-wrap ${
-              msg.from === 'user'
-                ? 'ml-auto bg-blue-100 text-right'
-                : 'mr-auto bg-gray-100 text-left'
-            }`}
-          >
-            {msg.text}
-          </div>
+    <ChatWrapper>
+      <ChatList>
+        <h3 style={{ padding: '16px', margin: 0 }}>상담 목록</h3>
+        {userList.map(user => (
+          <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
+            {user.name}
+          </ChatItem>
         ))}
-      </div>
+      </ChatList>
 
-      <div className="mt-4 flex items-center gap-2">
-        <input
-          type="text"
-          className="flex-1 border px-4 py-2 rounded text-sm"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="질문을 입력하세요..."
-        />
-        <button
-          onClick={handleSend}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
-        >
-          전송
-        </button>
-      </div>
-    </div>
+      <ChatRoom>
+        <ChatHeader>
+          {activeUser ? `${userList.find(u => u.id === activeUser)?.name} 상담 중` : '상담 선택 대기 중'}
+        </ChatHeader>
+
+        <ChatMessages>
+          {messages.map((msg, idx) => (
+            <Message key={idx} type={msg.senderType}>{msg.content}</Message>
+          ))}
+          {isTyping && <TypingBubble>입력 중...</TypingBubble>}
+        </ChatMessages>
+
+        <ChatInput>
+          <Input
+            type="text"
+            placeholder="답변을 입력하세요..."
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && sendMessage()}
+            disabled={!activeUser}
+          />
+          <Button onClick={sendMessage} disabled={!activeUser}>전송</Button>
+        </ChatInput>
+      </ChatRoom>
+    </ChatWrapper>
   );
 };
 
