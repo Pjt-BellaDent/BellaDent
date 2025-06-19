@@ -46,7 +46,7 @@ function Tour() {
           <img
             src={thumbnail}
             alt={thumbnail}
-            className="w-full object-cover rounded-4xl"
+            className="w-full object-cover rounded-xl"
           />
         </div>
         <ImageBox
