@@ -46,6 +46,7 @@ router.get("/patient", auth, staffRoleCheck, getPatients); // 전체 환자 상�
 router.get("/patient/:id", auth, staffRoleCheck, getPatientById); // 환자 상세 정보 조회 (id)
 router.get("/patient/name/:id", auth, staffRoleCheck, getPatientByName); // 환자 상세 정보 조회 (name)
 router.get("/staff/:id", auth, staffRoleCheck, getStaffById); // 직원 상세 정보 조회
+router.get('/patients/all', getPatients);
 
 router.put("/:id", auth, patientRoleCheck, updateUser); // 홈페이지 회원 정보 수정
 router.put("/patient/:id", auth, staffRoleCheck, updatePatient); // 환자 정보 수정

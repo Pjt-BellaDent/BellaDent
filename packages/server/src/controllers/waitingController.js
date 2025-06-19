@@ -20,6 +20,10 @@ export const addWaitingPatient = async (req, res) => {
       return res.status(400).json({ error: "이름, 생년월일, 진료과 필수" });
     }
     data.createdAt = new Date().toISOString();
+    data.status = data.status || '대기';
+    data.patientId = data.patientId || null;
+    data.doctorId = data.doctorId || null;
+    data.completedAt = null; // 진료완료시 갱신
     const doc = await db.collection('waiting').add(data);
     res.status(201).json({ id: doc.id });
   } catch (err) {
@@ -27,11 +31,16 @@ export const addWaitingPatient = async (req, res) => {
   }
 };
 
-// 대기 환자 수정
+// 대기 환자 수정 (진료완료 처리 포함)
 export const updateWaitingStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    await db.collection('waiting').doc(id).update(req.body);
+    const updateData = req.body;
+    // 진료완료 처리: status가 '완료'로 변경되면 completedAt 저장
+    if (updateData.status === '완료' && !updateData.completedAt) {
+      updateData.completedAt = new Date().toISOString();
+    }
+    await db.collection('waiting').doc(id).update(updateData);
     res.json({ message: "대기 환자 정보 수정 완료" });
   } catch (err) {
     res.status(500).json({ error: err.message });
