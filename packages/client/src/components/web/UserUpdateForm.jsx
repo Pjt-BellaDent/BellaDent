@@ -103,10 +103,7 @@ function UserUpdateForm() {
         <form className="w-120" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
-              <label
-                htmlFor="email"
-                className="block text-nowrap"
-              >
+              <label htmlFor="email" className="block text-nowrap">
                 이메일
               </label>
             </div>
@@ -123,10 +120,7 @@ function UserUpdateForm() {
           </div>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
-              <label
-                htmlFor="name"
-                className="block text-nowrap"
-              >
+              <label htmlFor="name" className="block text-nowrap">
                 이름
               </label>
             </div>
@@ -144,10 +138,7 @@ function UserUpdateForm() {
           </div>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
-              <label
-                htmlFor="phone"
-                className="block text-nowrap"
-              >
+              <label htmlFor="phone" className="block text-nowrap">
                 연락처
               </label>
             </div>
@@ -167,10 +158,7 @@ function UserUpdateForm() {
           </div>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
-              <label
-                htmlFor="address"
-                className="block text-nowrap"
-              >
+              <label htmlFor="address" className="block text-nowrap">
                 주소
               </label>
             </div>
