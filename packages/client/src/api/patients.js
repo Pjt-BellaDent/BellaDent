@@ -1,5 +1,5 @@
 // src/api/patients.js
-import axios from '@/libs/axiosInstance';
+import axios from '../libs/axiosIntance';
 
 export const fetchAllPatients = async () => {
   const { data } = await axios.get('/users/patients/all');

@@ -116,37 +116,6 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded shadow mb-6">
-        <h4 className="font-semibold mb-3">구글 애널리틱스</h4>
-        <iframe
-          src="https://datastudio.google.com/embed/reporting/1k2d3e4f5g6h7i8j9k/page/1M"
-          title="Google Analytics"
-          width="100%"
-          height="400"
-          frameBorder="0"
-          style={{ border: 0 }}
-          allowFullScreen
-        ></iframe>
-      </div>
-
-      <div className="bg-white p-4 rounded shadow">
-        <h4 className="font-semibold mb-3">만족도 조사</h4>
-        <iframe
-          src="https://datastudio.google.com/embed/reporting/1k2d3e4f5g6h7i8j9k/page/2M"
-          title="만족도 조사 차트"
-          width="100%"
-          height="400"
-          frameBorder="0"
-          style={{ border: 0 }}
-          allowFullScreen
-        ></iframe>
-        <div className="flex gap-2 mt-2">
-          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">주간</button>
-          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">월간</button>
-          <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">일간</button>
-        </div>
-      </div>
-
       {modalData.visible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto">

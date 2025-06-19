@@ -4,28 +4,19 @@ import { Timestamp } from "firebase-admin/firestore";
 
 // F&Q 생성
 export const createFaq = async (req, res) => {
-  const { value, error } = faqSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({ message: "Validation Error" });
-  }
-
   try {
-    const now = Timestamp.now();
-
-    const docRef = db.collection("faqs").doc();
-    await docRef.set({
-      id: docRef.id, // Firestore 문서 ID
-      ...value,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    res.status(201).json({ message: "F&Q 등록 성공" });
+    const { question, answer, authorId, isPublic, startTime, endTime } = req.body;
+    const faq = {
+      question,
+      answer: answer || '',
+      authorId,
+      isPublic: isPublic !== undefined ? isPublic : true,
+      startTime: startTime || null,
+      endTime: endTime || null
+    };
+    const doc = await db.collection('faqs').add(faq);
+    res.status(201).json({ id: doc.id });
   } catch (err) {
-    console.error("F&Q 등록 에러:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -74,35 +65,18 @@ export const readDisabledFaqsById = async (req, res) => {
 
 // F&Q 수정
 export const updateFaq = async (req, res) => {
-  const faqId = req.params.id;
-  const { value, error } = updateFaqSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation Error",
-    });
-  }
-
   try {
-    const docRef = db.collection("faqs").doc(faqId);
-    const faqDoc = await docRef.get();
-    const now = Timestamp.now();
-
-    if (!faqDoc.exists) {
-      return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
-    }
-
-    // 4. Firestore 업데이트
-    await docRef.update({
-      ...value,
-      updatedAt: now,
-    });
-
-    res.status(200).json({ message: "F&Q 수정 성공" });
+    const { id } = req.params;
+    const { question, answer, isPublic, startTime, endTime } = req.body;
+    const updateData = {};
+    if (question !== undefined) updateData.question = question;
+    if (answer !== undefined) updateData.answer = answer;
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
+    if (startTime !== undefined) updateData.startTime = startTime;
+    if (endTime !== undefined) updateData.endTime = endTime;
+    await db.collection('faqs').doc(id).update(updateData);
+    res.json({ message: 'FAQ 수정 완료' });
   } catch (err) {
-    console.error("&Q 수정 에러:", err);
     res.status(500).json({ error: err.message });
   }
 };

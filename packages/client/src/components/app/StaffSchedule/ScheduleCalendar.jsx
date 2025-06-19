@@ -4,6 +4,7 @@ const ScheduleCalendar = ({
   currentDate,
   scheduleData,
   onDateClick,
+  onScheduleClick,
   filterStaffId = '전체',
   staffList = [],
   onPrevMonth,
@@ -36,10 +37,14 @@ const ScheduleCalendar = ({
     cells.push(
       <div
         key={key}
-        onClick={() => onDateClick(year, month, day)}
         className={`bg-white min-h-[120px] p-2 cursor-pointer transition-colors ${
           isToday ? 'bg-blue-50' : ''
         }`}
+        onClick={e => {
+          if (e.target === e.currentTarget) {
+            onDateClick(year, month, day);
+          }
+        }}
       >
         <div className={`font-medium mb-2 ${
           isWeekend ? ((firstDay + day - 1) % 7 === 0 ? 'text-red-500' : 'text-blue-500') : 'text-gray-800'
@@ -50,10 +55,15 @@ const ScheduleCalendar = ({
           {sorted.map((e, i) => (
             <div
               key={i}
-              className="text-xs bg-blue-50 text-blue-700 rounded px-2 py-1 truncate hover:bg-blue-100"
+              className="text-xs bg-blue-50 text-blue-700 rounded px-2 py-1 truncate hover:bg-blue-100 flex items-center gap-1 cursor-pointer"
+              onClick={evt => {
+                evt.stopPropagation();
+                if (onScheduleClick) onScheduleClick(e, key);
+              }}
             >
-              {e.time} {e.position} {e.name}
-              {e.off && <span className="ml-1 text-red-500">🌙</span>}
+              {e.startTime && e.endTime ? `${e.startTime}~${e.endTime}` : ''}
+              {e.memo && <span>{e.memo}</span>}
+              {e.off && <span className="ml-1 text-red-500">🌙 휴무</span>}
             </div>
           ))}
         </div>

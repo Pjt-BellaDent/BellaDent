@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>병원 정보 ERD</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; background: #f9f9f9; }
+        h1 { text-align: center; }
+        .erd-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; }
+        .table-box {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: 350px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table-box h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+            color: #333;
+        }
+        .table-box table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-box th, .table-box td {
+            text-align: left;
+            padding: 0.4rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+        .table-box th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>병원 정보 ERD (채팅 설정 통합)</h1>
+    <div class="erd-container">
+      <div class="table-box">
+        <h2>hospital_info</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>name</td><td>string</td><td>병원명</td></tr>
+          <tr><td>address</td><td>string</td><td>주소</td></tr>
+          <tr><td>ceo</td><td>string</td><td>대표자명</td></tr>
+          <tr><td>bizNumber</td><td>string</td><td>사업자등록번호</td></tr>
+          <tr><td>phone</td><td>string</td><td>연락처</td></tr>
+          <tr><td>faqs</td><td>[object]</td><td>FAQ 목록 [{ id, question, answer, enabled }]</td></tr>
+          <tr><td>aiMode</td><td>boolean</td><td>AI 채팅 모드</td></tr>
+          <tr><td>answerTimeRange</td><td>object</td><td>자동 답변 시간대 { start, end }</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>appointments</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>userId</td><td>string</td><td>환자 ID</td></tr>
+          <tr><td>doctorId</td><td>string</td><td>담당의 ID</td></tr>
+          <tr><td>date</td><td>string</td><td>예약일 (YYYY-MM-DD)</td></tr>
+          <tr><td>startTime</td><td>string</td><td>시작 시간 (HH:MM)</td></tr>
+          <tr><td>endTime</td><td>string</td><td>종료 시간 (HH:MM)</td></tr>
+          <tr><td>chairNumber</td><td>number</td><td>진료실 번호</td></tr>
+          <tr><td>status</td><td>string</td><td>상태 (대기/진료중/진료완료)</td></tr>
+          <tr><td>department</td><td>string</td><td>진료과</td></tr>
+          <tr><td>name</td><td>string</td><td>환자명</td></tr>
+          <tr><td>birth</td><td>string</td><td>생년월일</td></tr>
+          <tr><td>title</td><td>string</td><td>시술명</td></tr>
+          <tr><td>phone</td><td>string</td><td>연락처</td></tr>
+          <tr><td>gender</td><td>string</td><td>성별</td></tr>
+          <tr><td>memo</td><td>string</td><td>메모</td></tr>
+          <tr><td>completedAt</td><td>timestamp</td><td>진료완료 시간</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>waiting</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>name</td><td>string</td><td>환자명</td></tr>
+          <tr><td>birth</td><td>string</td><td>생년월일</td></tr>
+          <tr><td>department</td><td>string</td><td>진료과</td></tr>
+          <tr><td>status</td><td>string</td><td>상태 (대기/진료중/진료완료)</td></tr>
+          <tr><td>doctor</td><td>string</td><td>담당의</td></tr>
+          <tr><td>time</td><td>string</td><td>예약 시간</td></tr>
+          <tr><td>phone</td><td>string</td><td>연락처</td></tr>
+          <tr><td>gender</td><td>string</td><td>성별</td></tr>
+          <tr><td>memo</td><td>string</td><td>메모</td></tr>
+          <tr><td>procedureTitle</td><td>string</td><td>시술명</td></tr>
+          <tr><td>createdAt</td><td>timestamp</td><td>등록 시간</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>staffSchedules</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>uid</td><td>string</td><td>직원 ID</td></tr>
+          <tr><td>name</td><td>string</td><td>직원명</td></tr>
+          <tr><td>position</td><td>string</td><td>직무</td></tr>
+          <tr><td>department</td><td>string</td><td>부서</td></tr>
+          <tr><td>scheduleDate</td><td>string</td><td>스케줄 날짜 (YYYY-MM-DD)</td></tr>
+          <tr><td>startTime</td><td>string</td><td>시작 시간 (HH:MM)</td></tr>
+          <tr><td>endTime</td><td>string</td><td>종료 시간 (HH:MM)</td></tr>
+          <tr><td>memo</td><td>string</td><td>메모</td></tr>
+          <tr><td>off</td><td>boolean</td><td>휴무 여부</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>users</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>uid</td><td>string</td><td>사용자 고유 ID</td></tr>
+          <tr><td>name</td><td>string</td><td>이름</td></tr>
+          <tr><td>birth</td><td>string</td><td>생년월일</td></tr>
+          <tr><td>phone</td><td>string</td><td>연락처</td></tr>
+          <tr><td>gender</td><td>string</td><td>성별</td></tr>
+          <tr><td>role</td><td>string</td><td>역할 (patient/staff/admin)</td></tr>
+          <tr><td>lastVisit</td><td>string</td><td>마지막 방문일</td></tr>
+          <tr><td>createdAt</td><td>timestamp</td><td>가입일</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>procedures</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>name</td><td>string</td><td>환자명</td></tr>
+          <tr><td>birth</td><td>string</td><td>생년월일</td></tr>
+          <tr><td>title</td><td>string</td><td>시술명</td></tr>
+          <tr><td>date</td><td>string</td><td>시술일</td></tr>
+          <tr><td>doctor</td><td>string</td><td>담당의</td></tr>
+          <tr><td>department</td><td>string</td><td>진료과</td></tr>
+          <tr><td>time</td><td>string</td><td>시술 시간</td></tr>
+          <tr><td>createdAt</td><td>timestamp</td><td>등록 시간</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>records</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>userId</td><td>string</td><td>환자 ID</td></tr>
+          <tr><td>appointmentId</td><td>string</td><td>예약 ID</td></tr>
+          <tr><td>diagnosis</td><td>string</td><td>진단</td></tr>
+          <tr><td>treatment</td><td>string</td><td>치료 내용</td></tr>
+          <tr><td>doctorId</td><td>string</td><td>담당의 ID</td></tr>
+          <tr><td>date</td><td>string</td><td>진료일</td></tr>
+        </table>
+      </div>
+
+      <div class="table-box">
+        <h2>onsitePatients</h2>
+        <table>
+          <tr><th>필드</th><th>타입</th><th>설명</th></tr>
+          <tr><td>name</td><td>string</td><td>환자명</td></tr>
+          <tr><td>birth</td><td>string</td><td>생년월일</td></tr>
+          <tr><td>gender</td><td>string</td><td>성별</td></tr>
+          <tr><td>phone</td><td>string</td><td>연락처</td></tr>
+          <tr><td>address</td><td>string</td><td>주소</td></tr>
+          <tr><td>insuranceNumber</td><td>string</td><td>보험번호</td></tr>
+          <tr><td>firstVisitDate</td><td>string</td><td>최초 방문일</td></tr>
+          <tr><td>lastVisitDate</td><td>string</td><td>마지막 방문일</td></tr>
+          <tr><td>createdAt</td><td>timestamp</td><td>등록 시간</td></tr>
+        </table>
+      </div>
+    </div>
+</body>
+</html> 
