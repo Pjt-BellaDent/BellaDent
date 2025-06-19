@@ -129,7 +129,7 @@ function Doctors() {
             <div>
               <Text CN="text-lg">text</Text>
               <Title CN="text-4xl">title</Title>
-              <Button CN="bg-blue-500 text-white w-40 py-4 rounded-2xl text-md mt-4">
+              <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
                 button
               </Button>
             </div>

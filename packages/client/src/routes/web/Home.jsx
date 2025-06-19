@@ -83,7 +83,6 @@ function Home() {
     },
   ];
 
-
   return (
     <>
       <Carousel images={carousel1Images} CN={'max-h-full'} />
@@ -102,7 +101,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
               button
             </Button>
           </Card>
@@ -114,7 +113,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
               button
             </Button>
           </Card>
@@ -190,7 +189,7 @@ function Home() {
             <Title CN="text-4xl">title</Title>
           </ScrollFadeIn>
           <Text CN="text-lg">text</Text>
-          <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+          <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
             button
           </Button>
         </Card>
@@ -216,7 +215,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
               button
             </Button>
           </Card>
@@ -248,7 +247,7 @@ function Home() {
           <Title CN="text-right text-2xl">title</Title>
         </ScrollFadeIn>
         <Text CN="text-right">text</Text>
-        <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+        <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
           button
         </Button>
       </ScrollBgBox>
@@ -263,7 +262,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="bg-BD-CharcoalBlack text-BD-ElegantGold w-40 py-4 rounded-2xl text-md mt-4">
+            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
               button
             </Button>
           </CardCarousel>

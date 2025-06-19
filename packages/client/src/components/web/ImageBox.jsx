@@ -9,7 +9,7 @@ function ImageBox({ images, CN, CCN, setThumbnail }) {
             src={image}
             alt={image}
             onClick={() => setThumbnail(image)}
-            className="object-cover rounded-2xl"
+            className="object-cover rounded-xl"
           />
         </div>
       ))}
