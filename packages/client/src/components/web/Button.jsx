@@ -3,7 +3,7 @@ import React from 'react';
 function Button({ children, CN, CLICK }) {
   return (
     <>
-      <button type="button" className={CN} onClick={CLICK}>
+      <button type="button" className={`text-lg ${CN}`} onClick={CLICK}>
         {children}
       </button>
     </>

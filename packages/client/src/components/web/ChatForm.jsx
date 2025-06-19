@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
@@ -14,13 +14,6 @@ function ChatForm() {
   const [modalMessage, setModalMessage] = useState('');
   const [aiReply, setAiReply] = useState(false);
   const [isAiActive, setIsAiActive] = useState(true);
-
-  useEffect(() => {
-    if (!userInfo) {
-      // setModalMessage('로그인 후 상담을 이용해주세요.');
-      // setShowModal(true);
-    }
-  }, [userInfo]);
 
   useEffect(() => {
     if (!userInfo) return;
@@ -50,6 +43,12 @@ function ChatForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.question.trim()) return;
+
+    if (!userInfo) {
+      setModalMessage('로그인 후 이용 가능합니다.');
+      setShowModal(true);
+      return;
+    }
 
     try {
       const url = 'http://localhost:3000/consultations';
@@ -101,7 +100,7 @@ function ChatForm() {
         <div className="mt-4 flex items-center gap-2">
           <input
             type="text"
-            className="flex-1 border px-4 py-2 rounded text-sm"
+            className="flex-1 px-6 py-2 rounded outline-1 -outline-offset-1 hover:-outline-offset-2 bg-BD-WarmBeige outline-BD-CoolGray hover:outline-BD-CharcoalBlack focus:outline-BD-CharcoalBlack duration-300"
             name="question"
             value={formData.question}
             onChange={handleChange}
@@ -110,7 +109,7 @@ function ChatForm() {
           <button
             type="submit"
             onClick={handleSubmit}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+            className="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300"
           >
             전송
           </button>
