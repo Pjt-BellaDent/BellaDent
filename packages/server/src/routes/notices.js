@@ -15,7 +15,7 @@ import {
 } from "../middleware/roleCheck.js";
 
 const router = express.Router();
-const auth = authenticateFirebaseToken; // Firebase 인증 미들웨어
+const auth = authenticateFirebaseToken;
 
 router.post("/", auth, managerRoleCheck, createNotice); // 공지 사항 작성
 router.get("/", readAllNotices); // 모든 공지 사항 조회
