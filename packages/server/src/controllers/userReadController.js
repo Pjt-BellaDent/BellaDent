@@ -377,7 +377,149 @@ export const getStaffById = async (req, res) => {
 // 전체 직원 정보 조회
 export const getAllStaff = async (req, res) => {
   try {
-    // 테스트용 더미 데이터 (ERD 구조에 맞게 수정)
+    // 실제 DB 조회
+    const staffSnapshot = await db
+      .collection("users")
+      .where("role", "in", ["staff", "manager", "admin"])
+      .get();
+
+    if (staffSnapshot.empty) {
+      // 실제 데이터가 없을 때 테스트용 더미 데이터 반환
+      console.log("실제 직원 데이터가 없어서 더미 데이터를 반환합니다.");
+      const dummyStaff = [
+        {
+          uid: "staff1",
+          email: "doctor1@belladent.com",
+          role: "staff",
+          name: "김치과 원장",
+          phone: "010-1234-5678",
+          address: "서울시 강남구",
+          gender: "남",
+          birth: "1980-01-01",
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          position: "원장",
+          department: "보철과",
+          joinDate: "2020-01-01",
+          licenseNumber: "12345",
+          memo: "보철 전문",
+          staffInfo: {
+            position: "원장",
+            department: "보철과",
+            joinDate: "2020-01-01",
+            isRetired: false,
+            licenseNumber: "12345",
+            memo: "보철 전문"
+          }
+        },
+        {
+          uid: "staff2",
+          email: "doctor2@belladent.com",
+          role: "staff",
+          name: "이보철 선생",
+          phone: "010-2345-6789",
+          address: "서울시 서초구",
+          gender: "여",
+          birth: "1985-02-02",
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          position: "선생",
+          department: "보철과",
+          joinDate: "2021-03-01",
+          licenseNumber: "23456",
+          memo: "임플란트 전문",
+          staffInfo: {
+            position: "선생",
+            department: "보철과",
+            joinDate: "2021-03-01",
+            isRetired: false,
+            licenseNumber: "23456",
+            memo: "임플란트 전문"
+          }
+        },
+        {
+          uid: "staff3",
+          email: "doctor3@belladent.com",
+          role: "staff",
+          name: "박교정 원장",
+          phone: "010-3456-7890",
+          address: "서울시 송파구",
+          gender: "남",
+          birth: "1982-03-03",
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          position: "원장",
+          department: "교정과",
+          joinDate: "2019-06-01",
+          licenseNumber: "34567",
+          memo: "교정 전문",
+          staffInfo: {
+            position: "원장",
+            department: "교정과",
+            joinDate: "2019-06-01",
+            isRetired: false,
+            licenseNumber: "34567",
+            memo: "교정 전문"
+          }
+        }
+      ];
+
+      return res.status(200).json({
+        staffInfo: dummyStaff,
+        message: "더미 직원 정보 조회 성공",
+      });
+    }
+
+    const staffPromises = staffSnapshot.docs.map(async (userDoc) => {
+      const userData = userDoc.data();
+      const userId = userDoc.id; // 문서 ID를 사용
+
+      // 하위 컬렉션에서 직원 정보 조회
+      const staffDoc = await userDoc.ref
+        .collection("staffs")
+        .doc(userId)
+        .get();
+
+      let staffData = null;
+      if (staffDoc.exists) {
+        staffData = staffDoc.data();
+      }
+
+      const userInfo = {
+        uid: userId,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name,
+        phone: userData.phone,
+        address: userData.address,
+        gender: userData.gender,
+        birth: userData.birth,
+        isActive: userData.isActive,
+        createdAt: userData.createdAt,
+        updatedAt: userData.updatedAt,
+        position: staffData?.position || '',
+        department: staffData?.department || '',
+        joinDate: staffData?.joinDate || '',
+        licenseNumber: staffData?.licenseNumber || '',
+        memo: staffData?.memo || '',
+        staffInfo: staffData,
+      };
+
+      return userInfo;
+    });
+
+    const allStaff = await Promise.all(staffPromises);
+
+    res.status(200).json({
+      staffInfo: allStaff,
+      message: "전체 직원 정보 조회 성공",
+    });
+
+    // 테스트용 더미 데이터 (ERD 구조에 맞게 수정) - 주석 처리
+    /*
     const dummyStaff = [
       {
         uid: "staff1",
@@ -504,56 +646,6 @@ export const getAllStaff = async (req, res) => {
     // 실제 DB 조회 대신 더미 데이터 반환
     res.status(200).json({
       staffInfo: dummyStaff,
-      message: "전체 직원 정보 조회 성공",
-    });
-
-    // 실제 DB 조회 코드는 주석 처리
-    /*
-    const staffSnapshot = await db
-      .collection("users")
-      .where("role", "in", ["staff", "manager", "admin"])
-      .get();
-
-    if (staffSnapshot.empty) {
-      return res.status(404).json({ message: "조회된 직원 정보가 없습니다." });
-    }
-
-    const staffPromises = staffSnapshot.docs.map(async (userDoc) => {
-      const userData = userDoc.data();
-      const userId = userData.id;
-
-      const staffDoc = await userDoc.ref
-        .collection("staffs")
-        .doc(userId)
-        .get();
-
-      let staffData = null;
-      if (staffDoc.exists) {
-        staffData = staffDoc.data();
-      }
-
-      const userInfo = {
-        id: userId,
-        email: userData.email,
-        role: userData.role,
-        name: userData.name,
-        phone: userData.phone,
-        address: userData.address,
-        gender: userData.gender,
-        birth: userData.birth,
-        isActive: userData.isActive,
-        createdAt: userData.createdAt,
-        updatedAt: userData.updatedAt,
-        staffInfo: staffData,
-      };
-
-      return userInfo;
-    });
-
-    const allStaff = await Promise.all(staffPromises);
-
-    res.status(200).json({
-      staffInfo: allStaff,
       message: "전체 직원 정보 조회 성공",
     });
     */

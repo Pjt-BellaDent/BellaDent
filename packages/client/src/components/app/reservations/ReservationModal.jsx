@@ -112,10 +112,12 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
 
   useEffect(() => {
     if (birthYear && birthMonth && birthDay) {
-      setForm(prev => ({ ...prev, birth: `${birthYear}-${birthMonth}-${birthDay}` }));
-    } else {
-      setForm(prev => ({ ...prev, birth: '' }));
+      const newBirth = `${birthYear}-${birthMonth}-${birthDay}`;
+      if (form.birth !== newBirth) {
+        setForm(prev => ({ ...prev, birth: newBirth }));
+      }
     }
+    // else는 form.birth를 ''로 덮어쓰지 않음
   }, [birthYear, birthMonth, birthDay]);
 
   const handleNameChange = (e) => {
@@ -130,29 +132,23 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     }
     const matches = patients.filter(p => p.name === value);
     setNameMatches(matches);
-    if (matches.length === 1) {
+    if (matches.length >= 1) {
       const found = matches[0];
+      let y = '', m = '', d = '';
+      if (found.birth && found.birth.includes('-')) {
+        [y, m, d] = found.birth.split('-');
+      } else if (found.birth && found.birth.length === 8) {
+        y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
+      }
+      setBirthYear(y); setBirthMonth(m); setBirthDay(d);
       setForm(prev => ({
         ...prev,
         userId: found.id || found.userId || '',
         phone: found.phone || '',
         gender: found.gender || '',
-        ...(found.birth ? (() => {
-          let y = '', m = '', d = '';
-          if (found.birth.includes('-')) {
-            [y, m, d] = found.birth.split('-');
-          } else if (found.birth.length === 8) {
-            y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
-          }
-          setBirthYear(y); setBirthMonth(m); setBirthDay(d);
-          return { birth: `${y}-${m}-${d}` };
-        })() : {})
+        birth: found.birth || ''
       }));
-      setShowPhoneDropdown(false);
-    } else if (matches.length > 1) {
-      setShowPhoneDropdown(true);
-      setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
-      setBirthYear(''); setBirthMonth(''); setBirthDay('');
+      setShowPhoneDropdown(matches.length > 1);
     } else {
       setShowPhoneDropdown(false);
       setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
