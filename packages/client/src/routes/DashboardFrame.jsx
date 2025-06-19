@@ -1,7 +1,7 @@
 import React, {  useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../layout/Sidebar';
-import NoticeModal from '../components/modals/NoticeModal.jsx';
+import NoticeModal from '../components/Notice/NoticeModal.jsx';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';
 
 function DashboardFrame() {
