@@ -90,14 +90,14 @@ function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
                       <div className="flex gap-4">
                         <button
                           type="button"
-                          className="flex items-center justify-center rounded-xl bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
+                          className="text-nowrap px-6 py-2 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
                           onClick={handleEdit}
                         >
                           수정
                         </button>
                         <button
                           type="button"
-                          className="flex items-center justify-center rounded-xl bg-BD-CoolGray text-BD-SoftGrayLine outline-2 -outline-offset-2 outline-BD-CoolGray px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-SoftGrayLine  hover-visible:outline-BD-SoftGrayLine hover:text-BD-CoolGray focus:bg-BD-SoftGrayLine  focus-visible:outline-BD-SoftGrayLine focus:text-BD-CoolGray duration-300"
+                          className="text-nowrap px-6 py-2 text-xl rounded bg-BD-DangerRed text-BD-PureWhite hover:bg-BD-DangerRedDark duration-300 cursor-pointer"
                           onClick={handleDelete}
                         >
                           삭제
