@@ -101,7 +101,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+            <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
               button
             </Button>
           </Card>
@@ -113,7 +113,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+            <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
               button
             </Button>
           </Card>
@@ -189,7 +189,7 @@ function Home() {
             <Title CN="text-4xl">title</Title>
           </ScrollFadeIn>
           <Text CN="text-lg">text</Text>
-          <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+          <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
             button
           </Button>
         </Card>
@@ -215,7 +215,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+            <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
               button
             </Button>
           </Card>
@@ -247,7 +247,7 @@ function Home() {
           <Title CN="text-right text-2xl">title</Title>
         </ScrollFadeIn>
         <Text CN="text-right">text</Text>
-        <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+        <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
           button
         </Button>
       </ScrollBgBox>
@@ -262,7 +262,7 @@ function Home() {
               <Title CN="text-4xl">title</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">text</Text>
-            <Button CN="px-6 py-2 rounded bg-BD-ElegantGold text-BD-CharcoalBlack hover:bg-BD-CharcoalBlack hover:text-BD-PureWhite duration-300 mt-4">
+            <Button CN="mt-4 px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer">
               button
             </Button>
           </CardCarousel>

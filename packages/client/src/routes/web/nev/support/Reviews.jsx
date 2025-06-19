@@ -36,9 +36,9 @@ function Reviews() {
 
   if (userInfo !== null) {
     const url = `http://localhost:3000/reviews/${userInfo.id}`;
-    const readDisabledPosts = async () => {
+    const readDisabledGets = async () => {
       try {
-        const res = await axios.post(
+        const res = await axios.get(
           url,
           {},
           {
@@ -55,7 +55,7 @@ function Reviews() {
         }
       }
     };
-    readDisabledPosts();
+    readDisabledGets();
   }
 
   return (
@@ -85,7 +85,7 @@ function Reviews() {
         <RowBox CN="justify-between items-center">
           <Title CN="text-4xl">이용 후기 목록</Title>
           <Button
-            CN="flex items-center justify-center rounded-xl bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
+            CN="px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             CLICK={() => {
               if (activeReview == false) {
                 setActiveReview(!activeReview);
