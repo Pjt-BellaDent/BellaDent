@@ -28,7 +28,7 @@ router.post(
 router.post("/ai", authenticateFirebaseToken, patientRoleCheck, aiChatBotReply);
 router.post("/staff", authenticateFirebaseToken, staffRoleCheck, staffReply);
 router.get(
-  "/:id",
+  "/",
   authenticateFirebaseToken,
   staffRoleCheck,
   getAllConsultations
