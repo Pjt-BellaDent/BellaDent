@@ -11,6 +11,7 @@ import {
   getDoc,
   serverTimestamp,
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { db } from '../../../config/firebase';
 
 const ChatWrapper = styled.div`
@@ -51,13 +52,14 @@ const ChatMessages = styled.div`
 `;
 
 const Message = styled.div`
-  align-self: ${(props) => (props.type === 'staff' ? 'flex-start' : 'flex-end')};
-  background: ${(props) => (props.type === 'staff' ? '#cfe2ff' : '#fff3cd')};
-  color: black;  // ✅ 글자가 잘 보이게
+  align-self: ${({ type }) => (type === 'staff' ? 'flex-start' : 'flex-end')};
+  background: ${({ type }) => (type === 'staff' ? '#cfe2ff' : '#fff3cd')};
+  color: black;
   padding: 10px;
   margin: 6px 0;
   border-radius: 6px;
   max-width: 60%;
+  word-break: break-word;
 `;
 
 const TypingBubble = styled.div`
@@ -97,6 +99,9 @@ const ChatItem = styled.div`
   padding: 12px 16px;
   border-bottom: 1px solid #ddd;
   cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   &:hover {
     background: #eee;
   }
@@ -108,7 +113,8 @@ const Chat = () => {
   const [userList, setUserList] = useState([]);
   const [chatData, setChatData] = useState({});
   const [isTyping, setIsTyping] = useState(false);
-  const [staffUid] = useState('STAFF_UID');
+  const auth = getAuth();
+  const staffUid = auth.currentUser?.uid;
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
 
@@ -132,6 +138,7 @@ const Chat = () => {
             id: docSnap.id,
             name,
             status: data.status,
+            hasUnread: data.hasUnread || false,
           };
         })
       );
@@ -145,9 +152,21 @@ const Chat = () => {
     const msgRef = collection(db, `consultations/${activeUser}/messages`);
     const q = query(msgRef, orderBy('sentAt'));
     const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => doc.data());
+      const msgs = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          ...data,
+          content: data.content || data.message || '',
+          senderType: data.senderType,
+        };
+      });
       setChatData(prev => ({ ...prev, [activeUser]: msgs }));
     });
+
+    updateDoc(doc(db, 'consultations', activeUser), {
+      hasUnread: false,
+    });
+
     return () => unsub();
   }, [activeUser]);
 
@@ -162,7 +181,7 @@ const Chat = () => {
 
   const sendMessage = async () => {
     const text = inputText.trim();
-    if (!text || !activeUser) return;
+    if (!text || !activeUser || !staffUid) return;
 
     const msgRef = collection(db, `consultations/${activeUser}/messages`);
     await addDoc(msgRef, {
@@ -177,6 +196,7 @@ const Chat = () => {
       handlerId: staffUid,
       status: 'responded',
       typing: false,
+      hasUnread: false,
     });
 
     setInputText('');
@@ -192,7 +212,8 @@ const Chat = () => {
         <h3 style={{ padding: '16px', margin: 0 }}>상담 목록</h3>
         {userList.map(user => (
           <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
-            {user.name}
+            <span>{user.name}</span>
+            {user.hasUnread && <span style={{ color: 'red' }}>●</span>}
           </ChatItem>
         ))}
       </ChatList>
@@ -204,7 +225,9 @@ const Chat = () => {
 
         <ChatMessages>
           {messages.map((msg, idx) => (
-            <Message key={idx} type={msg.senderType}>{msg.content}</Message>
+            <Message key={idx} type={msg.senderType === 'patient' ? 'patient' : 'staff'}>
+              {msg.content}
+            </Message>
           ))}
           {isTyping && <TypingBubble>입력 중...</TypingBubble>}
         </ChatMessages>
