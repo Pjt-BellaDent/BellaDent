@@ -14,14 +14,6 @@ export const fetchProceduresByName = async (name, birth) => {
   return data;
 };
 
-export const fetchAppointmentsByName = async (name, birth) => {
-  if (!name || !birth) throw new Error("이름과 생년월일이 필요합니다.");
-  const { data } = await axios.get('/appointments', {
-    params: { name, birth }
-  });
-  return data;
-};
-
 export const fetchAppointments = async (month) => {
   const { data } = await axios.get('/appointments', {
     params: { month }
