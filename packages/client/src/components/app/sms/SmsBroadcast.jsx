@@ -4,6 +4,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import axios from 'axios';
 
 // 스타일 정의
 const Container = styled.div`
@@ -144,7 +145,7 @@ const DarkCalendarWrapper = styled.div`
   }
 
   .react-calendar__navigation button:hover:enabled {
-    color: #f87171; /* 은은한 hover 효과 */
+    color: #f87171;
   }
 
   .react-calendar__navigation button:disabled {
@@ -182,7 +183,7 @@ const DarkCalendarWrapper = styled.div`
     font-weight: 500;
   }
 `;
-// 날짜 관련
+
 const SmsBroadcast = () => {
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -195,8 +196,15 @@ const SmsBroadcast = () => {
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const snapshot = await getDocs(collection(db, 'patients'));
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const snapshot = await getDocs(collection(db, 'users'));
+      const data = snapshot.docs.map(doc => {
+        const user = doc.data();
+        return {
+          id: doc.id,
+          name: user.name,
+          phone: user.phone,
+        };
+      });
       setPatients(data);
     };
     fetchPatients();
