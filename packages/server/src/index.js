@@ -19,6 +19,7 @@ import waitingRouter from './routes/waiting.js';
 import patientsRouter from "./routes/patients.js";
 import hospitalRouter from './routes/hospital.js';
 import activitiesRouter from './routes/activities.js';
+import aiChatRouter from './routes/aiChat.js';
 
 import noticeRoutes from './routes/notices.js';
 import smsRoutes from './routes/sms.js';
@@ -54,6 +55,7 @@ app.use('/waiting', waitingRouter);
 app.use("/patients", patientsRouter);
 app.use('/hospital', hospitalRouter);
 app.use('/activities', activitiesRouter);
+app.use('/ai', aiChatRouter);
 
 // ===== 404 핸들러 =====
 app.use((req, res) => {
