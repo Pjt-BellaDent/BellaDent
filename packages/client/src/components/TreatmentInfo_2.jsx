@@ -1,21 +1,22 @@
 import React from 'react';
-import dentistry from '../assets/dentistry.png';
+import LineImageBanner from './web/LineImageBanner';
+import line_banner from '../assets/images/line_banner.png';
+import Title from './/web/Title';
+import Text from './/web/Text';
 
 function TreatmentInfo_2() {
   return (
     <>
-      <div className="relative">
-        <img
-          src={dentistry}
-          alt="dentistry"
-          className="w-full h-50 object-cover"
-        />
-
-        <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20 text-[32px]">
-          <b>비급여 항목 안내</b>
-        </p>
-        <div className="mt-16 mb-3 mx-5"></div>
-      </div>
+      <LineImageBanner
+        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        image={line_banner}
+      >
+        <div className="flex flex-col justify-center items-center mt-16 mb-3 mx-5">
+          <Title CN="text-4xl text-center text-BD-CharcoalBlack text-shadow-lg/20"><b>비급여 항목 안내</b></Title>
+          <Text CN="text-xl text-center">Non-covered items information</Text>
+        </div>
+      </LineImageBanner>
+      <div className="mt-16 mb-3 mx-5"></div>
 
       <div className="max-w-300 mx-auto">
         <title>non-covered items</title>

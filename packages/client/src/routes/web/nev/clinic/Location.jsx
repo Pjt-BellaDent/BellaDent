@@ -27,8 +27,8 @@ function location() {
         image={line_banner}
       >
         <div className="flex flex-col justify-center items-center">
-          <Title CN="text-4xl text-center">Welcome to Our Clinic</Title>
-          <Text CN="text-xl text-center">Your health is our priority</Text>{' '}
+          <Title CN="text-4xl text-center"><b>오시는 길 안내</b></Title>
+          <Text CN="text-xl text-center">"How to get here?"</Text>{' '}
         </div>
       </LineImageBanner>
       
