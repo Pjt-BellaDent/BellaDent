@@ -1,8 +1,10 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// 웹 전용 프레임 및 라우트
+// 웹 전용 프레임
 import Frame from './routes/web/Frame';
+
+// 사용자용 웹 라우트
 import Home from './routes/web/Home';
 import SignIn from './routes/web/users/SignIn';
 import SignUp from './routes/web/users/SignUp';
