@@ -1,7 +1,5 @@
-import {
-  updateUserSchema,
-} from "../models/user.js";
-import { db } from "../config/firebase.js";
+import { updateUserSchema } from "../models/user.js";
+import { db, auth } from "../config/firebase.js";
 import { Timestamp } from "firebase-admin/firestore";
 
 // 홈페이지 회원 정보 수정
@@ -248,14 +246,25 @@ export const enableUser = async (req, res) => {
   const paramsId = req.params.id;
 
   try {
-    // Firestore에서 수정 대상 사용자의 현재 정보 및 역할을 조회
+    // 1. Firebase Authentication Custom Claim 업데이트
+    const userRecord = await auth.getUser(paramsId);
+    const currentClaims = userRecord.customClaims || {};
+
+    await auth.setCustomUserClaims(paramsId, {
+      ...currentClaims,
+      isActive: true, // isActive를 true로 설정
+    });
+    console.log(`Custom claim isActive: true set for user ${paramsId}`);
+
+    // 2. Firestore 문서 업데이트 (isActive 필드)
     const userDocRef = db.collection("users").doc(paramsId);
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
+      console.error(`Firestore 문서 없음 for user: ${paramsId}`);
       return res
         .status(404)
-        .json({ message: "수정하려는 사용자를 찾을 수 없습니다." });
+        .json({ message: "활성화하려는 사용자를 찾을 수 없습니다." });
     }
 
     const batch = db.batch(); // Batch 인스턴스 생성
@@ -268,11 +277,12 @@ export const enableUser = async (req, res) => {
 
     batch.update(userDocRef, updateData);
 
-    await batch.commit();
+    await batch.commit(); // Batch 실행
     console.log(`사용자 ${paramsId} 계정 활성화 성공`);
 
     res.status(200).json({ message: "계정 활성화 성공" });
   } catch (err) {
+    console.error(`사용자 ${paramsId} 계정 활성화 중 오류 발생:`, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -282,14 +292,25 @@ export const disabledUser = async (req, res) => {
   const paramsId = req.params.id;
 
   try {
-    // Firestore에서 수정 대상 사용자의 현재 정보 및 역할을 조회
+    // 1. Firebase Authentication Custom Claim 업데이트
+    const userRecord = await auth.getUser(paramsId);
+    const currentClaims = userRecord.customClaims || {};
+
+    await auth.setCustomUserClaims(paramsId, {
+      ...currentClaims,
+      isActive: false, // isActive를 false로 설정
+    });
+    console.log(`Custom claim isActive: false set for user ${paramsId}`);
+
+    // 2. Firestore 문서 업데이트 (isActive 필드)
     const userDocRef = db.collection("users").doc(paramsId);
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
+      console.error(`Firestore 문서 없음 for user: ${paramsId}`);
       return res
         .status(404)
-        .json({ message: "수정하려는 사용자를 찾을 수 없습니다." });
+        .json({ message: "비활성화하려는 사용자를 찾을 수 없습니다." });
     }
 
     const batch = db.batch(); // Batch 인스턴스 생성
@@ -302,11 +323,20 @@ export const disabledUser = async (req, res) => {
 
     batch.update(userDocRef, updateData);
 
-    await batch.commit();
-    console.log(`사용자 ${paramsId} 계정 비활성화 성공`);
+    await batch.commit(); // Batch 실행
+    console.log(
+      `사용자 ${paramsId} 계정 비활성화 성공 (Firestore 업데이트 완료)`
+    );
+
+    // 3. (선택 사항이지만 권장) 사용자의 기존 세션 무효화
+    await auth.revokeRefreshTokens(paramsId);
+    console.log(
+      `Refresh tokens revoked for user ${paramsId}. User must re-authenticate.`
+    );
 
     res.status(200).json({ message: "계정 비활성화 성공" });
   } catch (err) {
+    console.error(`사용자 ${paramsId} 계정 비활성화 중 오류 발생:`, err);
     res.status(500).json({ error: err.message });
   }
 };
