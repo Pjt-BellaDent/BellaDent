@@ -16,5 +16,8 @@
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev",
     "function": "yarn workspace functions run deploy"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
   }
 }
