@@ -1,7 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import { db, admin } from '../config/firebase.js';
-import { getChatbotSettings, updateChatbotSettings } from './aiChatController.js';
+import { getChatbotSettings, updateChatbotSettings } from '../controllers/aiChatController.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
