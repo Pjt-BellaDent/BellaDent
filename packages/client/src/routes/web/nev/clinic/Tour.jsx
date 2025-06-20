@@ -37,7 +37,7 @@ function Tour() {
         image={line_banner}
       >
         <div className="flex flex-col justify-center items-center">
-          <Title CN="text-4xl text-center">치과병원 내부 둘러 보기</Title>
+          <Title CN="text-4xl text-center"><b>치과병원 내부 둘러 보기</b></Title>
           <Text CN="text-xl text-center">Take a look inside our dental clinic</Text>{' '}
         </div>
       </LineImageBanner>
