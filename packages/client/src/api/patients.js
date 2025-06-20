@@ -22,6 +22,13 @@ export const fetchAppointmentsByName = async (name, birth) => {
   return data;
 };
 
+export const fetchAppointments = async (month) => {
+  const { data } = await axios.get('/appointments', {
+    params: { month }
+  });
+  return data;
+}
+
 export const addProcedure = async (payload) => {
   const { data } = await axios.post('/procedures', payload);
   return data;
@@ -39,5 +46,20 @@ export const deletePatient = async (id) => {
 
 export const addAppointment = async (payload) => {
   const { data } = await axios.post('/appointments', payload);
+  return data;
+};
+
+export const updateAppointment = async (id, payload) => {
+  const { data } = await axios.put(`/appointments/${id}`, payload);
+  return data;
+}
+
+export const deleteAppointment = async (id) => {
+  await axios.delete(`/appointments/${id}`);
+  return true;
+}
+
+export const addWaitingPatient = async (payload) => {
+  const { data } = await axios.post('/waiting', payload);
   return data;
 };
