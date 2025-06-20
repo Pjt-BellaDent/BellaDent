@@ -108,35 +108,38 @@ const PatientPage = ({ events }) => {
 
   const fetchPatients = async () => {
     try {
-      const data = await fetchAllPatients();
-      // 이름, 성별, 생년월일, 전화번호 4개가 모두 있는 환자만 표시
-      let validPatients = (data.patientsInfo || []).filter(p => p.name && p.gender && p.birth && p.phone);
+      const today = new Date().toISOString().slice(0, 10);
+      const waitingRes = await axios.get('/waiting', { params: { date: today } });
 
-      // waiting에서 환자별 최근 completedAt(진료완료일시) 조회
-      const waitingRes = await axios.get('/waiting/status');
-      const waitingList = waitingRes.data || [];
-      // 환자별로 가장 최근 completedAt을 lastVisitDate로 할당
-      validPatients = validPatients.map(p => {
-        const waits = waitingList.filter(w => (w.patientId && w.patientId === p.id) || (w.name === p.name && w.birth === p.birth));
-        // completedAt, latestvisit, lastVisit 등 우선순위로 찾기
-        const completedDates = waits.map(w => w.completedAt).filter(Boolean);
-        let lastVisitDate = '';
-        if (completedDates.length > 0) {
-          // 가장 최근 날짜 찾기
-          lastVisitDate = completedDates.sort((a, b) => {
-            const da = typeof a === 'object' && a._seconds ? a._seconds : Date.parse(a)/1000;
-            const db = typeof b === 'object' && b._seconds ? b._seconds : Date.parse(b)/1000;
-            return db - da;
-          })[0];
-        } else if (p.patientInfo?.lastVisitDate) {
-          lastVisitDate = p.patientInfo.lastVisitDate;
+      // [key, value] 쌍의 배열을 사용하여 Map을 올바르게 생성합니다.
+      const patientLastVisit = (waitingRes.data || []).reduce((acc, p) => {
+        if (p.status === '완료' && p.completedAt) {
+          const key = `${p.name}-${p.birth}`;
+          if (!acc[key] || new Date(p.completedAt) > new Date(acc[key])) {
+            acc[key] = p.completedAt;
+          }
         }
-        return { ...p, lastVisitDate };
-      });
-      setPatients(validPatients);
+        return acc;
+      }, {});
+      const waitingMap = new Map(Object.entries(patientLastVisit));
+      
+      const patientsRes = await fetchAllPatients();
+      // API 응답 구조에 맞게 patientsRes.patientsInfo 배열을 사용합니다.
+      const patientsArray = patientsRes.patientsInfo || [];
+
+      // 이름, 성별, 생년월일, 전화번호가 모두 있는 환자만 필터링합니다.
+      const validPatients = patientsArray.filter(p => 
+        p.name && p.gender && p.birth && p.phone
+      );
+
+      const combined = validPatients.map(p => ({
+        ...p,
+        lastVisitDate: waitingMap.get(`${p.name}-${p.birth}`) || p.patientInfo?.lastVisitDate || ''
+      }));
+      setPatients(combined);
 
       const procData = {};
-      for (let p of validPatients) {
+      for (let p of combined) {
         if (!p.name || !p.birth) continue;
         const res = await axios.get(`/procedures/name/${p.name}/${p.birth}`);
         procData[`${p.name}_${p.birth}`] = res.data;
