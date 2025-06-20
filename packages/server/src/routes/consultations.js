@@ -3,11 +3,12 @@ import {
   createOrAddMessage,
   aiChatBotReply,
   staffReply,
+  setConsultationHandler,
   getAllConsultations,
   getMessagesById,
   enableMessage,
   disabledMessage,
-  deleteConsultation
+  deleteConsultation,
 } from "../controllers/consultationsController.js";
 import {
   authenticateFirebaseToken, // 모든 보호된 라우트에 적용
@@ -26,7 +27,8 @@ router.post(
   createOrAddMessage
 );
 router.post("/ai", authenticateFirebaseToken, patientRoleCheck, aiChatBotReply);
-router.post("/staff", authenticateFirebaseToken, staffRoleCheck, staffReply);
+router.post("/handler", authenticateFirebaseToken, staffRoleCheck, staffReply);
+router.post("/staff/:id", authenticateFirebaseToken, staffRoleCheck, setConsultationHandler);
 router.get(
   "/",
   authenticateFirebaseToken,
