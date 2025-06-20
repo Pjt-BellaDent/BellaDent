@@ -12,7 +12,7 @@ import {
   addAppointment,
   updateAppointment,
   deleteAppointment,
-} from '../../../api/appointments';
+} from '../../../api/patients';
 import { fetchAllStaff } from '../../../api/scheduleApi';
 
 // ISO 8601 표준 (월요일부터 시작)에 맞는 요일 배열
