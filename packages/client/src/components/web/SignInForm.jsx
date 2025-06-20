@@ -12,31 +12,11 @@ import Title from '../web/Title.jsx';
 
 function SignInForm() {
   const navigate = useNavigate();
-  const { isLogin, userInfo, signOutUser } = useUserInfo();
-  const [comment, setComment] = useState('로그인중 입니다.');
+  const { isLogin, userInfo } = useUserInfo();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState('');
-  const [pendingLogin, setPendingLogin] = useState(false); // 로그인 후 userInfo 대기
-
-  useEffect(() => {
-    // 로그인 시도 후 userInfo가 갱신되면 분기 처리
-    if (pendingLogin && userInfo) {
-      if (userInfo.isActive === false) {
-        setModalType('error');
-        setModalMessage('비활성화된 계정입니다. 관리자에게 문의하세요.');
-        setShowModal(true);
-        setPendingLogin(false);
-        signOutUser();
-      } else if (userInfo.isActive === true) {
-        setModalType('success');
-        setModalMessage(`${userInfo.name}님 환영합니다.`);
-        setShowModal(true);
-        setPendingLogin(false);
-      }
-    }
-  }, [pendingLogin, userInfo, signOutUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,65 +24,81 @@ function SignInForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLogin) return;
+    if (isLogin) {
+      return;
+    }
+
+    setShowModal(false);
+    setModalMessage('');
+    setModalType('');
 
     try {
       await setPersistence(auth, browserSessionPersistence);
-      await signInWithEmailAndPassword(
+
+      const userCredential = await signInWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
-      setPendingLogin(true);
+
+      const user = userCredential.user;
+
+      const idTokenResult = await user.getIdTokenResult();
+      const claims = idTokenResult.claims;
+
+      const isActive =
+        claims && claims.isActive !== undefined ? claims.isActive : true;
+
+      if (isActive === false) {
+        setModalType('error');
+        setModalMessage(
+          '회원 개정이 비활성화되었습니다. 관리자에게 문의하세요.'
+        );
+        setShowModal(true);
+
+        await auth.signOut();
+        setFormData({ email: '', password: '' });
+      } else {
+        setModalType('success');
+        setModalMessage('로그인에 성공했습니다.');
+        setShowModal(true);
+        setFormData({ email: '', password: '' });
+      }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
 
-      console.error('로그인 실패:', errorCode, errorMessage);
+      let displayMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
 
       switch (errorCode) {
         case 'auth/invalid-email':
-          // 유효하지 않은 이메일 형식 처리
-          setModalType('error');
-          setModalMessage('유효하지 않은 이메일 주소 형식입니다.');
-          setShowModal(true);
+          displayMessage = '유효하지 않은 이메일 주소 형식입니다.';
           break;
         case 'auth/user-not-found':
-          // 사용자 없음 처리
-          setModalType('error');
-          setModalMessage('등록되지 않은 이메일 주소입니다.');
-          setShowModal(true);
+          displayMessage = '등록되지 않은 이메일 주소입니다.';
           break;
         case 'auth/wrong-password':
-          // 비밀번호 오류 처리
-          setModalType('error');
-          setModalMessage('비밀번호가 틀렸습니다.');
-          setShowModal(true);
+          displayMessage = '비밀번호가 틀렸습니다.';
           break;
         case 'auth/user-disabled':
-          // 계정 비활성화 처리
-          setModalType('error');
-          setModalMessage(
-            '사용자 계정이 비활성화되었습니다. 관리자에게 문의하세요.'
-          );
-          setShowModal(true);
+          displayMessage =
+            '사용자 계정이 비활성화되었습니다. 관리자에게 문의하세요.';
           break;
         case 'auth/too-many-requests':
-          // 과도한 시도 처리
-          setModalType('error');
-          setModalMessage(
-            '로그인을 너무 여러 번 시도하여 계정이 잠겼습니다. 잠시 후 다시 시도해주세요.'
-          );
-          setShowModal(true);
+          displayMessage =
+            '로그인을 너무 여러 번 시도하여 계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도해주세요.';
           break;
         default:
-          // 기타 오류 처리
-          setModalType('error');
-          setModalMessage('로그인 중 오류가 발생했습니다: ' + errorMessage);
-          setShowModal(true);
+          displayMessage = `로그인 중 오류가 발생했습니다: ${errorMessage}`;
       }
+
+      setModalType('error');
+      setModalMessage(displayMessage);
+      setShowModal(true);
+      setFormData({ email: '', password: '' });
     }
   };
+
   return (
     <>
       <div className="mx-auto max-w-full px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 shadow-xl bg-BD-PureWhite text-BD-CharcoalBlack text-md font-BD-sans">
@@ -149,7 +145,8 @@ function SignInForm() {
           </div>
         </form>
       </div>
-      {modalType === 'success' && (
+
+      {showModal && modalType === 'success' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
@@ -160,23 +157,22 @@ function SignInForm() {
               userInfo?.role === 'manager' ||
               userInfo?.role === 'admin'
             ) {
-              navigate('/');
-            } else {
               navigate('/Dashboard');
+            } else {
+              navigate('/');
             }
           }}
         >
           <Title>{modalMessage}</Title>
         </Modal>
       )}
-      {modalType === 'error' && (
+
+      {showModal && modalType === 'error' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            setFormData({ email: '', password: '' });
-            navigate(0);
           }}
         >
           <Title>{modalMessage}</Title>
