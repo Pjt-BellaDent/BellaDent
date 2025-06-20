@@ -14,11 +14,11 @@ import faqsRouter from "./routes/faqs.js";
 import appointmentsRouter from "./routes/appointments.js";
 import procedureRouter from "./routes/procedure.js";
 import staffSchedulesRouter from "./routes/staffSchedules.js";
-import messagesRouter from "./routes/messages.js";
 import statsRouter from './routes/stats.js';
 import waitingRouter from './routes/waiting.js';
 import patientsRouter from "./routes/patients.js";
 import hospitalRouter from './routes/hospital.js';
+import activitiesRouter from './routes/activities.js';
 
 import noticeRoutes from './routes/notices.js';
 import smsRoutes from './routes/sms.js';
@@ -49,11 +49,11 @@ app.use('/api/notice', noticeRoutes);
 app.use("/appointments", appointmentsRouter);
 app.use("/procedures", procedureRouter);
 app.use("/staff-schedules", staffSchedulesRouter);
-app.use("/messages", messagesRouter);
 app.use('/stats', statsRouter);
 app.use('/waiting', waitingRouter);
 app.use("/patients", patientsRouter);
 app.use('/hospital', hospitalRouter);
+app.use('/activities', activitiesRouter);
 
 // ===== 404 핸들러 =====
 app.use((req, res) => {
