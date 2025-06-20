@@ -68,7 +68,6 @@ export const UserInfoProvider = ({ children }) => {
     });
 
     return () => {
-      console.log('Cleaning up onAuthStateChanged listener.');
       unsubscribe();
     };
 
@@ -77,7 +76,6 @@ export const UserInfoProvider = ({ children }) => {
   const signOutUser = async () => {
     try {
       await signOut(auth);
-      console.log('Successfully signed out from Firebase Auth.');
     } catch (error) {
       console.error('Error signing out:', error);
       alert('로그아웃 중 오류가 발생했습니다.');

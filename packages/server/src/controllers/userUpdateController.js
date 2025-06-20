@@ -70,7 +70,6 @@ export const updateUser = async (req, res) => {
     batch.update(userDocRef, updateCommonData); // 공통 정보 update 작업 추가
 
     await batch.commit();
-    console.log(`사용자 ${paramsId} 정보 수정 성공`);
 
     res.status(200).json({ message: "회원 정보 수정 성공" });
   } catch (err) {
@@ -152,7 +151,6 @@ export const updatePatient = async (req, res) => {
     }
 
     await batch.commit();
-    console.log(`사용자 ${paramsId} 정보 수정 성공`);
 
     res.status(200).json({ message: "환자 정보 수정 성공" });
   } catch (err) {
@@ -234,7 +232,6 @@ export const updateStaff = async (req, res) => {
     }
 
     await batch.commit();
-    console.log(`사용자 ${paramsId} 정보 수정 성공`);
 
     res.status(200).json({ message: "직원 정보 수정 성공" });
   } catch (err) {
@@ -269,7 +266,6 @@ export const enableUser = async (req, res) => {
     batch.update(userDocRef, updateData);
 
     await batch.commit();
-    console.log(`사용자 ${paramsId} 계정 활성화 성공`);
 
     res.status(200).json({ message: "계정 활성화 성공" });
   } catch (err) {
@@ -303,7 +299,6 @@ export const disabledUser = async (req, res) => {
     batch.update(userDocRef, updateData);
 
     await batch.commit();
-    console.log(`사용자 ${paramsId} 계정 비활성화 성공`);
 
     res.status(200).json({ message: "계정 비활성화 성공" });
   } catch (err) {
