@@ -1,10 +1,17 @@
 import express from 'express';
 import axios from 'axios';
 import { db, admin } from '../config/firebase.js';
+import { getChatbotSettings, updateChatbotSettings } from './aiChatController.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const router = express.Router();
+
+// 챗봇 설정 조회
+router.get('/settings', getChatbotSettings);
+
+// 챗봇 설정 업데이트
+router.put('/settings', updateChatbotSettings);
 
 async function generateChatResponse(message, consultationId = 'unknown') {
   if (!message) throw new Error("질문이 없습니다.");

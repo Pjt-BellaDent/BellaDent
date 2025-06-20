@@ -1,96 +1,100 @@
 // src/app/waiting/components/WaitingStatus.jsx
 import React, { useEffect, useState } from 'react';
 import axios from '../../../libs/axiosIntance';
-
-const ROOMS = [
-  { key: '1', label: '① 진료실', doctor: '남성안', department: '보철과' },
-  { key: '2', label: '② 진료실', doctor: '염현정', department: '교정과' },
-  { key: '3', label: '③ 진료실', doctor: '김영철', department: '치주과' }
-];
-
-const MAX_WAIT = 5;
-const makeInit = () => {
-  const obj = {};
-  ROOMS.forEach(r => { obj[r.key] = { inTreatment: '', waiting: [] }; });
-  return obj;
-};
+import { fetchAllStaff } from '../../../api/scheduleApi';
 
 const WaitingStatus = () => {
-  const [rooms, setRooms] = useState(makeInit());
+  const [doctors, setDoctors] = useState([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const fetchData = async () => {
+    try {
+      const [staffRes, waitingRes] = await Promise.all([
+        fetchAllStaff(),
+        axios.get('/waiting')
+      ]);
+      
+      const staff = staffRes.filter(s => s.role === 'manager' && s.name !== '매니져');
+      const waitingList = waitingRes.data;
+
+      const doctorsMap = new Map(staff.map(doc => [doc.uid, { ...doc, 진료중: [], 대기: [] }]));
+
+      waitingList.forEach(patient => {
+        const doctor = doctorsMap.get(patient.doctorId);
+        if (doctor) {
+          if (patient.status === '진료중') {
+            doctor.진료중.push(patient);
+          } else if (patient.status === '대기') {
+            doctor.대기.push(patient);
+          }
+        }
+      });
+      setDoctors(Array.from(doctorsMap.values()));
+    } catch (err) {
+      console.error("데이터 로딩 실패", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const { data } = await axios.get('/waiting/status');
-        // 배열이면 진료과 기준으로 분류
-        if (Array.isArray(data)) {
-          const newRooms = makeInit();
-          data.forEach(item => {
-            const roomKey =
-              item.department === '보철과' ? '1'
-              : item.department === '교정과' ? '2'
-              : item.department === '치주과' ? '3'
-              : null;
-            if (roomKey) {
-              if (item.status === '진료중') {
-                newRooms[roomKey].inTreatment = item;
-              } else if (item.status !== '진료완료') {
-                newRooms[roomKey].waiting.push(item);
-              }
-            }
-          });
-          setRooms(newRooms);
-        } else {
-          setRooms(data);
-        }
-      } catch (e) {}
+    fetchData();
+    const fetchInterval = setInterval(fetchData, 5000);
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
+
+    return () => {
+      clearInterval(fetchInterval);
+      clearInterval(timeInterval);
     };
-    fetchRooms();
-    const interval = setInterval(fetchRooms, 2000);
-    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="bg-gradient-to-b from-blue-800 to-blue-400 min-h-screen flex flex-col items-center pt-10">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl px-4">
-        {ROOMS.map(room => (
-          <div key={room.key} className="bg-white border-4 border-blue-300 rounded-2xl shadow-md overflow-hidden">
-            <div className="bg-blue-700 text-white text-center text-xl font-bold py-3">
-              {room.label}
-              <div className="text-yellow-300 font-semibold text-base mt-1">원장 {room.doctor}</div>
-            </div>
-            <div className="flex flex-col justify-center items-center min-h-[80px] py-10">
-              {rooms[room.key].inTreatment && rooms[room.key].inTreatment.status === '진료중' ? (
-                <span>
-                  <span className="text-blue-700 font-bold text-2xl">진료중 </span>
-                  <span className="text-orange-500 font-bold text-2xl ml-2">{rooms[room.key].inTreatment.name}</span>
-                </span>
-              ) : (
-                <span className="text-red-600 font-bold text-2xl">준비중</span>
-              )}
-            </div>
-            <div className="bg-blue-50 py-4 min-h-[220px]">
-              {[...Array(MAX_WAIT)].map((_, i) => {
-                // '진료완료' 상태 환자는 대기열에서 제외
-                const waitingList = rooms[room.key].waiting.filter(p => p.status !== '진료완료');
-                const patient = waitingList[i];
-                return (
-                  <div key={i} className="flex items-center text-blue-800 px-6 py-2 border-b border-blue-200">
-                    <span className="w-16 font-bold">대기{i + 1}</span>
-                    <span className="flex-1 text-lg font-semibold">
-                      {patient ? patient.name : <span className="text-gray-400">-</span>}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className="flex justify-between items-center bg-blue-100 text-blue-800 font-bold px-6 py-3">
-                <span>대기인수</span>
-                <span>{rooms[room.key].waiting.filter(p => p.status !== '진료완료').length} 명</span>
+    <div className="bg-gray-900 text-white min-h-screen p-8">
+      <header className="flex justify-between items-center pb-6 border-b border-gray-700">
+        <h1 className="text-4xl font-bold">진료 현황</h1>
+        <div className="text-right">
+          <p className="text-2xl font-semibold">
+            {currentTime.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          <p className="text-4xl font-bold text-blue-400">
+            {currentTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: true })}
+          </p>
+        </div>
+      </header>
+
+      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+        {doctors.map(doctor => (
+          <div key={doctor.uid} className="bg-gray-800 rounded-lg p-6 shadow-lg">
+            <h2 className="text-2xl font-bold">{doctor.name}</h2>
+            <p className="text-blue-400 mb-6">{doctor.department}</p>
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-green-400 border-b-2 border-green-400 pb-2 mb-3">진료중</h3>
+              <div className="bg-gray-700 rounded-lg p-4 h-24 flex items-center justify-center">
+                {doctor.진료중.length > 0 ? (
+                  <span className="text-2xl font-bold">{doctor.진료중[0].name}</span>
+                ) : (
+                  <span className="text-gray-500">-</span>
+                )}
               </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-yellow-400 border-b-2 border-yellow-400 pb-2 mb-3">대기</h3>
+              <ul className="space-y-3">
+                {doctor.대기.slice(0, 5).map(patient => (
+                   <li key={patient.id} className="bg-gray-700 rounded-lg p-4 text-xl font-semibold text-center">
+                    {patient.name}
+                  </li>
+                ))}
+                {doctor.대기.length === 0 && (
+                   <li className="bg-gray-700 rounded-lg p-4 text-xl font-semibold text-center text-gray-500">
+                    -
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
         ))}
-      </div>
+      </main>
     </div>
   );
 };
