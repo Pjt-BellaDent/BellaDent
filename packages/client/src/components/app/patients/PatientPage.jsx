@@ -115,7 +115,6 @@ const PatientPage = ({ events }) => {
       // waiting에서 환자별 최근 completedAt(진료완료일시) 조회
       const waitingRes = await axios.get('/waiting/status');
       const waitingList = waitingRes.data || [];
-      console.log('waitingList:', waitingList);
       // 환자별로 가장 최근 completedAt을 lastVisitDate로 할당
       validPatients = validPatients.map(p => {
         const waits = waitingList.filter(w => (w.patientId && w.patientId === p.id) || (w.name === p.name && w.birth === p.birth));
@@ -135,7 +134,6 @@ const PatientPage = ({ events }) => {
         return { ...p, lastVisitDate };
       });
       setPatients(validPatients);
-      console.log('환자 데이터 구조 확인:', validPatients);
 
       const procData = {};
       for (let p of validPatients) {

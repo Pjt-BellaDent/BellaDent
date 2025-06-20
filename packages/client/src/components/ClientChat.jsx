@@ -46,7 +46,6 @@ function GeminiChat() {
       );
 
       // Express 서버로부터 받은 응답 데이터(result.data)를 상태에 저장
-      console.log('Express server response:', result.data); // 로그 메시지 변경
       setResponse(result.data);
     } catch (err) {
       console.error('Error calling Express server:', err); // 로그 메시지 변경
