@@ -1,6 +1,8 @@
 // ReservationTimeTable.jsx (Tailwind 버전)
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { addWaitingPatient } from '../../../api/patients';
+import axios from '../../../libs/axiosIntance';
 
 const times = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -12,18 +14,55 @@ const isTimeInReservation = (res, time) => {
   return idx >= idxStart && idx <= idxEnd;
 };
 
-function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddClick, staff = [] }) {
+function ReservationTimeTable({ selectedDate, events = [], onEdit, onAdd, staff = [], onDelete }) {
   const [detailData, setDetailData] = useState(null);
   const navigate = useNavigate();
+
+  const handleCheckIn = async (appointment) => {
+    console.log("1. 접수 시작. Appointment data:", appointment);
+
+    if (!appointment.id || !appointment.doctorId) {
+      alert("예약 정보에 ID 또는 의사 ID가 없습니다. 접수할 수 없습니다.");
+      console.error("접수 실패: 예약 정보 부족", appointment);
+      return;
+    }
+    
+    try {
+      console.log("2. 서버로 보낼 데이터 준비...");
+      const payload = {
+        name: appointment.name,
+        birth: appointment.birth,
+        phone: appointment.phone,
+        department: appointment.department,
+        doctorId: appointment.doctorId,
+        patientId: appointment.userId,
+        title: appointment.title,
+        status: '대기',
+        appointmentId: appointment.id,
+      };
+      console.log("3. 서버로 보낼 데이터:", payload);
+
+      await addWaitingPatient(payload);
+
+      console.log("4. 접수 성공!");
+      alert(`${appointment.name}님을 대기 목록에 추가했습니다.`);
+      setDetailData(null);
+
+    } catch (error) {
+      console.error('5. 접수 실패:', error);
+      const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+      alert(`대기 환자 추가에 실패했습니다: ${errorMsg}`);
+    }
+  };
 
   const getDateStr = date =>
   date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` : '';
   
   const dateStr = getDateStr(selectedDate);
   
-  const getReservation = (doctorName, time) => {
+  const getReservation = (doctorId, time) => {
     return events.find(res => {
-      const doctorMatch = (res.doctor || res.doctorId) === doctorName;
+      const doctorMatch = res.doctorId === doctorId;
       const timeMatch = isTimeInReservation(res, time);
       return doctorMatch && timeMatch;
     });
@@ -53,7 +92,7 @@ function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddCli
           </button>
           <button
             className="bg-blue-600 text-white rounded-md px-4 py-2 font-semibold text-sm hover:bg-blue-700"
-            onClick={() => onAddClick({ date: dateStr })}
+            onClick={() => onAdd({ date: dateStr })}
           >
             + 예약 등록
           </button>
@@ -78,7 +117,7 @@ function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddCli
               <tr key={time}>
                 <td className="border border-gray-200 px-3 py-2 text-center font-mono">{time}</td>
                 {staff.map(doc => {
-                  const res = getReservation(doc.name, time);
+                  const res = getReservation(doc.uid, time);
                   if (res) {
                     return (
                       <td key={doc.uid} className="border border-gray-200 p-1 align-top bg-blue-50">
@@ -93,9 +132,15 @@ function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddCli
                           <div className="text-right mt-1">
                             <button
                               className="text-blue-600 hover:underline text-xs font-semibold"
-                              onClick={(e) => { e.stopPropagation(); onEditClick(res); }}
+                              onClick={(e) => { e.stopPropagation(); onEdit(res); }}
                             >
                               수정
+                            </button>
+                            <button
+                              className="text-blue-600 hover:underline text-xs font-semibold ml-2"
+                              onClick={(e) => { e.stopPropagation(); onDelete(res.id); }}
+                            >
+                              삭제
                             </button>
                           </div>
                         </div>
@@ -106,7 +151,7 @@ function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddCli
                     <td
                       key={doc.uid}
                       className="border border-gray-200 text-center align-middle cursor-pointer hover:bg-gray-100"
-                      onClick={() => onAddClick({
+                      onClick={() => onAdd({
                         date: dateStr,
                         department: doc.department,
                         doctor: doc.name,
@@ -132,13 +177,18 @@ function ReservationTimeTable({ selectedDate, events = [], onEditClick, onAddCli
               <p><b>환자명:</b> {detailData.name} ({detailData.birth})</p>
               <p><b>연락처:</b> {detailData.phone || '-'}</p>
               <p><b>진료과:</b> {detailData.department}</p>
-              <p><b>담당의:</b> {detailData.doctor}</p>
+              <p><b>담당의:</b> {(staff.find(d => d.uid === detailData.doctorId) || {}).name || '미지정'}</p>
               <p><b>시술:</b> {detailData.title}</p>
               <p><b>시간:</b> {detailData.startTime} ~ {detailData.endTime}</p>
-              <p><b>상태:</b> {detailData.status}</p>
               <p><b>메모:</b> {detailData.memo || '-'}</p>
             </div>
-            <div className="text-right mt-4">
+            <div className="text-right mt-4 space-x-2">
+              <button
+                className="bg-blue-600 text-white rounded-md px-4 py-2 font-semibold text-sm"
+                onClick={() => handleCheckIn(detailData)}
+              >
+                접수
+              </button>
               <button
                 className="bg-gray-200 text-gray-800 rounded-md px-4 py-2 font-semibold text-sm"
                 onClick={() => setDetailData(null)}

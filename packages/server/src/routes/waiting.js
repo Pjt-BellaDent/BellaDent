@@ -9,9 +9,9 @@ import {
 
 const router = express.Router();
 
-router.get('/status', getWaitingStatus);
-router.post('/', addWaitingPatient);
-router.put('/:id', updateWaitingStatus);
-router.delete('/:id', deleteWaitingPatient);
+router.get("/", getWaitingStatus);
+router.post("/", addWaitingPatient);
+router.put("/:id", updateWaitingStatus);
+router.delete("/:id", deleteWaitingPatient);
 
 export default router;

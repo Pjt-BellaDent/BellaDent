@@ -246,42 +246,27 @@ const ReservationModal = ({ isOpen, onClose, onSave, initialData, date, staffLis
     if (!form.name) missing.push('이름');
     if (!form.department) missing.push('진료과');
     if (!form.doctor) missing.push('담당의');
-    if (!form.chairNumber) missing.push('체어번호');
     if (!userId) missing.push('환자');
-    if (!selectedTimes.length) missing.push('시간');
+    if (selectedTimes.length === 0) missing.push('예약 시간');
+
     if (missing.length > 0) {
       alert(`${missing.join(', ')} 정보를 모두 선택해 주세요.`);
       return;
     }
-    if (!isContinuous(selectedTimes)) {
-      alert('시간은 연속으로 선택되어야 합니다.');
-      return;
-    }
-    let doctor = form.doctor || initialData?.doctor || '';
-    let department = form.department || initialData?.department || '';
-    let startTime = times.find(t => t === selectedTimes[0]) || selectedTimes[0];
-    let endTime = times.find(t => t === selectedTimes[selectedTimes.length - 1]) || selectedTimes[selectedTimes.length - 1];
-    if (department && doctor) {
-      const validDoctors = DOCTOR_MAP[department];
-      if (validDoctors && !validDoctors.includes(doctor)) {
-        doctor = validDoctors[0];
-      }
-    }
+
     const payload = {
       ...form,
-      userId,
-      chairNumber: Number(form.chairNumber),
-      doctor,
-      department,
-      startTime,
-      endTime,
-      doctorId: doctor,
-      status: form.status || '대기'
+      startTime: selectedTimes[0] || '',
+      endTime: selectedTimes[selectedTimes.length - 1] || '',
+      userId: userId,
     };
-    Object.keys(payload).forEach(key => {
-      if (payload[key] === '' || payload[key] === undefined) delete payload[key];
-    });
+    
+    if (!payload.chairNumber) {
+      payload.chairNumber = '1'; // 체어번호가 없으면 1번으로 자동 할당
+    }
+
     onSave(payload);
+    onClose();
   };
 
   const { am, pm } = splitAmPm(HOUR_MAP);
@@ -394,10 +379,8 @@ const ReservationModal = ({ isOpen, onClose, onSave, initialData, date, staffLis
             <div>
               <label className="block text-sm font-medium text-gray-700">담당의</label>
               <select name="doctor" value={form.doctor} onChange={handleChange} disabled={!form.department} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                <option value="">의사 선택</option>
-                {availableDoctors.map(doc => (
-                  <option key={doc.uid} value={doc.name}>{doc.name}</option>
-                ))}
+                <option value="">담당의 선택</option>
+                {availableDoctors.map(doc => <option key={doc.uid} value={doc.name}>{doc.name}</option>)}
               </select>
             </div>
           </div>

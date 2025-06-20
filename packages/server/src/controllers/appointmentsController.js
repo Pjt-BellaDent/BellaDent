@@ -17,45 +17,31 @@ export const getTodayAppointments = async (req, res) => {
 
 // 예약 생성
 export const createAppointment = async (req, res) => {
+  const { userId, doctorId, date, startTime, endTime, chairNumber, status, department, name, birth, title, phone, gender, memo } = req.body;
+  if (!name || !birth || !date || !department || !startTime) {
+    return res.status(400).json({ error: '필수 항목 누락' });
+  }
   try {
-    // undefined → null or "" 처리
-    const safeValue = v => v === undefined ? null : v;
-    const {
-      userId,
-      doctorId,
+    const newAppointment = {
+      userId: userId || null,
+      doctorId: doctorId || null,
       date,
       startTime,
-      endTime,
-      chairNumber,
-      status,
+      endTime: endTime || startTime,
+      chairNumber: chairNumber || null,
+      status: status || '대기',
       department,
       name,
       birth,
-      title,
-      phone,
-      gender,
-      memo,
-    } = req.body;
-    if (!userId || !doctorId || !date || !startTime || !endTime || !chairNumber) {
-      return res.status(400).json({ error: "필수 항목이 누락되었습니다." });
-    }
-    const ref = await db.collection("appointments").add({
-      userId: safeValue(userId),
-      doctorId: safeValue(doctorId),
-      date: safeValue(date),
-      startTime: safeValue(startTime),
-      endTime: safeValue(endTime),
-      chairNumber: safeValue(chairNumber),
-      status: safeValue(status) || "reserved",
-      department: safeValue(department),
-      name: safeValue(name),
-      birth: safeValue(birth),
-      title: safeValue(title),
-      phone: safeValue(phone),
-      gender: safeValue(gender),
-      memo: safeValue(memo),
-    });
-    res.status(201).json({ id: ref.id });
+      title: title || 'N/A',
+      phone: phone || null,
+      gender: gender || null,
+      memo: memo || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const docRef = await db.collection('appointments').add(newAppointment);
+    res.status(201).json({ id: docRef.id, ...newAppointment });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -64,9 +50,13 @@ export const createAppointment = async (req, res) => {
 // 예약 수정
 export const updateAppointment = async (req, res) => {
   const { id } = req.params;
+  const updateData = { ...req.body, updatedAt: new Date().toISOString() };
   try {
-    await db.collection("appointments").doc(id).update(req.body);
-    res.json({ message: "예약 수정 완료" });
+    const docRef = db.collection('appointments').doc(id);
+    const doc = await docRef.get();
+    if (!doc.exists) return res.status(404).json({ error: '예약 정보를 찾을 수 없음' });
+    await docRef.update(updateData);
+    res.json({ id, ...updateData });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -97,6 +87,20 @@ export const getAppointmentsByName = async (req, res) => {
       .get();
     const result = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.status(200).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 특정 의사의 모든 예약 조회
+export const getAppointmentsByDoctorId = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const snapshot = await db.collection("appointments")
+      .where("doctorId", "==", id)
+      .get();
+    const appointments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(appointments);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

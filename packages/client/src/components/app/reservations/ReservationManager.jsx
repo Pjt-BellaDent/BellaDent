@@ -96,7 +96,7 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
         </div>
       </div>
       {/* Daily Info */}
-      <div className="flex-1 w-full lg:mt-6 transform translate-x-[10%] -translate-y-[25%] lg:transform-none">
+      <div className="flex-1 w-full mt-4 lg:mt-6">
         <div className="mb-2 text-sm min-h-[20px]">
           {closedDepts.map(d => (
             <span
@@ -119,7 +119,7 @@ const CalendarPanel = ({ selectedDate, onDateChange, events }) => {
               .map(e => (
                 <li
                   key={e.id || (e.name + e.birth + e.startTime)}
-                  className="text-[15px] bg-gray-100 mb-1.5 rounded-lg px-3 py-2 flex items-center gap-2"
+                  className="text-[15px] bg-gray-100 mb-1.5 rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-2"
                 >
                   <span className="dot w-[9px] h-[9px] rounded-full inline-block bg-blue-500" />
                   {e.startTime}
@@ -198,10 +198,10 @@ const ReservationManager = () => {
 
   const handleSave = async (formData) => {
     try {
-      if (editData?.id) {
+      if (editData && editData.id) {
         await updateAppointment(editData.id, formData);
       } else {
-        await addAppointment(formData);
+        const newAppointment = await addAppointment(formData);
       }
       setModalOpen(false);
       setEditData(null);
@@ -248,10 +248,10 @@ const ReservationManager = () => {
           <ReservationTimeTable
             selectedDate={selectedDate}
             events={events[getDateStr(selectedDate)] || []}
-            onEditClick={handleEditClick}
-            onAddClick={handleAddClick}
-            onDeleteClick={handleDelete}
             staff={staff}
+            onAdd={handleAddClick}
+            onEdit={handleEditClick}
+            onDelete={handleDelete}
           />
         </div>
       </div>
