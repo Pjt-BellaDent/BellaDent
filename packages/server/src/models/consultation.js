@@ -18,3 +18,8 @@ export const staffReplySchema = Joi.object({
 export const activeMessageSchema = Joi.object({
   consultationId: Joi.string().required(), 
 });
+
+export const handleConsultationSchema = Joi.object({
+  consultationId: Joi.string().required(),
+  handlerId: Joi.string().allow(null).required(),
+});

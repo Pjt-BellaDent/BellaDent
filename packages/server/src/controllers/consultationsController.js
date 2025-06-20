@@ -338,19 +338,65 @@ export const staffReply = async (req, res) => {
 // 전체 상담 조회
 export const getAllConsultations = async (req, res) => {
   try {
-    const consultationsDoc = await db.collection("consultations").get();
-
-    if (consultationsDoc.empty) {
-      return res.status(404).json({ message: "조회된 상담 정보가 없습니다." });
+    const consultationsSnapshot = await db
+      .collection("consultations")
+      .orderBy("updatedAt", "desc")
+      .get();
+    if (consultationsSnapshot.empty) {
+      return res
+        .status(200)
+        .json({ consultations: [], message: "조회된 상담 정보가 없습니다." });
     }
 
-    const consultationsData = consultationsDoc.docs.map((doc) => doc.data());
+    const consultationsData = await Promise.all(
+      consultationsSnapshot.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        const userId = data.userId;
+        let userName = "(이름 없음)";
+
+        let handlerName = null;
+
+        try {
+          const userDoc = await db.collection("users").doc(userId).get();
+          if (userDoc.exists) {
+            userName = userDoc.data().name || "(이름 없음)";
+          }
+
+          if (data.handlerId) {
+            const handlerDoc = await db
+              .collection("users")
+              .doc(data.handlerId)
+              .get();
+            if (handlerDoc.exists) {
+              handlerName = handlerDoc.data().name || "(알 수 없음)";
+            }
+          }
+        } catch (userErr) {
+          console.error(
+            `Error fetching user/handler name for ${userId}/${data.handlerId}:`,
+            userErr
+          );
+        }
+
+        return {
+          id: docSnap.id,
+          userId: userId,
+          name: userName,
+          status: data.status, 
+          handlerId: data.handlerId || null, 
+          handlerName: handlerName, 
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+        };
+      })
+    );
 
     res.status(200).json({
       consultations: consultationsData,
       message: "전체 상담 조회 성공",
     });
   } catch (err) {
+    console.error("Error in getAllConsultations:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -368,7 +414,9 @@ export const getMessagesById = async (req, res) => {
     // ** 1. 상담 문서 존재 여부 확인 **
     if (!consultationDoc.exists) {
       console.warn(`Consultation not found for ID: ${consultationId}`);
-      return res.status(404).json({ message: "조회된 상담 정보를 찾을 수 없습니다." });
+      return res
+        .status(404)
+        .json({ message: "조회된 상담 정보를 찾을 수 없습니다." });
     }
 
     const consultationData = consultationDoc.data();
@@ -376,8 +424,7 @@ export const getMessagesById = async (req, res) => {
     // ** 3. 메시지 하위 컬렉션 조회 **
     const messagesRef = consultationRef.collection("messages");
     // 'sentAt' 필드를 기준으로 오름차순 정렬하여 메시지 문서들 조회
-    const messagesSnap = await messagesRef.orderBy('sentAt', 'asc').get();
-
+    const messagesSnap = await messagesRef.orderBy("sentAt", "asc").get();
 
     if (messagesSnap.empty) {
       // 메시지 하위 컬렉션에 문서가 없는 경우
@@ -387,7 +434,7 @@ export const getMessagesById = async (req, res) => {
     }
 
     // 조회된 메시지 문서들을 순회하며 데이터 추출 및 가공
-    const messagesData = messagesSnap.docs.map(doc => {
+    const messagesData = messagesSnap.docs.map((doc) => {
       const messageData = doc.data();
       // 프론트엔드에서 사용할 형식으로 데이터를 가공
       // sentAt Timestamp 객체를 JavaScript Date 객체로 변환 (선택 사항)
@@ -402,18 +449,75 @@ export const getMessagesById = async (req, res) => {
       };
     });
 
-
     // ** 4. 성공 응답 (요청하신 형태로 변경!) **
     res.status(200).json({
       messages: messagesData,
     });
-
   } catch (err) {
     console.error(`getMessagesById Error for ID ${consultationId}:`, err);
     // Firestore 조회 등 예상치 못한 오류 발생 시 500 응답
     res.status(500).json({
       message: "상담 메시지 조회 중 내부 서버 오류 발생", // 오류 메시지는 'message' 키로 유지
       errorDetails: err.message, // 추가 디버깅 정보
+    });
+  }
+};
+
+// 상담 담당자 지정/해제
+export const setConsultationHandler = async (req, res) => {
+  const authenticatedUser = req.user;
+  const staffId = authenticatedUser.uid; // 요청을 보낸 스태프의 UID
+
+  // Joi 유효성 검사
+  const { value, error } = handleConsultationSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    console.error("setConsultationHandler Validation Error:", error.details);
+    return res
+      .status(400)
+      .json({ message: "Validation Error", details: error.details });
+  }
+
+  const { consultationId, handlerId } = value; // handlerId는 null 또는 직원 UID가 됨
+
+  // handlerId가 null이 아닐 경우, 요청을 보낸 스태프와 일치하는지 확인 (보안 강화)
+  if (handlerId !== null && staffId !== handlerId) {
+    return res
+      .status(403)
+      .json({ message: "요청한 스태프 ID와 일치하지 않습니다." });
+  }
+
+  try {
+    const consultationRef = db.collection("consultations").doc(consultationId);
+    const consultationDoc = await consultationRef.get();
+
+    if (!consultationDoc.exists) {
+      return res.status(404).json({ message: "해당 상담을 찾을 수 없습니다." });
+    }
+
+    const updateData = {
+      handlerId: handlerId, // null 또는 직원 UID
+      updatedAt: Timestamp.now(), // 업데이트 시각
+    };
+
+    await consultationRef.update(updateData);
+
+    const action = handlerId === null ? "해제" : "지정";
+    console.log(
+      `상담 ${consultationId}의 담당자가 ${
+        handlerId || "없음"
+      }으로 ${action}되었습니다.`
+    );
+    res
+      .status(200)
+      .json({ message: `상담 담당자가 성공적으로 ${action}되었습니다.` });
+  } catch (error) {
+    console.error("setConsultationHandler Error:", error);
+    res.status(500).json({
+      message: "상담 담당자 업데이트 중 내부 서버 오류 발생",
+      errorDetails: error.message,
     });
   }
 };
