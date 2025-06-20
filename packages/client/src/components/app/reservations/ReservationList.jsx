@@ -7,7 +7,7 @@ import {
   addAppointment,
   updateAppointment,
   deleteAppointment,
-} from '../../../api/appointments';
+} from '../../../api/patients';
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
