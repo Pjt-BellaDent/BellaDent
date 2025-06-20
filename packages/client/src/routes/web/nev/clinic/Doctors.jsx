@@ -65,8 +65,8 @@ function Doctors() {
         image={line_banner}
       >
         <div className="flex flex-col justify-center items-center">
-          <Title CN="text-4xl text-center">Welcome to Our Clinic</Title>
-          <Text CN="text-xl text-center">Your health is our priority</Text>
+          <Title CN="text-4xl text-center"><b>의료진 소개</b></Title>
+          <Text CN="text-xl text-center">medical staff introduction </Text>
         </div>
       </LineImageBanner>
 
