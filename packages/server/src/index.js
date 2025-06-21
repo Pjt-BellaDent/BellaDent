@@ -1,11 +1,11 @@
 // backend/index.js (최신 ERD, 라우트/미들웨어 통합)
-import http from 'http';
+import http from "http";
 import express from "express";
 import logger from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import initSocketServer from "./config/socketServer.js";
+import initSocketServer from "./config/socketServer.js"; // 경로 확인: config/socketServer.js
 
 import userRouter from "./routes/users.js";
 import consultationsRouter from "./routes/consultations.js";
@@ -26,7 +26,7 @@ import patientsRouter from "./routes/patients.js";
 import callRouter from "./routes/call.js";
 import hospitalRouter from "./routes/hospital.js";
 
-import noticeRoutes from "./routes/notices.js";
+import noticeRoutes from "./routes/notices.js"; // 중복 임포트 가능성 있으나, 일단 유지
 import smsRoutes from "./routes/sms.js";
 import onsiteRoutes from "./routes/onsite.js";
 import feedbackRoutes from "./routes/feedback.js";
@@ -35,6 +35,20 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// HTTP 서버 생성
+const server = http.createServer(app);
+
+// Socket.IO 서버 초기화 및 인스턴스 저장
+// initSocketServer 함수가 io 인스턴스를 반환하므로, 그 값을 받아야 합니다.
+const io = initSocketServer(server); // <--- 여기가 핵심 변경 사항! io 인스턴스를 받습니다.
+
+// 모든 요청에 io 인스턴스를 req.io로 주입하는 미들웨어
+// 모든 라우터 등록 전에 위치해야 합니다.
+app.use((req, res, next) => {
+  req.io = io; // req 객체에 io 인스턴스 주입
+  next();
+});
 
 app.use(express.json());
 app.use(cookieParser());
@@ -76,12 +90,6 @@ app.use("/hospital", hospitalRouter);
 app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
-
-// http server 생성
-const server = http.createServer(app);
-
-// 소켓 서버 초기화
-initSocketServer(server);
 
 // 서버 실행
 server.listen(port, () => {
