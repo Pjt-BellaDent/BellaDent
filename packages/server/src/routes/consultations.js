@@ -45,7 +45,7 @@ router.post(
 // --- 여기까지 수정 ---
 
 router.post(
-  "/handler/:id",
+  "/staff/:id",
   authenticateFirebaseToken,
   staffRoleCheck,
   wrapAsync(staffReply)
@@ -54,7 +54,7 @@ router.post(
 // (현재 이슈와는 별개지만 확인해보세요)
 
 router.post(
-  "/staff/:id",
+  "/handler/:id",
   authenticateFirebaseToken,
   staffRoleCheck,
   wrapAsync(setConsultationHandler)

@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from "joi";
 
 // createConsultation 함수 요청 body 스키마
 export const createOrAddMessageSchema = Joi.object({
@@ -7,19 +7,19 @@ export const createOrAddMessageSchema = Joi.object({
 
 // aiChatBot 함수 요청 body 스키마
 export const aiChatBotReplySchema = Joi.object({
-  question: Joi.string().min(1).required(), 
+  question: Joi.string().min(1).required(),
 });
 
 // staffReplyConsultation 함수 요청 body 스키마
 export const staffReplySchema = Joi.object({
-  answer: Joi.string().min(1).required(), 
+  answer: Joi.string().min(1).required(),
 });
 
 export const activeMessageSchema = Joi.object({
-  consultationId: Joi.string().required(), 
+  consultationId: Joi.string().required(),
 });
 
 export const handleConsultationSchema = Joi.object({
-  consultationId: Joi.string().required(),
   handlerId: Joi.string().allow(null).required(),
+  hasUnread: Joi.boolean().allow(null).optional(),
 });
