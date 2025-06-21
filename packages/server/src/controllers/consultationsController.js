@@ -140,30 +140,22 @@ export const createOrAddMessage = async (req, res) => {
 
 // ai 답변 등록 및 상담 갱신
 export const aiChatBotReply = async (req, res) => {
-  const authenticatedUser = req.user; // 요청한 사용자의 정보
+  const authenticatedUser = req.user;
   const consultationId = authenticatedUser.uid; // 사용자의 UID
+  const ioInstance = req.io; // <-- req 객체에서 io 인스턴스를 가져옵니다.
 
-  // ** Joi 유효성 검사 **
   const { value, error } = aiChatBotReplySchema.validate(req.body, {
     abortEarly: false,
   });
-
   if (error) {
-    console.error("aiChatBot Validation Error:", error.details);
-    return res.status(400).json({ message: "Validation Error" });
+    /* ... */
   }
-
-  // Joi 검증 통과한 value에서 데이터 추출
   const { question } = value;
 
   try {
-    // 1. 외부 AI Function 호출
     const aiFunctionUrl = process.env.FIREBASE_FUNCTION_URL;
     if (!aiFunctionUrl) {
-      console.error(
-        "aiChatBot Error: FIREBASE_FUNCTION_URL environment variable is not set."
-      );
-      return res.status(500).json({ message: "AI 서비스 URL 설정 오류." });
+      /* ... */
     }
 
     const functionResponse = await axios.post(
@@ -171,79 +163,100 @@ export const aiChatBotReply = async (req, res) => {
       { question },
       { headers: { "Content-Type": "application/json" } }
     );
-
-    // 외부 Function 응답 상태 확인 (성공적인 응답 코드가 아니면 AI 응답 실패로 간주)
     if (functionResponse.status < 200 || functionResponse.status >= 300) {
-      console.error(
-        "AI Function 호출 실패:",
-        functionResponse.status,
-        functionResponse.data
-      );
-      // AI Function에서 오류 응답을 보낸 경우
-      // message 필드로 응답을 통일하는 것을 고려
-      return res.status(functionResponse.status).json({
-        message: functionResponse.data?.message || "AI 서비스 응답 오류", // AI 응답 에러 메시지 사용 시도
-        details: functionResponse.data,
-      });
+      /* ... */
     }
-
-    // AI 응답 본문에서 답변 추출 (필드 이름 통일)
     const aiAnswer =
       functionResponse.data?.answer ||
       functionResponse.data?.message ||
-      "답변 없음"; // 둘 다 없으면 기본값
+      "답변 없음";
 
-    // ** Batch Writes 시작 **
-    const batch = db.batch(); // Batch 인스턴스 생성
-    const now = Timestamp.now(); // 현재 시각 Firestore Timestamp
-
-    const aiUid = "aiChatBot"; // 시스템에서 사용하는 ai UID (상수로 분리 고려)
+    const batch = db.batch();
+    const now = Timestamp.now();
+    const aiUid = "aiChatBot";
     const consultationRef = db.collection("consultations").doc(consultationId);
 
-    // Batch에 상담 내역 문서 update 작업 추가
-    batch.update(consultationRef, {
-      updatedAt: now, // 수정 시각 업데이트
-      status: "responded", // 상담 상태 업데이트 (AI 응답 완료)
-      handlerId: aiUid, // AI가 응답했음을 표시
-    });
+    // 상담 문서 존재 확인 및 처리 (set vs update)
+    const consultationDoc = await consultationRef.get();
 
-    // 하위 컬렉션(messages)에 ai 답변 메시지 추가를 위한 새 문서 참조 생성
-    const messageRef = consultationRef.collection("messages").doc(); // Firestore 자동 생성 ID
+    if (!consultationDoc.exists) {
+      batch.set(consultationRef, {
+        userId: consultationId,
+        createdAt: now,
+        updatedAt: now,
+        status: "responded",
+        handlerId: aiUid,
+      });
+      console.log(
+        `AI: 새 상담 문서 생성 준비: Consultation ID ${consultationId}`
+      );
+    } else {
+      batch.update(consultationRef, {
+        updatedAt: now,
+        status: "responded",
+        handlerId: aiUid,
+      });
+      console.log(`AI: 기존 상담 ${consultationId} 상위 문서 상태 갱신 준비.`);
+    }
 
-    // Batch에 하위 컬렉션 메시지 set 작업 추가
+    // 메시지 하위 컬렉션에 ai 답변 메시지 추가
+    const messageRef = consultationRef.collection("messages").doc();
     batch.set(messageRef, {
-      id: messageRef.id, // 자동 생성된 메시지 ID
-      senderId: aiUid, // AI sender ID
-      senderType: "ai", // sender 타입
-      message: aiAnswer, // 메시지 내용 (consistent name: message)
-      isActive: true, // 메시지 활성화 상태 (기본값 true)
-      sentAt: now, // 메시지 전송 시각 (Timestamp)
+      id: messageRef.id,
+      senderId: aiUid,
+      senderType: "ai",
+      message: aiAnswer, // 'message' 필드 사용
+      isActive: true,
+      sentAt: now,
     });
+    console.log(`AI: 새 AI 메시지 저장 준비: Message ID ${messageRef.id}`);
 
-    // ** Batch 실행 (상담 업데이트와 AI 메시지 추가를 원자적으로 처리) **
     await batch.commit();
     console.log(
-      `상담 내역 ${consultationId} 갱신 및 AI 답변 메시지 저장 완료.`
+      `AI: 상담 처리 완료: Consultation ID ${consultationId}, AI 답변 추가.`
     );
 
-    // 2. 프론트엔드로 AI 답변 반환
-    res.status(200).json({ message: "AI 답변 처리 성공", answer: aiAnswer }); // 상태 코드는 200으로 통일, 메시지 추가
+    // **AI 답변 메시지 브로드캐스트 (가장 중요)**
+    if (ioInstance) {
+      console.log(
+        `AI: Attempting to broadcast AI reply to room ${consultationId}`
+      );
+      ioInstance.to(consultationId).emit("newMessage", {
+        id: messageRef.id,
+        senderId: aiUid,
+        senderType: "ai",
+        content: aiAnswer,
+        sentAt: now.toDate(),
+        consultationId,
+      });
+      console.log(
+        `AI: AI 답변 broadcast 완료: ${aiAnswer} to room ${consultationId}`
+      );
+      ioInstance.emit("consultationListUpdated");
+    } else {
+      console.error("AI: ioInstance is NOT available for broadcasting!");
+    }
+
+    res.status(200).json({ message: "AI 답변 처리 성공", answer: aiAnswer });
   } catch (error) {
     console.error("aiChatBot 에러:", error);
-
-    // axios 오류 (AI Function 호출 자체 실패 또는 응답 상태 코드 오류)
-    if (error.response) {
+    // ... (기존 에러 처리 로직)
+    if (error.message && error.message.includes("No document to update")) {
+      console.error("Firestore 오류: AI 답변 시도 중 문서 없음 (NOT_FOUND).");
+      res.status(500).json({
+        message: "AI 답변 저장 중 오류 발생 (상담 문서 없음).",
+        errorDetails: error.message,
+      });
+    } else if (error.response) {
       res.status(error.response.status).json({
-        message: error.response.data?.message || "AI 서비스 응답 오류", // AI 응답의 에러 메시지 사용 시도
+        message: error.response.data?.message || "AI 서비스 응답 오류",
       });
     } else if (error.message && error.message.includes("Batch commit failed")) {
-      // Batch 쓰기 작업 중 Firestore 오류 발생
       console.error("Firestore Batch Commit 에러 (aiChatBot):", error);
       res.status(500).json({
         message: "AI 답변 저장 중 오류 발생",
       });
     } else {
-      // 네트워크 오류, 코드 내부 오류 등 기타 예상치 못한 오류
       console.error("Unexpected aiChatBot Error:", error);
       res.status(500).json({
         message: "내부 서버 오류 발생",
@@ -382,9 +395,9 @@ export const getAllConsultations = async (req, res) => {
           id: docSnap.id,
           userId: userId,
           name: userName,
-          status: data.status, 
-          handlerId: data.handlerId || null, 
-          handlerName: handlerName, 
+          status: data.status,
+          handlerId: data.handlerId || null,
+          handlerName: handlerName,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
         };
@@ -411,45 +424,53 @@ export const getMessagesById = async (req, res) => {
     const consultationRef = db.collection("consultations").doc(consultationId);
     const consultationDoc = await consultationRef.get();
 
-    // ** 1. 상담 문서 존재 여부 확인 **
+    // ** 1. 상담 문서 존재 여부 확인 및 수정된 로직 **
     if (!consultationDoc.exists) {
-      console.warn(`Consultation not found for ID: ${consultationId}`);
-      return res
-        .status(404)
-        .json({ message: "조회된 상담 정보를 찾을 수 없습니다." });
+      // 상담 문서가 존재하지 않아도 404 대신 200 OK와 빈 메시지 배열을 반환합니다.
+      // 이렇게 하면 클라이언트에서는 "메시지 없음"으로 처리하며 404 오류가 발생하지 않습니다.
+      console.log(
+        `Consultation document for ID: ${consultationId} does not exist. Returning empty messages.`
+      );
+      return res.status(200).json({ messages: [] }); // <-- 이 부분이 수정되었습니다.
     }
 
     const consultationData = consultationDoc.data();
 
-    // ** 3. 메시지 하위 컬렉션 조회 **
+    // (선택 사항) 요청하는 사용자가 해당 상담의 참여자인지 확인하는 로직을 여기에 추가할 수 있습니다.
+    // 예를 들어, `consultationData.userId`와 `requestingUserId`를 비교하거나
+    // `authenticatedUser.role`이 'staff'인지 확인하는 등입니다.
+    // if (consultationData.userId !== requestingUserId && !authenticatedUser.role.includes('staff')) {
+    //   return res.status(403).json({ message: "이 상담에 접근할 권한이 없습니다." });
+    // }
+
+    // ** 2. 메시지 하위 컬렉션 조회 **
     const messagesRef = consultationRef.collection("messages");
-    // 'sentAt' 필드를 기준으로 오름차순 정렬하여 메시지 문서들 조회
+    // 'sentAt' 필드를 기준으로 오름차순 정렬하여 메시지 문서들을 조회합니다.
     const messagesSnap = await messagesRef.orderBy("sentAt", "asc").get();
 
     if (messagesSnap.empty) {
-      // 메시지 하위 컬렉션에 문서가 없는 경우
-      console.log(`No messages found for consultation ID: ${consultationId}`);
-      // 메시지 배열만 반환하도록 요청하셨으므로, 빈 배열을 담아 200 응답
+      // 메시지 하위 컬렉션에 문서가 없는 경우에도 200 OK와 빈 배열을 반환합니다.
+      console.log(
+        `No messages found in subcollection for consultation ID: ${consultationId}`
+      );
       return res.status(200).json({ messages: [] });
     }
 
     // 조회된 메시지 문서들을 순회하며 데이터 추출 및 가공
     const messagesData = messagesSnap.docs.map((doc) => {
       const messageData = doc.data();
-      // 프론트엔드에서 사용할 형식으로 데이터를 가공
-      // sentAt Timestamp 객체를 JavaScript Date 객체로 변환 (선택 사항)
+      // 프론트엔드에서 사용할 형식으로 데이터를 가공합니다.
       return {
         id: doc.id, // 메시지 문서의 자동 생성 ID 포함
-        senderType: messageData.senderType,
-        message: messageData.message, // 메시지 내용
-        sentAt: messageData.sentAt, // Timestamp
         senderId: messageData.senderId, // 누가 보냈는지 ID
         senderType: messageData.senderType, // 보낸 사람 타입 (user, staff, ai)
+        content: messageData.message || messageData.content, // 메시지 내용 (message 또는 content)
+        sentAt: messageData.sentAt, // Timestamp (프론트엔드에서 Date 변환)
         isActive: messageData.isActive, // 활성화 상태
       };
     });
 
-    // ** 4. 성공 응답 (요청하신 형태로 변경!) **
+    // ** 3. 성공 응답 **
     res.status(200).json({
       messages: messagesData,
     });
