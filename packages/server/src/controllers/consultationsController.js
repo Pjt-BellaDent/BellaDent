@@ -7,6 +7,7 @@ import {
   aiChatBotReplySchema,
   staffReplySchema,
   activeMessageSchema,
+  handleConsultationSchema,
 } from "../models/consultation.js";
 
 dotenv.config();
@@ -51,6 +52,7 @@ export const createOrAddMessage = async (req, res) => {
         updatedAt: now, // 첫 메시지 전송 시각
         status: "pending", // 초기 상태는 '대기'
         handlerId: null, // 초기 담당자는 없음
+        hasUnread: true, // <-- 새로운 상담 생성 시 추가
       };
 
       batch.set(consultationRef, newConsultationData);
@@ -65,6 +67,7 @@ export const createOrAddMessage = async (req, res) => {
       const updateConsultationData = {
         updatedAt: now, // 마지막 메시지 시각으로 업데이트
         status: "pending",
+        hasUnread: true,
       };
       batch.update(consultationRef, updateConsultationData);
       console.log(`기존 상담 ${consultationId} 상위 문서 상태 갱신 준비.`);
@@ -186,6 +189,7 @@ export const aiChatBotReply = async (req, res) => {
         updatedAt: now,
         status: "responded",
         handlerId: aiUid,
+        hasUnread: true,
       });
       console.log(
         `AI: 새 상담 문서 생성 준비: Consultation ID ${consultationId}`
@@ -195,6 +199,7 @@ export const aiChatBotReply = async (req, res) => {
         updatedAt: now,
         status: "responded",
         handlerId: aiUid,
+        hasUnread: true,
       });
       console.log(`AI: 기존 상담 ${consultationId} 상위 문서 상태 갱신 준비.`);
     }
@@ -267,9 +272,10 @@ export const aiChatBotReply = async (req, res) => {
 
 // 스태프 답변 등록 및 상담 갱신
 export const staffReply = async (req, res) => {
-  const authenticatedUser = req.user; // 답변을 등록하는 스태프/관리자 정보 (decodedToken)
-  const staffId = authenticatedUser.uid; // 답변하는 스태프/관리자의 UID
-  const consultationId = req.params.id; // URL 파라미터에서 상담 ID 추출
+  const authenticatedUser = req.user;
+  const staffId = authenticatedUser.uid;
+  const consultationId = req.params.id;
+  const ioInstance = req.io; // <-- Socket.IO 인스턴스 가져오기
 
   // ** Joi 유효성 검사 **
   const { value, error } = staffReplySchema.validate(req.body, {
@@ -289,62 +295,64 @@ export const staffReply = async (req, res) => {
       .collection("consultations")
       .doc(consultationId)
       .get();
-
     if (!consultationDoc.exists) {
       return res
         .status(404)
         .json({ message: "답변하려는 상담을 찾을 수 없습니다." });
     }
 
-    const now = Timestamp.now(); // 현재 시각
-
-    // ** Batch Writes 시작 **
+    const now = Timestamp.now();
     const batch = db.batch();
-
     const consultationRef = db.collection("consultations").doc(consultationId);
 
-    // 1. 상담 내역 문서 갱신 (상태 및 담당자 업데이트)
+    // 1. 상담 내역 문서 갱신
     batch.update(consultationRef, {
-      updatedAt: now, // 수정 시각 업데이트
-      status: "completed", // 스태프 답변 완료 상태 (또는 'responded' 등)
-      handlerId: staffId, // 답변한 스태프/관리자의 ID
+      updatedAt: now,
+      status: "completed",
+      handlerId: staffId,
+      hasUnread: true, // 환자 측에서 읽지 않은 상태로 표시될 수 있음
     });
 
-    // 2. 하위 컬렉션(messages)에 답변 메시지 추가
-    const messageRef = consultationRef.collection("messages").doc(); // 답변 메시지 문서 자동 생성 ID
-
-    batch.set(messageRef, {
-      id: messageRef.id, // 자동 생성된 메시지 ID
-      senderId: staffId, // 답변한 스태프/관리자의 ID
-      senderType: "staff", // sender 타입은 'staff'
-      message: answer, // 메시지 내용 (consistent name: message)
-      isActive: true, // 메시지 활성화 상태 (기본값 true)
-      sentAt: now, // 메시지 전송 시각 (Timestamp)
+    // 2. 메시지 하위 컬렉션에 답변 메시지 추가
+    const msgRef = consultationRef.collection("messages").doc();
+    batch.set(msgRef, {
+      id: msgRef.id,
+      senderId: staffId,
+      senderType: "staff",
+      message: answer, // 'message' 필드 사용
+      isActive: true,
+      sentAt: now,
     });
 
-    // ** Batch 실행 (상담 업데이트와 스태프 메시지 추가를 원자적으로 처리) **
     await batch.commit();
     console.log(
       `상담 내역 ${consultationId} 갱신 및 스태프 답변 메시지 저장 완료. Staff ID: ${staffId}`
     );
 
+    // --- 핵심 변경: Socket.IO를 통해 메시지 브로드캐스트 ---
+    if (ioInstance) {
+      // 모든 클라이언트 (자기 자신 포함)에게 새 메시지 이벤트 전송
+      // 자기 자신에게도 보내는 이유는, 즉시 화면에 추가하는 로직과 함께 사용될 때
+      // 서버에서 할당된 최종 ID를 동기화하거나, 다른 기기에서 접속했을 때 메시지를 받기 위함입니다.
+      ioInstance.to(consultationId).emit("newMessage", {
+        id: msgRef.id, // Firestore에서 생성된 실제 ID 사용
+        senderId: staffId,
+        senderType: "staff",
+        content: answer, // 클라이언트가 content 필드를 기대하므로 일관성 유지
+        sentAt: now.toDate(), // Date 객체로 변환
+        consultationId: consultationId,
+      });
+      ioInstance.emit("consultationListUpdated"); // 상담 목록 업데이트 알림
+      console.log(
+        `Socket: 스태프 답변 broadcast 완료: ${answer} to room ${consultationId}`
+      );
+    }
+
     res.status(200).json({ message: "답변이 등록되었습니다." });
   } catch (error) {
     console.error("staffReplyConsultation Error:", error);
-    // Batch commit 실패 시 발생하는 에러 포함
-    if (error.message && error.message.includes("Batch commit failed")) {
-      console.error(
-        "Firestore Batch Commit 에러 (staffReplyConsultation):",
-        error
-      );
-      res.status(500).json({
-        message: "답변 저장 중 오류 발생",
-      });
-    } else {
-      // Firestore 조회 실패 등 기타 예상치 못한 오류
-      console.error("Unexpected staffReplyConsultation Error:", error);
-      res.status(500).json({ message: "내부 서버 오류 발생" });
-    }
+    // ... (에러 처리 로직)
+    res.status(500).json({ message: "내부 서버 오류 발생" });
   }
 };
 
@@ -498,10 +506,12 @@ export const setConsultationHandler = async (req, res) => {
     console.error("setConsultationHandler Validation Error:", error.details);
     return res
       .status(400)
-      .json({ message: "Validation Error", details: error.details });
+      .json({ message: "Validation Error", details: error.details }); // <-- 이 부분이 지금 400 Bad Request를 반환
   }
 
-  const { consultationId, handlerId } = value; // handlerId는 null 또는 직원 UID가 됨
+  // const { consultationId, handlerId } = value; // <-- 스키마가 이 두 값을 기대
+  const consultationIdFromParams = req.params.id; // <-- 라우트 파라미터에서 consultationId를 가져옴
+  const { handlerId, hasUnread } = value;
 
   // handlerId가 null이 아닐 경우, 요청을 보낸 스태프와 일치하는지 확인 (보안 강화)
   if (handlerId !== null && staffId !== handlerId) {
@@ -511,7 +521,9 @@ export const setConsultationHandler = async (req, res) => {
   }
 
   try {
-    const consultationRef = db.collection("consultations").doc(consultationId);
+    const consultationRef = db
+      .collection("consultations")
+      .doc(consultationIdFromParams);
     const consultationDoc = await consultationRef.get();
 
     if (!consultationDoc.exists) {
@@ -522,12 +534,15 @@ export const setConsultationHandler = async (req, res) => {
       handlerId: handlerId, // null 또는 직원 UID
       updatedAt: Timestamp.now(), // 업데이트 시각
     };
+    if (typeof hasUnread === "boolean") {
+      updateData.hasUnread = hasUnread;
+    }
 
     await consultationRef.update(updateData);
 
     const action = handlerId === null ? "해제" : "지정";
     console.log(
-      `상담 ${consultationId}의 담당자가 ${
+      `상담 ${consultationIdFromParams}의 담당자가 ${
         handlerId || "없음"
       }으로 ${action}되었습니다.`
     );
