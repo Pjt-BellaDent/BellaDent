@@ -63,17 +63,20 @@ export const deleteSchedule = async (id) => {
 export const fetchAllStaff = async () => {
   try {
     const res = await axios.get('/users/staff');
-    if (res.data && res.data.staffInfo) {
-      return res.data.staffInfo.map(staff => ({
-        uid: staff.uid,
-        name: staff.name,
-        position: staff.position || staff.staffInfo?.position || '',
-        department: staff.department || staff.staffInfo?.department || '',
-        email: staff.email,
-        phone: staff.phone,
-        role: staff.role,
-        isActive: staff.isActive
-      }));
+    if (res.data && Array.isArray(res.data)) {
+      return res.data
+        .filter(staff => staff.name && staff.name.trim() !== '')
+        .map(staff => ({
+          uid: staff.uid,
+          name: staff.name,
+          position: staff.position || '',
+          department: staff.department || '',
+          email: staff.email,
+          phone: staff.phone,
+          role: staff.role,
+          isActive: staff.isActive,
+          chairNumber: staff.chairNumber || ''
+        }));
     }
     return [];
   } catch (error) {

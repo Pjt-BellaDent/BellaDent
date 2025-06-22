@@ -1,5 +1,3 @@
-// src/controllers/activitiesController.js
-
 import { db } from '../config/firebase.js';
 
 // 최근 활동 리스트 조회 (예: 최근 20건)
@@ -15,4 +13,4 @@ export const getRecentActivities = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};
+}; 

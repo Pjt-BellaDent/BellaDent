@@ -9,12 +9,10 @@
   "private": true,
   "workspaces": [
     "packages/server",
-    "packages/client",
-    "packages/functions"
+    "packages/client"
   ],
   "scripts": {
     "server": "yarn workspace server run dev",
-    "client": "yarn workspace client run dev",
-    "function": "yarn workspace functions run deploy"
+    "client": "yarn workspace client run dev"
   }
 }

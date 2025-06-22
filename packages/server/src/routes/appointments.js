@@ -9,7 +9,8 @@ import {
   createAppointment,
   updateAppointment,
   deleteAppointment,
-  getAppointmentsByName
+  getAppointmentsByName,
+  getAppointmentsByDoctorId
 } from "../controllers/appointmentsController.js";
 
 const router = express.Router();
@@ -31,7 +32,10 @@ router.get("/", (req, res, next) => {
   return getMonthlyAppointments(req, res, next);
 });
 
-router.post('/', createAppointment);
+router.get("/doctor/:id", getAppointmentsByDoctorId);
+router.post("/", createAppointment);
+router.put("/:id", updateAppointment);
+router.delete("/:id", deleteAppointment);
 
 // 진료완료 처리
 router.put('/complete', async (req, res) => {
@@ -127,8 +131,5 @@ router.put('/back-to-waiting', async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 });
-
-router.put('/:id', updateAppointment);
-router.delete('/:id', deleteAppointment);
 
 export default router;
