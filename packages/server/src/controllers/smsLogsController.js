@@ -117,7 +117,6 @@ export const SendMessage = async (req, res) => {
 
     // **5. Batch 실행 (모든 작업을 원자적으로 커밋)**
     await batch.commit();
-    console.log(`SMS 발신 이력 (ID: ${smsLogId}) 및 착신자 정보 저장 성공`);
 
     // API 호출 결과에 따라 응답 상태 및 메시지 조정
     if (response.ok) {

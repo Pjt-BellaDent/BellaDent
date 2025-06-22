@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import axios from '../../../libs/axiosIntance';
+import { v4 as uuidv4 } from 'uuid';
+import axiosInstance from '../../../libs/axiosInstance';
 
 // 상수 정의
 const CHATBOT_SETTINGS_DOC = 'chatbotSettings';
@@ -20,351 +23,242 @@ const QUESTION_LABELS = {
   시간: '진료 시간'
 };
 
+// 모달 컴포넌트
+const FaqModal = ({ isOpen, onClose, onSave, faq }) => {
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+
+  useEffect(() => {
+    if (faq) {
+      setQuestion(faq.question);
+      setAnswer(faq.answer);
+    } else {
+      setQuestion('');
+      setAnswer('');
+    }
+  }, [faq]);
+
+  if (!isOpen) return null;
+
+  const handleSave = () => {
+    onSave({ question, answer });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg border">
+        <h2 className="text-xl font-bold mb-4">{faq ? '질문 수정' : '질문 추가'}</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">질문(Question)</label>
+            <input
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">답변(Answer)</label>
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              rows="4"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            ></textarea>
+          </div>
+        </div>
+        <div className="mt-6 flex justify-end space-x-2">
+          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+            취소
+          </button>
+          <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatbotSettings = () => {
-  // FAQ 배열 상태
-  const [faqs, setFaqs] = useState(DEFAULT_FAQS);
-  // 편집/추가 폼 상태
-  const [editIndex, setEditIndex] = useState(null); // null: 편집X, 숫자: 편집, 'new': 추가
-  const [form, setForm] = useState({ question: '', answer: '', enabled: true });
-  // 예시 선택 상태
+  const [chatbotSettings, setChatbotSettings] = useState(null);
+  const [faqs, setFaqs] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingFaq, setEditingFaq] = useState(null);
   const [selectedExample, setSelectedExample] = useState(0);
-  // 기타 상태
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  // AI 모드, 시간대
   const [aiMode, setAiMode] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [answerTimeRange, setAnswerTimeRange] = useState({ start: '09:00', end: '18:00' });
   const [rangeInput, setRangeInput] = useState({ start: '09:00', end: '18:00' });
 
-  // Firestore에서 FAQ/설정 불러오기
-  const loadSettings = useCallback(async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const settingsDoc = doc(db, 'settings', CHATBOT_SETTINGS_DOC);
-      const settingsSnapshot = await getDoc(settingsDoc);
-      if (settingsSnapshot.exists()) {
-        const data = settingsSnapshot.data();
-        setFaqs(data.faqs || DEFAULT_FAQS);
-        setAiMode(data.aiMode !== undefined ? data.aiMode : true);
-        setAnswerTimeRange(data.answerTimeRange || { start: '09:00', end: '18:00' });
-      } else {
-        await setDoc(settingsDoc, {
-          faqs: DEFAULT_FAQS,
-          aiMode: true,
-          answerTimeRange: { start: '09:00', end: '18:00' }
-        });
-        setFaqs(DEFAULT_FAQS);
-        setAiMode(true);
-        setAnswerTimeRange({ start: '09:00', end: '18:00' });
-      }
-    } catch (err) {
-      setError('설정을 불러오는 중 오류가 발생했습니다.');
+      const res = await axiosInstance.get('/ai/settings');
+      setChatbotSettings(res.data);
+      setFaqs(res.data.faqs || []);
+      setAiMode(res.data.aiMode !== undefined ? res.data.aiMode : true);
+      setAnswerTimeRange(res.data.answerTimeRange || { start: '09:00', end: '18:00' });
+    } catch (error) {
+      setError("챗봇 설정을 불러오는 데 실패했습니다.");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Firestore에 FAQ/설정 저장
-  const saveSettings = useCallback(async (newFaqs, aiModeVal, answerTimeRangeVal) => {
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const updateSettings = async (newSettings) => {
     try {
       setIsSaving(true);
       setError(null);
-      const settingsDoc = doc(db, 'settings', CHATBOT_SETTINGS_DOC);
-      await updateDoc(settingsDoc, {
-        faqs: newFaqs,
-        aiMode: aiModeVal,
-        answerTimeRange: answerTimeRangeVal,
-        updatedAt: new Date()
-      });
-      setFaqs(newFaqs);
-      setAiMode(aiModeVal);
-      setAnswerTimeRange(answerTimeRangeVal);
-    } catch (err) {
-      if (err.code === 'not-found' || err.message?.includes('No document to update')) {
-        const settingsDoc = doc(db, 'settings', CHATBOT_SETTINGS_DOC);
-        await setDoc(settingsDoc, {
-          faqs: newFaqs,
-          aiMode: aiModeVal,
-          answerTimeRange: answerTimeRangeVal,
-          updatedAt: new Date()
-        });
-        setFaqs(newFaqs);
-        setAiMode(aiModeVal);
-        setAnswerTimeRange(answerTimeRangeVal);
-      } else {
-        setError('설정 저장 중 오류가 발생했습니다.');
-      }
+      await axiosInstance.put('/ai/settings', newSettings);
+      await fetchSettings(); // 최신 정보 다시 로드
+    } catch (error) {
+      setError("설정 저장에 실패했습니다.");
+      console.error(error);
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  };
 
-  useEffect(() => { loadSettings(); }, [loadSettings]);
+  const handleOpenModal = (faq = null) => {
+    setEditingFaq(faq);
+    setIsModalOpen(true);
+  };
 
-  // 폼 열기(편집/추가)
-  const handleEdit = (idx) => {
-    setEditIndex(idx);
-    if (idx === 'new') {
-      setForm({ question: '', answer: '', enabled: true });
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingFaq(null);
+  };
+
+  const handleSaveFaq = async (data) => {
+    let updatedFaqs;
+    if (editingFaq) {
+      // 수정
+      updatedFaqs = faqs.map(faq =>
+        faq.id === editingFaq.id ? { ...faq, ...data } : faq
+      );
     } else {
-      setForm({ ...faqs[idx] });
+      // 추가
+      const newFaq = { id: uuidv4(), ...data, isPublic: true };
+      updatedFaqs = [...faqs, newFaq];
     }
-  };
-  // 폼 입력 변경
-  const handleFormChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
-  };
-  // 폼 저장(추가/편집)
-  const handleFormSave = async () => {
-    if (!form.question.trim() || !form.answer.trim()) {
-      setError('질문과 답변을 모두 입력해주세요.');
-      return;
-    }
-    let newFaqs;
-    if (editIndex === 'new') {
-      newFaqs = [...faqs, { ...form, id: form.question + '_' + Date.now() }];
-    } else {
-      newFaqs = faqs.map((f, i) => i === editIndex ? { ...form, id: f.id } : f);
-    }
-    await saveSettings(newFaqs, aiMode, answerTimeRange);
-    setEditIndex(null);
-    setForm({ question: '', answer: '', enabled: true });
-  };
-  // 폼 취소
-  const handleFormCancel = () => {
-    setEditIndex(null);
-    setForm({ question: '', answer: '', enabled: true });
-    setError(null);
-  };
-  // 삭제
-  const handleDelete = async (idx) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
-    const newFaqs = faqs.filter((_, i) => i !== idx);
-    await saveSettings(newFaqs, aiMode, answerTimeRange);
-    if (selectedExample === idx) setSelectedExample(0);
-  };
-  // 토글
-  const handleToggle = async (idx) => {
-    const newFaqs = faqs.map((f, i) => i === idx ? { ...f, enabled: !f.enabled } : f);
-    await saveSettings(newFaqs, aiMode, answerTimeRange);
-  };
-  // AI 모드 토글
-  const handleAiModeToggle = async () => {
-    const newMode = !aiMode;
-    setAiMode(newMode);
-    await saveSettings(faqs, newMode, answerTimeRange);
-  };
-  // 고급 설정 열기/닫기
-  const handleOpenAdvanced = () => {
-    setRangeInput(answerTimeRange);
-    setShowAdvanced(true);
-  };
-  const handleCloseAdvanced = () => {
-    setShowAdvanced(false);
-  };
-  // 시간대 저장
-  const handleSaveTimeRange = async () => {
-    setAnswerTimeRange(rangeInput);
-    await saveSettings(faqs, aiMode, rangeInput);
-    setShowAdvanced(false);
+    await updateSettings({ ...chatbotSettings, faqs: updatedFaqs });
+    handleCloseModal();
   };
 
-  // 예시로 보여줄 질문/답변
-  const enabledFaqs = faqs.filter(f => f.enabled);
-  const exampleIdx = enabledFaqs.length > 0 ? (selectedExample < enabledFaqs.length ? selectedExample : 0) : 0;
-  const exampleFaq = enabledFaqs[exampleIdx] || faqs[0];
+  const handleDeleteFaq = async (id) => {
+    if (window.confirm("정말 이 질문을 삭제하시겠습니까?")) {
+      const updatedFaqs = faqs.filter(faq => faq.id !== id);
+      await updateSettings({ ...chatbotSettings, faqs: updatedFaqs });
+    }
+  };
+
+  const handleTogglePublic = async (faqToToggle) => {
+    const updatedFaqs = faqs.map(faq =>
+      faq.id === faqToToggle.id ? { ...faq, isPublic: !faq.isPublic } : faq
+    );
+    await updateSettings({ ...chatbotSettings, faqs: updatedFaqs });
+  };
+
+  const handleToggleAiMode = async () => {
+    const newAiMode = !aiMode;
+    setAiMode(newAiMode);
+    await updateSettings({ ...chatbotSettings, aiMode: newAiMode });
+  };
+
+  const activeFaqs = useMemo(() => faqs.filter(f => f.isPublic), [faqs]);
+  const hoveredFaq = faqs.find(f => f.isHovered);
 
   // 로딩
   if (isLoading) return <div className="p-6">로딩 중...</div>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-6">⚙️ AI 챗봇 설정</h2>
-      {error && <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
-      <div className="flex gap-6">
-        {/* 왼쪽: FAQ 관리 */}
-        <div className="flex-[2] bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">자주 묻는 질문 설정</h3>
-            <button onClick={() => handleEdit('new')} className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">질문 추가</button>
-          </div>
-          <div>
-            {faqs.map((faq, idx) => (
-              <div key={faq.id} className={`border-b border-gray-200 py-3 flex items-center ${faq.enabled ? '' : 'opacity-60'}`}>
-                {editIndex === idx ? (
-                  <div className="w-full flex flex-col gap-2">
-                    <input
-                      name="question"
-                      value={form.question}
-                      onChange={handleFormChange}
-                      className="border rounded p-2 text-sm mb-1"
-                      placeholder="질문을 입력하세요"
-                    />
-                    <textarea
-                      name="answer"
-                      value={form.answer}
-                      onChange={handleFormChange}
-                      className="border rounded p-2 text-sm"
-                      rows={2}
-                      placeholder="답변을 입력하세요"
-                    />
-                    <div className="flex items-center gap-2 mt-1">
-                      <label className="flex items-center text-xs gap-1">
-                        <input type="checkbox" name="enabled" checked={form.enabled} onChange={handleFormChange} /> 활성화
-                      </label>
-                      <div className="flex gap-2 ml-auto">
-                        <button onClick={handleFormCancel} className="px-3 py-1 border rounded hover:bg-gray-100">취소</button>
-                        <button onClick={handleFormSave} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex-1 cursor-pointer" onClick={() => setSelectedExample(enabledFaqs.findIndex(f => f.id === faq.id))}>
-                      <div className="font-medium text-gray-800 mb-1">{faq.question}</div>
-                      <div className="text-sm text-gray-600">{faq.answer}</div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <button onClick={() => handleEdit(idx)} className="px-3 py-1 text-sm border rounded hover:bg-gray-100">편집</button>
-                      <button onClick={() => handleDelete(idx)} className="px-3 py-1 text-sm border text-red-400 hover:bg-red-50">삭제</button>
-                      <label className="relative inline-flex items-center cursor-pointer ml-2">
-                        <input type="checkbox" className="sr-only peer" checked={faq.enabled} onChange={() => handleToggle(idx)} />
-                        <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
-                        <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                      </label>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-            {/* 추가 폼 */}
-            {editIndex === 'new' && (
-              <div className="border-b border-gray-200 py-3 flex items-center">
-                <div className="w-full flex flex-col gap-2">
-                  <input
-                    name="question"
-                    value={form.question}
-                    onChange={handleFormChange}
-                    className="border rounded p-2 text-sm mb-1"
-                    placeholder="질문을 입력하세요"
-                  />
-                  <textarea
-                    name="answer"
-                    value={form.answer}
-                    onChange={handleFormChange}
-                    className="border rounded p-2 text-sm"
-                    rows={2}
-                    placeholder="답변을 입력하세요"
-                  />
-                  <div className="flex items-center gap-2 mt-1">
-                    <label className="flex items-center text-xs gap-1">
-                      <input type="checkbox" name="enabled" checked={form.enabled} onChange={handleFormChange} /> 활성화
-                    </label>
-                    <div className="flex gap-2 ml-auto">
-                      <button onClick={handleFormCancel} className="px-3 py-1 border rounded hover:bg-gray-100">취소</button>
-                      <button onClick={handleFormSave} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">저장</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        {/* 오른쪽: 예시/설정 */}
-        <div className="flex-1 bg-white rounded-lg shadow p-6 h-fit">
-          {/* AI 채팅 모드 토글 */}
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold">💬 고객에게 보이는 응답 예시</h4>
-            <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium ${aiMode ? 'text-blue-700' : 'text-gray-400'}`}>AI 채팅 모드</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" checked={aiMode} onChange={handleAiModeToggle} disabled={isSaving} />
-                <div className="w-10 h-5 bg-gray-200 rounded-full peer-checked:bg-blue-600 transition-colors peer-disabled:opacity-50"></div>
-                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-              </label>
-            </div>
-          </div>
-          <div className="border border-gray-200 p-4 rounded bg-gray-50 text-sm mb-4">
-            <strong className="text-gray-800">질문:</strong>
-            <span className="text-gray-600 ml-1">
-              {exampleFaq ? exampleFaq.question : '질문을 선택해주세요.'}
-            </span>
-            <br /><br />
-            <strong className="text-gray-800">AI 답변:</strong><br />
-            <span className="text-gray-700 leading-relaxed">
-              {exampleFaq ? exampleFaq.answer : '답변을 선택해주세요.'}
-            </span>
-          </div>
-          {/* 활성화 상태 표시 */}
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-            <h5 className="font-medium text-blue-800 mb-2">활성화된 답변</h5>
-            <div className="space-y-1">
-              {enabledFaqs.length === 0 && <div className="text-sm text-gray-400">활성화된 답변이 없습니다.</div>}
-              {enabledFaqs.map((f, i) => (
-                <div key={f.id} className={`flex items-center text-sm cursor-pointer ${i === exampleIdx ? 'font-bold text-blue-700' : ''}`} onClick={() => setSelectedExample(i)}>
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                  <span className="text-gray-700">{f.question}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* AI 자동 답변 가능 시간대 설정 */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleOpenAdvanced}
-              className="px-6 py-2 bg-gray-800 text-white rounded shadow hover:bg-gray-700 transition-colors"
-            >
-              AI 자동 답변 가능 시간대 설정
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8">AI 챗봇 설정</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* 왼쪽: 질문 설정 */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold">자주 묻는 질문 설정</h2>
+            <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              질문 추가
             </button>
           </div>
-        </div>
-      </div>
-      {/* 고급 설정 모달 (밝은 배경) */}
-      {showAdvanced && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md border border-gray-200">
-            <h3 className="text-lg font-bold mb-4">AI 자동 답변 가능 시간대</h3>
-            <div className="mb-6">
-              <label className="block mb-2 text-sm font-medium text-gray-700">답변 가능 시간</label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={rangeInput.start}
-                  onChange={e => setRangeInput(r => ({ ...r, start: e.target.value }))}
-                  className="border rounded p-1 text-center"
-                />
-                <span className="mx-2 text-gray-500">~</span>
-                <input
-                  type="time"
-                  value={rangeInput.end}
-                  onChange={e => setRangeInput(r => ({ ...r, end: e.target.value }))}
-                  className="border rounded p-1 text-center"
-                />
+          <div className="space-y-4">
+            {faqs.map((faq) => (
+              <div key={faq.id} className="p-4 border rounded-md flex justify-between items-center">
+                <div>
+                  <p className="font-semibold">{faq.question}</p>
+                  <p className="text-sm text-gray-600">{faq.answer}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button onClick={() => handleOpenModal(faq)} className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-100">
+                    편집
+                  </button>
+                  <button onClick={() => handleDeleteFaq(faq.id)} className="px-3 py-1 border border-red-500 text-red-500 rounded-md text-sm hover:bg-red-50">
+                    삭제
+                  </button>
+                  <button
+                    onClick={() => handleTogglePublic(faq)}
+                    className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${faq.isPublic ? 'bg-blue-600' : 'bg-gray-200'}`}
+                    disabled={isSaving}
+                  >
+                    <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${faq.isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">이 시간대에만 AI 자동 답변이 전송됩니다. (예: 09:00 ~ 18:00)</p>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={handleCloseAdvanced}
-                className="px-4 py-1 border rounded hover:bg-gray-100"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleSaveTimeRange}
-                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={isSaving}
-              >
-                저장
-              </button>
-            </div>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* 오른쪽: 응답 예시 */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+           <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">고객에게 보이는 응답 예시</h2>
+              <div className="flex items-center space-x-2">
+                 <span className="text-sm">AI 채팅 모드</span>
+                 <button 
+                    onClick={handleToggleAiMode}
+                    className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${aiMode ? 'bg-blue-600' : 'bg-gray-200'}`}
+                    disabled={isSaving}
+                  >
+                   <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${aiMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                 </button>
+              </div>
+           </div>
+           <div className="bg-gray-100 p-4 rounded-lg mb-6">
+              <p className="text-sm font-semibold text-gray-800">질문: {faqs[0]?.question || '등록된 질문이 없습니다.'}</p>
+              <p className="text-sm text-gray-600 mt-2">
+                <span className="font-semibold">AI 답변:</span> {faqs[0]?.answer || ''}
+              </p>
+           </div>
+           <div className="bg-blue-50 p-4 rounded-lg">
+             <h3 className="font-bold mb-3">활성화된 답변</h3>
+             <ul className="space-y-2">
+                {activeFaqs.map(faq => (
+                  <li key={faq.id} className="flex items-center text-sm">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    {faq.question}
+                  </li>
+                ))}
+             </ul>
+           </div>
+           <button className="mt-6 w-full px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900">
+             AI 자동 답변 가능 시간대 설정
+           </button>
+        </div>
+      </div>
+      <FaqModal isOpen={isModalOpen} onClose={handleCloseModal} onSave={handleSaveFaq} faq={editingFaq} />
     </div>
   );
 };

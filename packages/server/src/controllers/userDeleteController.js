@@ -19,7 +19,6 @@ export const deleteUser = async (req, res) => {
 
     // ** 1. Firebase Authentication 사용자 계정 삭제 **
     await auth.deleteUser(paramsId);
-    console.log(`Firebase Auth User ${paramsId} deleted.`);
 
     // ** 2. Firestore 문서 삭제 **
     const batch = db.batch(); // Batch 인스턴스 생성
@@ -46,7 +45,6 @@ export const deleteUser = async (req, res) => {
     }
 
     await batch.commit();
-    console.log(`Firestore document ${paramsId} deleted.`);
 
     res.status(204).json({ message: "회원 탈퇴 성공" });
   } catch (err) {
