@@ -55,9 +55,6 @@ export const signUp = async (req, res) => {
     batch.set(userDocRef, commonUserData);
 
     await batch.commit();
-    console.log(
-      `사용자 개정 생성 성공: User ID ${userId}, Role ${defaultRole}`
-    );
 
     res.status(201).json({ message: "사용자 개정 생성 성공" });
   } catch (err) {
@@ -138,7 +135,6 @@ export const CreatePatient = async (req, res) => {
 
     // ** 4. Batch 실행 **
     await batch.commit();
-    console.log(`환자 계정 생성 성공: User ID ${userId}, Role ${defaultRole}`);
 
     res.status(201).json({ message: `${defaultRole} 환자 계정 생성 성공` });
   } catch (err) {
@@ -225,7 +221,6 @@ export const CreateStaff = async (req, res) => {
 
     // ** 4. Batch 실행 **
     await batch.commit();
-    console.log(`직원 계정 생성 성공: User ID ${userId}, Role ${role}`);
 
     res.status(201).json({ message: `${role} 직원 계정 생성 성공` });
   } catch (err) {

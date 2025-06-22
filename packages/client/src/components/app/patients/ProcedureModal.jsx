@@ -1,7 +1,7 @@
 // src/app/patients/components/ProcedureModal.jsx
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from '../../../libs/axiosIntance';
-import { addWaitingPatient } from '../../../api/appointments';
+import { addWaitingPatient } from '../../../api/patients';
 
 const PROCEDURE_MAP = {
   '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],

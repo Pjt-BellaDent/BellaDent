@@ -25,7 +25,6 @@ const NoticeWrapper = forwardRef((props, ref) => {
       onSkipToday={() => {
         sessionStorage.setItem('noticeSkipDate', todayKey);
         setShow(false);
-        console.log('✅ 오늘은 다시 보지 않기 적용됨');
       }}
     />
   );
