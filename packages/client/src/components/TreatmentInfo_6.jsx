@@ -1,5 +1,8 @@
 import React from 'react';
-import dentistry from '../assets/dentistry.png';
+import LineImageBanner from './web/LineImageBanner';
+import line_banner from '../assets/images/line_banner.png';
+import Title from './/web/Title';
+import Text from './/web/Text';
 import orthod1 from '../assets/orthod1.png';
 import orthod2 from '../assets/orthod2.png';
 import orthod3 from '../assets/orthod3.png';
@@ -26,16 +29,15 @@ import cav2 from '../assets/cav2.png';
 function TreatmentInfo_6() {
   return (
     <>
-      <div className="relative">
-        <img
-          src={dentistry}
-          alt="dentistry"
-          className="w-full h-50 object-cover"
-        />
-        <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20 text-[32px]">
-          <b>전후 사진 겔러리</b>
-        </p>
-      </div>
+      <LineImageBanner
+        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        image={line_banner}
+      >
+        <div className="flex flex-col justify-center items-center">
+          <Title CN="text-4xl text-center text-BD-CharcoalBlack text-shadow-lg/20"><b>전후 사진 겔러리</b></Title>
+          <Text CN="text-xl text-center">Before and After Photo Gallery</Text>
+        </div>
+      </LineImageBanner>
       <div className="max-w-300 mx-auto">
         <h3 className="text-center text-[48px] mt-10 mb-6">
           <b>Before & After</b>{' '}
