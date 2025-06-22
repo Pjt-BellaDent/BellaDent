@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
+import { useUserInfo } from '../../contexts/UserInfoContext.jsx'; // Context 경로 확인
 import axios from 'axios';
 import io from 'socket.io-client';
 import Modal from '../web/Modal.jsx';
@@ -13,18 +13,16 @@ function ChatForm() {
   const { userInfo, userToken } = useUserInfo();
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [isAiActive, setIsAiActive] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = useRef(null);
+  const [isAiActive, setIsAiActive] = useState(false); // AI 활성 상태
 
   const socketRef = useRef(null);
-
   const currentUserId = userInfo?.id;
 
   useEffect(() => {
+    // userInfo 또는 userToken이 없으면 소켓 연결 및 데이터 로딩을 건너뜁니다.
     if (!userInfo || !userToken) {
       console.log(
-        'UserInfo 또는 UserToken이 아직 없습니다. 소켓 연결 및 데이터 가져오기를 건너뜁니다.'
+        'ChatForm: 사용자 정보 또는 토큰이 없어 소켓 연결 및 데이터 가져오기 건너뜜.'
       );
       return;
     }
@@ -55,82 +53,36 @@ function ChatForm() {
 
       // --- newMessage 리스너 등록 (AI 답변 및 상대방 메시지 전용) ---
       const handleNewMessage = (msg) => {
-        console.log('>>> handleNewMessage CALLED with:', msg);
-        console.groupCollapsed(
-          'ChatForm: handleNewMessage - New Message Received'
-        );
-        console.log('Msg Object:', msg);
-        console.log('Msg ID:', msg.id);
-        console.log('Msg Sender ID:', msg.senderId);
-        console.log('Current User ID:', currentUserId);
-        console.log('Msg Content:', msg.content);
-        console.log('Msg Sender Type:', msg.senderType);
+        // AI 또는 스태프 메시지이며, 현재 사용자가 보낸 메시지가 아닌 경우에만 처리
+        // isActive 필드를 고려하여 활성 메시지만 추가하도록 로직 확장 가능
+        if (
+          msg.consultationId === currentUserId &&
+          msg.senderId !== currentUserId
+        ) {
+          const formattedMsg = {
+            id: msg.id,
+            senderId: msg.senderId,
+            senderType: msg.senderType,
+            content: msg.content,
+            sentAt: msg.sentAt ? new Date(msg.sentAt) : new Date(), // Date 객체로 변환
+            isActive: msg.isActive !== undefined ? msg.isActive : true, // 서버에서 받은 값 사용, 없으면 기본값 true
+          };
 
-        if (msg.consultationId === currentUserId) {
-          console.log('Condition 1: consultationId matches (OK)');
-
-          // AI 메시지 또는 다른 사용자(스태프) 메시지인 경우에만 처리
-          // AI의 senderId는 'aiChatBot'이므로 currentUserId와 다름
-          if (msg.senderId !== currentUserId) {
-            console.log(
-              'Condition 2: senderId is DIFFERENT from currentUserId (OK for AI/Staff)'
-            );
-
-            // **수정: formattedMsg 정의**
-            const formattedMsg = {
-              id: msg.id,
-              senderId: msg.senderId,
-              senderType: msg.senderType,
-              content: msg.content,
-              sentAt: msg.sentAt ? new Date(msg.sentAt) : new Date(), // sentAt이 Date 객체인지 확인
-            };
-
-            setMessages((prev) => {
-              const currentIds = prev.map((m) => m.id);
-              console.log('Current IDs in state:', currentIds);
-
-              if (
-                formattedMsg.id &&
-                !currentIds.includes(formattedMsg.id) &&
-                formattedMsg.content
-              ) {
-                console.log(
-                  'Condition 3: Message is UNIQUE and has CONTENT (OK)'
-                );
-                console.log('ADDING MESSAGE TO STATE:', formattedMsg);
-                return [...prev, formattedMsg];
-              } else {
-                console.log(
-                  'Condition 3: FAILED. (Duplicate ID or missing content). Msg:',
-                  formattedMsg
-                );
-              }
-              return prev;
-            });
-          } else {
-            console.log(
-              'Condition 2: FAILED. (Message is from current user, skipping - this should happen for your own questions)'
-            );
-          }
-        } else {
-          console.log(
-            'Condition 1: FAILED. (consultationId does NOT match currentUserId)'
-          );
+          setMessages((prev) => {
+            // 중복 메시지 방지 및 유효한 내용 확인
+            const currentIds = prev.map((m) => m.id);
+            if (
+              formattedMsg.id &&
+              !currentIds.includes(formattedMsg.id) &&
+              formattedMsg.content
+            ) {
+              return [...prev, formattedMsg];
+            }
+            return prev;
+          });
         }
-        console.groupEnd();
       };
       newSocket.on('newMessage', handleNewMessage);
-
-      // --- typingStatus 리스너 등록 ---
-      const handleTypingStatus = ({
-        isTyping: typingStatus,
-        userId: typingUserId,
-      }) => {
-        if (typingUserId !== currentUserId) {
-          setIsTyping(typingStatus);
-        }
-      };
-      newSocket.on('typingStatus', handleTypingStatus);
 
       socketRef.current = newSocket;
     }
@@ -145,22 +97,30 @@ function ChatForm() {
         });
         const formattedMessages = (response.data.messages || []).map((msg) => ({
           ...msg,
+          // Firestore Timestamp 형식을 Date 객체로 변환하거나, 이미 Date 객체인 경우 그대로 사용
           sentAt:
-            msg.sentAt && msg.sentAt._seconds // Firestore Timestamp 형식 처리
+            msg.sentAt && msg.sentAt._seconds
               ? new Date(
                   msg.sentAt._seconds * 1000 +
                     (msg.sentAt._nanoseconds || 0) / 1000000
                 )
-              : msg.sentAt, // 이미 Date 객체인 경우 그대로 사용
+              : msg.sentAt
+              ? new Date(msg.sentAt)
+              : new Date(), // 유효한 sentAt 값이 없으면 현재 시간으로
+          isActive: msg.isActive !== undefined ? msg.isActive : true, // 서버에서 받은 값 사용, 없으면 기본값 true
         }));
+        // 여기서 isActive가 false인 메시지를 필터링하여 UI에 표시하지 않을 수 있습니다.
+        // 예를 들면: .filter(msg => msg.isActive)
         setMessages(formattedMessages);
       } catch (error) {
         if (error.response?.status === 404) {
-          console.log(`상담 기록 없음 (${currentUserId}): 초기 메시지 없음.`);
+          console.log(
+            `ChatForm: 상담 기록 없음 (${currentUserId}): 초기 메시지 없음.`
+          );
           setMessages([]);
         } else {
           console.error(
-            '초기 메시지 가져오기 오류:',
+            'ChatForm: 초기 메시지 가져오기 오류:',
             error.response?.data || error.message
           );
           if (error.response?.status === 401) {
@@ -178,57 +138,23 @@ function ChatForm() {
       if (socketRef.current) {
         // 이벤트 리스너 제거
         socketRef.current.off('newMessage', handleNewMessage);
-        socketRef.current.off('typingStatus', handleTypingStatus);
         socketRef.current.off('error');
         socketRef.current.off('connect_error');
         socketRef.current.off('connect');
 
-        // 방 나가기 및 타이핑 상태 초기화
+        // 방 나가기
         socketRef.current.emit('leave', currentUserId);
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-        }
-        if (currentUserId && socketRef.current.connected) {
-          socketRef.current.emit('typing', {
-            consultationId: currentUserId,
-            isTyping: false,
-            userId: currentUserId,
-          });
-        }
 
         // 소켓 연결 해제
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, [userInfo, userToken, currentUserId]);
+  }, [userInfo, userToken, currentUserId, navigate]);
 
-  // --- handleChange 함수: 메시지 입력 및 isTyping 로직 ---
+  // --- handleChange 함수: 메시지 입력만 처리 ---
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    if (!currentUserId || !socketRef.current || !socketRef.current.connected)
-      return;
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    socketRef.current.emit('typing', {
-      consultationId: currentUserId,
-      isTyping: true,
-      userId: currentUserId,
-    });
-
-    typingTimeoutRef.current = setTimeout(() => {
-      if (socketRef.current && socketRef.current.connected) {
-        socketRef.current.emit('typing', {
-          consultationId: currentUserId,
-          isTyping: false,
-          userId: currentUserId,
-        });
-      }
-    }, 1000);
   };
 
   // --- handleSubmit 함수: 메시지 전송 로직 (사용자 자신의 메시지 즉시 추가) ---
@@ -251,7 +177,7 @@ function ChatForm() {
       senderType: 'patient',
       content: messageContent,
       sentAt: new Date(),
-      isActive: true,
+      isActive: true, // isActive 필드 다시 추가
     };
     setMessages((prev) => [...prev, userMessage]);
 
@@ -265,27 +191,17 @@ function ChatForm() {
         senderId: currentUserId,
         senderType: 'patient',
         content: messageContent,
+        // 서버 전송 시 isActive 필드도 함께 보낼 수 있습니다. (백엔드 설계에 따라)
+        // isActive: true,
       });
     } else {
       setModalMessage(
         '채팅 서버에 연결되지 않았습니다. 잠시 후 다시 시도해주세요.'
       );
       setShowModal(true);
-      // 소켓 연결 실패 시 즉시 추가했던 메시지를 제거하거나 실패 표시할 수 있습니다.
+      // 메시지 전송 실패 시, 추가했던 임시 메시지 제거
       setMessages((prev) => prev.filter((msg) => msg.id !== tempMessageId));
       return;
-    }
-
-    // 메시지 전송 후 'typing' 상태를 false로 즉시 전송합니다.
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('typing', {
-        consultationId: currentUserId,
-        isTyping: false,
-        userId: currentUserId,
-      });
     }
 
     // AI 활성 상태라면 AI 응답을 요청합니다.
@@ -302,10 +218,10 @@ function ChatForm() {
         );
       } catch (error) {
         console.error(
-          'AI 응답 요청 실패:',
+          'ChatForm: AI 응답 요청 실패:',
           error.response?.data || error.message
         );
-        // AI 응답 실패 시 사용자에게 알림 (옵션)
+        // AI 응답 요청 실패 시 사용자에게 알림 또는 재시도 로직 추가 고려
       }
     }
   };
@@ -315,24 +231,21 @@ function ChatForm() {
       <div className="flex flex-col h-[calc(100vh-200px)] max-w-2xl mx-auto p-4">
         <h2 className="text-xl font-bold mb-4">AI 챗봇 상담</h2>
         <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow p-4 space-y-3">
-          {messages.map((msg, i) => (
-            <div
-              key={msg.id || i}
-              className={`max-w-[80%] text-sm px-4 py-2 rounded-lg whitespace-pre-wrap ${
-                msg.senderType === 'patient'
-                  ? 'ml-auto bg-blue-100 text-right'
-                  : 'mr-auto bg-gray-100 text-left'
-              }`}
-            >
-              {msg.content}
-            </div>
-          ))}
-          {/* isTyping 표시 UI */}
-          {isTyping && (
-            <div className="text-gray-500 text-sm italic ml-2">
-              상대방이 입력 중입니다...
-            </div>
-          )}
+          {/* isActive가 false인 메시지는 여기서 필터링하여 렌더링하지 않을 수 있습니다. */}
+          {messages
+            // .filter(msg => msg.isActive) // 만약 비활성 메시지를 표시하지 않으려면 이 필터를 추가하세요.
+            .map((msg, i) => (
+              <div
+                key={msg.id || i}
+                className={`max-w-[80%] text-sm px-4 py-2 rounded-lg whitespace-pre-wrap ${
+                  msg.senderType === 'patient'
+                    ? 'ml-auto bg-blue-100 text-right'
+                    : 'mr-auto bg-gray-100 text-left'
+                }`}
+              >
+                {msg.content}
+              </div>
+            ))}
         </div>
         <div className="mt-4 flex items-center gap-2">
           <input
