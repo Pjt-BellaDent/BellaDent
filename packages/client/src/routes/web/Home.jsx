@@ -118,7 +118,7 @@ function Home() {
               <Title CN="text-4xl">BellaDent 장점</Title>
             </ScrollFadeIn>
             <Text CN="text-lg">
-              사실 임플란트(implant)라는 말은 해당 치과치료에만 국한되는 말은
+              임플란트(implant)는  치과치료에만 
               아니고, 인체 내부에다 심어 넣는다는 뜻이다. 일반적으로 의학계에서
               쓰일 때는 뭔가를 인체에 매입하는 수술, 즉 장기나 인공장기 등을
               몸에 넣는 수술(흔히 말해 '이식(移植)수술') 등을 총칭하는 말이다.

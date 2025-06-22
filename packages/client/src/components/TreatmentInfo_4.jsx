@@ -1,5 +1,8 @@
 import React from 'react';
-import dentistry from '../assets/dentistry.png';
+import LineImageBanner from './web/LineImageBanner';
+import line_banner from '../assets/images/line_banner.png';
+import Title from './/web/Title';
+import Text from './/web/Text';
 import teeth1 from '../assets/teeth1.png';
 import image from '../assets/image.png';
 import dgim from '../assets/dgim.png';
@@ -18,16 +21,15 @@ import dental8 from '../assets/dental8.png';
 function TreatmentInfo_4() {
   return (
     <>
-      <div className="relative">
-        <img
-          src={dentistry}
-          alt="dentistry"
-          className="w-full h-50 object-cover"
-        />
-        <p className="absolute left-[50%] top-[50%] -translate-[50%] text-white text-shadow-lg/20 text-[32px]">
-          <b>교정 / 미용치료</b>
-        </p>
-      </div>
+      <LineImageBanner
+        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        image={line_banner}
+      >
+        <div className="flex flex-col justify-center items-center">
+          <Title CN="text-4xl text-center text-BD-CharcoalBlack text-shadow-lg/20"><b>교정 / 미용치료</b></Title>
+          <Text CN="text-xl text-center">Orthodontics/cosmetic treatment</Text>
+        </div>
+      </LineImageBanner>
       <div>
         <div className="justify-center max-w-300 mx-auto relative">
           <h2 className="text-center text-[48px] mt-[60px] mb-20 mx-10">
