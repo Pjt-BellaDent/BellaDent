@@ -65,6 +65,7 @@ function App() {
       {/* 사용자용 웹 프레임 */}
       <Route path="/" element={<Frame />}>
         <Route index element={<Home />} />
+        <Route path="login" element={<SignIn />} />
         <Route path="signIn" element={<SignIn />} />
         <Route path="signup" element={<SignUp />} />
         <Route path="userinfo" element={<UserInfo />} />
