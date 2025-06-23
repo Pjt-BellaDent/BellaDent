@@ -110,8 +110,8 @@ function Home() {
               {/* text-lg -> size="lg" */}
               하얀치아 예쁜미소!!! 충치치료 치아교정 앞으로도 의료계와의 소통을
               통해 정확하고 신뢰받는 심사를 바탕으로 안전하고 수준 높은 적정진료
-              등으로 우리의 건강과 아름다운 치아로 건강한 치아로 하얀치아와
-              미소로 우리의 행복한 삶을 만들어 새로운 미래를 함께 합니다
+              등 우리의 건강과 아름다운 치아로 건강한 치아로 하얀치아와
+              미소로 우리의 행복한 삶을 만들어 새로운 미래를 함께 합니다.
             </Text>
             {/* Button 컴포넌트 적용 */}
             <Button size="lg" variant="primary" className="mt-4">
@@ -178,7 +178,7 @@ function Home() {
             image={home_sec_3_1}
             CN="flex flex-col-reverse items-center gap-4 pt-15"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               충치치료
             </Title>{' '}
             {/* text-4xl -> size="lg" */}
@@ -201,23 +201,23 @@ function Home() {
             image={home_sec_3_2}
             CN="flex flex-col-reverse items-center gap-4"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               임플란트
             </Title>{' '}
             {/* text-4xl -> size="lg" */}
             <Text size="lg">
               {' '}
               {/* text-lg -> size="lg" */}
-              수술 시간은 보통 15분에서 한 시간 반 가량 되는데 수술의 범위,
-              임플란트 개수, 치조골 이식의 동반 여부에 따라 길어질 수도 있다.
+              수술 시간은 보통 15분에서 한 시간 반 가량 되는데 수술의 범위
+              임플란트 개수 치조골 이식의 동반 여부에 따라 길어질 수도 있다.
               여기에서 수술 시간이 짧으면 달인이라 생각할 수도 있지만, 대충 하는
               경우도 있단 걸 기억해두자. 단순 임플란트가 아니라 치조골 이식을
               동반하거나 여러 개를 심는 경우인데 너무 금방 끝났다면 합리적
               의심을 해볼 수도 있으나 사실 그 정도로 양심 없는 치과의사는
-              극소수다. 행여 시간이 오래 걸렸다면 이 양반이 꼼꼼하게 하려고
+              극소수다. 행여 시간이 오래 걸렸다면 꼼꼼하게 하려고
               하는구나 생각하면 된다. 임플란트는 그것을 심는 순간부터 죽을
               때까지 한 사람과 평생을 함께하게 될 인공물이므로, 의식적으로
-              그것에 익숙해지고 자연스러워지는 적응기간을 갖게 된다
+              그것에 익숙해지고 자연스러워지는 적응기간을 갖게 된다.
             </Text>
           </Card>
           <Card
@@ -225,7 +225,7 @@ function Home() {
             image={home_sec_3_3}
             CN="flex flex-col-reverse items-center gap-4 pt-30"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               건강한 치아
             </Title>{' '}
             {/* text-4xl -> size="lg" */}
@@ -235,7 +235,7 @@ function Home() {
               어렵게 충치 치료를 결심했는데 없던 통증이 생겼다면 환자로서는
               고통스러울 수밖에 없다. 치료를 또 해야 해서 치과 의료 분쟁의 주요
               원인이 되기도 한다. “애초에 신경 치료를 하면 통증 발생 가능성은
-              없겠지만, 신경 등 자연치아는 최대한 보존하는 것이 좋다”고 말했다.
+              없겠지만, 신경 등 자연치아는 최대한 보존하는 것이 좋다”고 한다.
               최근 밝혀진 바에 따르면 치아 신경의 ‘역할’은 생각보다 크다. 온도
               자극을 느끼는 것 뿐만 아니라 고유 수용 감각이 있어 저작 기능이 잘
               이뤄질 수 있도록 돕는다. “애초에 신경 치료를 하면 통증 발생
@@ -270,7 +270,7 @@ function Home() {
           CN="mx-auto flex flex-row-reverse justify-end gap-12"
         >
           <ScrollFadeIn delay={0.3}>
-            <Title as="h2" size="lg">
+            <Title as="h2" size="lg" CN={'mb-4'}>
               치아 엑스레이
             </Title>{' '}
             {/* text-4xl -> size="lg" */}
@@ -332,7 +332,7 @@ function Home() {
             CN="mx-auto flex flex-row justify-between gap-12 pb-20"
           >
             <ScrollFadeIn delay={0.3}>
-              <Title as="h2" size="lg">
+              <Title as="h2" size="lg" CN={'mb-4'}>
                 치과 치료 과정
               </Title>{' '}
               {/* text-4xl -> size="lg" */}
@@ -427,7 +427,7 @@ function Home() {
             CCN="mx-auto flex flex-row justify-between gap-12 mb-20"
           >
             <ScrollFadeIn delay={0.3}>
-              <Title as="h2" size="lg">
+              <Title as="h2" size="lg" CN={'mb-4'}>
                 장비와 시스템
               </Title>{' '}
               {/* text-4xl -> size="lg" */}
@@ -465,23 +465,23 @@ function Home() {
       </Wrapper>
 
       <LineBanner CN="w-full h-40 bg-BD-CharcoalBlack flex">
-        <Container CN="flex justify-between items-start mt-15">
+        <Container CN="flex justify-between items-start mt-12">
           <div className="flex flex-row items-end gap-4 text-BD-ElegantGold">
-            <Title as="h2" size="lg">
-              주소: 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층{' '}
-            </Title>{' '}
+            <Title as="h2" size="1g">
+         BellaDent DENTAL LOCATION
+            </Title>
             {/* text-4xl -> size="lg" */}
             <Text size="md">오시는 길 안내</Text>{' '}
             {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
           </div>
           <div className="flex flex-col gap-4 p-12 bg-BD-ElegantGold text-BD-CharcoalBlack z-10">
-            <Title as="h3" size="lg">
-              BellaDent 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층
+            <Title as="h3" size="sm">
+              광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층 BellaDent 
             </Title>{' '}
             {/* text-4xl -> size="lg" */}
             <Text size="md">자가용 </Text>{' '}
             {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md" CN="mt-4">
+            <Text size="md" >
               ※ 주차는 건물뒷편 기계식주차를 이용하시면 되며 관리인이 주차를
               도와드립니다
             </Text>{' '}
@@ -494,7 +494,7 @@ function Home() {
             {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
             <Text size="md">오시는 길 안내</Text>{' '}
             {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md">버스노선 : 01, 45, 47, 26. . . . .</Text>{' '}
+            <Text size="md">버스노선 : 01, 45, 47, 26. 37. . . .</Text>{' '}
             {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
           </div>
         </Container>
