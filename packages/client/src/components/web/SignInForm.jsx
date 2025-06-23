@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import {
@@ -9,6 +9,7 @@ import {
 import { auth } from '../../config/firebase.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function SignInForm() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function SignInForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('');
+  const [modalType, setModalType] = useState(''); // 'success', 'error'
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,9 +26,14 @@ function SignInForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isLogin) {
+      // 이미 로그인 상태일 때, 불필요한 재로그인 시도 방지
+      setModalType('error');
+      setModalMessage('이미 로그인되어 있습니다.');
+      setShowModal(true);
       return;
     }
 
+    // 모달 초기화
     setShowModal(false);
     setModalMessage('');
     setModalType('');
@@ -52,17 +58,17 @@ function SignInForm() {
       if (isActive === false) {
         setModalType('error');
         setModalMessage(
-          '회원 개정이 비활성화되었습니다. 관리자에게 문의하세요.'
+          '회원 계정이 비활성화되었습니다. 관리자에게 문의하세요.'
         );
         setShowModal(true);
 
-        await auth.signOut();
+        await auth.signOut(); // 비활성화 계정은 자동 로그아웃
         setFormData({ email: '', password: '' });
       } else {
         setModalType('success');
         setModalMessage('로그인에 성공했습니다.');
         setShowModal(true);
-        setFormData({ email: '', password: '' });
+        setFormData({ email: '', password: '' }); // 폼 데이터 초기화
       }
     } catch (error) {
       const errorCode = error.code;
@@ -95,7 +101,7 @@ function SignInForm() {
       setModalType('error');
       setModalMessage(displayMessage);
       setShowModal(true);
-      setFormData({ email: '', password: '' });
+      setFormData({ email: '', password: '' }); // 폼 데이터 초기화
     }
   };
 
@@ -136,12 +142,9 @@ function SignInForm() {
             />
           </div>
           <div className="flex items-center justify-center">
-            <button
-              type="submit"
-              className="w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
-            >
+            <Button type="submit" size="lg" className="w-full">
               로그인
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -152,6 +155,7 @@ function SignInForm() {
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
+            // 로그인 성공 후 페이지 이동 로직은 그대로 유지
             if (
               userInfo?.role === 'staff' ||
               userInfo?.role === 'manager' ||

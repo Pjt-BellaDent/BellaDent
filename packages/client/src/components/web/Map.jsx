@@ -155,7 +155,7 @@ function Map({ markersData = [], center, zoom, address }) {
             mapInstanceRef.current
           );
           textOverlaysRef.current.push(textOverlay);
-        } else {
+        } else { 
           console.warn('유효하지 않은 마커 데이터가 있습니다:', markerData);
         }
       });
