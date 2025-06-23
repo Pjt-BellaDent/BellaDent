@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './Button';
 
 const Modal = ({ children, show, setShow, activeClick, activeClose }) => {
   const handleClick = () => {
@@ -19,19 +20,23 @@ const Modal = ({ children, show, setShow, activeClick, activeClose }) => {
       <div className="bg-BD-PureWhite px-20 py-15 max-w-200 min-w-120 max-h-[80vh] overflow-y-auto shadow-xl text-lg ">
         {children}
         <div className="mt-20 flex justify-center gap-4">
-          <button
-            className="flex-1 w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+          <Button
+            variant="primary" // 기본 primary 스타일
+            size="lg" // 큰 사이즈
+            className="flex-1 w-full"
             onClick={handleClick}
           >
             확인
-          </button>
+          </Button>
           {activeClose && (
-            <button
-              className="flex-1 w-full px-6 py-3 rounded text-lg bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+            <Button
+              variant="secondary" // 보조 secondary 스타일
+              size="lg" // 큰 사이즈
+              className="flex-1 w-full"
               onClick={handleClose}
             >
               취소
-            </button>
+            </Button>
           )}
         </div>
       </div>

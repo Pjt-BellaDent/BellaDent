@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function SignUpForm() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function SignUpForm() {
   });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('');
+  const [modalType, setModalType] = useState(''); // 'success', 'error'
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,41 +25,65 @@ function SignUpForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // 모달 초기화
+    setShowModal(false);
+    setModalMessage('');
+    setModalType('');
+
     try {
       if (formData.password !== formData.password_check) {
-        alert('비밀번호가 일치하지 않습니다. 다시 확인하세요.');
+        setModalType('error');
+        setModalMessage('비밀번호가 일치하지 않습니다. 다시 확인하세요.');
+        setShowModal(true);
         return;
       }
       const url = 'http://localhost:3000/users/signUp';
-      const response = await axios
-        .post(
-          url,
-          {
-            email: formData.email,
-            password: formData.password,
-            name: formData.name,
-            phone: formData.phone,
-            address: formData.address,
-          }
-        )
-        .then((res) => {
-          if (res.status === 201) {
-            setModalType('success');
-            setModalMessage('회원가입이 완료되었습니다.');
-            setShowModal(true);
-          }
-        });
-    } catch (err) {
-      if (err.status === 404) {
-        setModalType('error');
-        setModalMessage('이미 사용중인 이메일입니다.');
+      const response = await axios.post(url, {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+      });
+
+      if (response.status === 201) {
+        setModalType('success');
+        setModalMessage('회원가입이 완료되었습니다.');
         setShowModal(true);
-      } else if (err.status === 400) {
+      } else {
+        // 예상치 못한 성공 응답 (201이 아닌 다른 2xx)
         setModalType('error');
-        setModalMessage('입력값이 형식을 벗어났습니다.');
+        setModalMessage(`회원가입 중 예상치 못한 응답: ${response.status}`);
         setShowModal(true);
       }
+    } catch (err) {
       console.error(err);
+      let displayMessage = '회원가입 중 알 수 없는 오류가 발생했습니다.';
+
+      // Axios 에러 객체에서 상태 코드 확인
+      if (axios.isAxiosError(err) && err.response) {
+        switch (err.response.status) {
+          case 400:
+            displayMessage =
+              err.response.data.message || '입력값이 형식을 벗어났습니다.';
+            break;
+          case 409: // 충돌 (예: 이미 사용중인 이메일)
+            displayMessage =
+              err.response.data.message || '이미 사용중인 이메일입니다.';
+            break;
+          default:
+            displayMessage = `회원가입 중 오류 발생: ${
+              err.response.data.message || err.message
+            }`;
+            break;
+        }
+      } else {
+        displayMessage = `회원가입 중 오류 발생: ${err.message}`;
+      }
+
+      setModalType('error');
+      setModalMessage(displayMessage);
+      setShowModal(true);
     }
   };
 
@@ -205,16 +230,14 @@ function SignUpForm() {
             </div>
           </div>
           <div className="flex items-center justify-center mt-4">
-            <button
-              type="submit"
-              className="w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
-            >
+            <Button type="submit" size="lg" className="w-full">
               등록
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-      {modalType === 'success' && (
+
+      {showModal && modalType === 'success' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
@@ -226,13 +249,14 @@ function SignUpForm() {
           <Title>{modalMessage}</Title>
         </Modal>
       )}
-      {modalType === 'error' && (
+
+      {showModal && modalType === 'error' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            navigate(0);
+            // navigate(0); // 오류 시 새로고침 대신 모달만 닫도록
           }}
         >
           <Title>{modalMessage}</Title>

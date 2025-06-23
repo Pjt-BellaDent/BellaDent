@@ -1,382 +1,405 @@
-import React, { useState, useEffect } from 'react';
-import styled from '@emotion/styled';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import React, { useState, useEffect } from 'react'; // useEffect 임포트
 import axios from 'axios';
+import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
 
-// 스타일 정의
-const Container = styled.div`
-  padding: 30px;
-  background-color: #f8f9fc;
-  font-family: 'Noto Sans KR', sans-serif;
-`;
-
-const Title = styled.h2`
-  font-size: 22px;
-  margin-bottom: 20px;
-  color: #333;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  background-color: ${({ color }) => color || '#007bff'};
-  color: white;
-  border: none;
-  border-radius: 5px;
-  margin-right: 10px;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background-color: ${({ color }) =>
-      color === '#dc3545' ? '#c82333' : '#0056b3'};
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  margin-bottom: 10px;
-`;
-
-const Th = styled.th`
-  background-color: #6699cc;
-  color: white;
-  padding: 12px;
-  font-size: 14px;
-  text-align: center;
-`;
-
-const Td = styled.td`
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: center;
-`;
-
-const MessageInput = styled.textarea`
-  width: 100%;
-  height: 100px;
-  padding: 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: none;
-  margin-bottom: 20px;
-`;
-
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 20px;
-`;
-
-const PageButton = styled.button`
-  padding: 6px 12px;
-  background-color: ${({ active }) => (active ? '#007bff' : '#fff')};
-  color: ${({ active }) => (active ? '#fff' : '#333')};
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #007bff;
-    color: white;
-  }
-`;
-
-const SearchInput = styled.input`
-  padding: 8px;
-  font-size: 14px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 200px;
-`;
-
-// 모달 캘린더
-const CalendarOverlay = styled.div`
-  display: ${({ show }) => (show ? 'flex' : 'none')};
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  justify-content: center;
-  align-items: center;
-`;
-
-const CalendarBox = styled.div`
-  background: #1a1a1a;
-  padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  color: white;
-`;
-
-const DarkCalendarWrapper = styled.div`
-  .react-calendar {
-    background: #1a1a1a;
-    border: none;
-    color: #fff;
-    font-family: 'Noto Sans KR', sans-serif;
-  }
-
-  .react-calendar__navigation {
-    background: transparent;
-    margin-bottom: 1rem;
-  }
-
-  .react-calendar__navigation button {
-    background: transparent !important;
-    color: #fff;
-    font-weight: bold;
-    font-size: 16px;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: color 0.2s ease;
-  }
-
-  .react-calendar__navigation button:hover:enabled {
-    color: #f87171;
-  }
-
-  .react-calendar__navigation button:disabled {
-    color: #888;
-    cursor: default;
-    opacity: 0.4;
-  }
-
-  .react-calendar__tile {
-    color: #fff;
-    background: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-
-  .react-calendar__tile:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .react-calendar__tile--now {
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
-    font-weight: bold;
-  }
-
-  .react-calendar__tile--active {
-    background: rgba(255, 255, 255, 0.2);
-    color: inherit;
-  }
-
-  .react-calendar__month-view__weekdays {
-    color: #ccc;
-    text-align: center;
-    font-weight: 500;
-  }
-`;
+const ITEMS_PER_PAGE = 10;
 
 const SmsBroadcast = () => {
+  const { userToken } = useUserInfo();
+
   const [patients, setPatients] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
   const [message, setMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const [calendarShow, setCalendarShow] = useState(false);
+  const [searchExecuted, setSearchExecuted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [sendingPhone, setSendingPhone] = useState(''); // 발신번호 상태 추가
+  const [sendPhoneLoading, setSendPhoneLoading] = useState(true); // 발신번호 로딩 상태
+  const [sendPhoneError, setSendPhoneError] = useState(null); // 발신번호 에러 상태
 
   const pageSize = 10;
 
+  // 컴포넌트 마운트 시 발신번호를 가져오는 useEffect
   useEffect(() => {
-    const fetchPatients = async () => {
-      const snapshot = await getDocs(collection(db, 'users'));
-      const data = snapshot.docs.map(doc => {
-        const user = doc.data();
-        return {
-          id: doc.id,
-          name: user.name,
-          phone: user.phone,
-        };
-      });
-      setPatients(data);
+    const fetchSendingNumber = async () => {
+      if (!userToken) {
+        setSendPhoneError('로그인 정보가 없어 발신번호를 불러올 수 없습니다.');
+        setSendPhoneLoading(false);
+        return;
+      }
+      setSendPhoneLoading(true);
+      setSendPhoneError(null);
+      try {
+        const response = await axios.get('http://localhost:3000/sms/number', {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        });
+        if (
+          response.status === 200 &&
+          response.data.data &&
+          response.data.data.number
+        ) {
+          // API 응답 구조에 따라 'number' 필드가 발신번호라고 가정합니다.
+          // 실제 API 응답을 확인하고 적절한 필드명으로 수정해주세요.
+          setSendingPhone(response.data.data.number);
+        } else {
+          setSendPhoneError('발신번호를 불러오지 못했습니다.');
+        }
+      } catch (err) {
+        console.error('발신번호 조회 중 오류 발생:', err);
+        setSendPhoneError('발신번호 조회 중 오류가 발생했습니다.');
+      } finally {
+        setSendPhoneLoading(false);
+      }
     };
-    fetchPatients();
-  }, []);
 
-  const filteredPatients = patients.filter(
-    (p) =>
-      (p.name || '').includes(searchTerm.trim()) ||
-      (p.phone || '').includes(searchTerm.trim())
-  );
+    fetchSendingNumber();
+  }, [userToken]); // userToken이 변경될 때마다 재조회
 
-  const totalPages = Math.ceil(filteredPatients.length / pageSize);
-  const paginatedPatients = filteredPatients.slice(
+  // 이름으로 환자 정보를 검색하는 함수
+  const searchPatientsByName = async () => {
+    if (!searchTerm.trim()) {
+      alert('검색할 이름을 입력해주세요.');
+      return;
+    }
+    if (!userToken) {
+      alert('로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.');
+      return;
+    }
+
+    setLoading(true);
+    setSearchError(null);
+    setSearchExecuted(true);
+    setPatients([]);
+    setCurrentPage(1);
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/users/patient/name/${searchTerm.trim()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+
+      if (response.status === 200 && response.data.patientInfo) {
+        setPatients(response.data.patientInfo);
+      } else {
+        setPatients([]);
+        setSearchError('검색된 환자 정보가 없습니다.');
+      }
+    } catch (err) {
+      console.error('환자 검색 중 오류 발생:', err);
+      setPatients([]);
+      setSearchError(
+        err.response?.data?.message || '환자 검색 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setLoading(false);
+      setSearchTerm('');
+    }
+  };
+
+  const paginatedPatients = patients.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+  const totalPages = Math.ceil(patients.length / pageSize);
 
-  const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
-    );
+  const toggleSelectRecipient = (patient) => {
+    setSelectedRecipients((prev) => {
+      const isSelected = prev.some((p) => p.id === patient.id);
+      if (isSelected) {
+        return prev.filter((p) => p.id !== patient.id);
+      } else {
+        return [...prev, patient];
+      }
+    });
   };
 
-  const toggleAll = () => {
-    const allIds = filteredPatients.map((p) => p.id);
-    const allSelected = allIds.every((id) => selected.includes(id));
-    setSelected(allSelected ? [] : allIds);
+  const removeRecipient = (patientId) => {
+    setSelectedRecipients((prev) => prev.filter((p) => p.id !== patientId));
   };
 
   const insertAd = () => {
     setMessage('(광고) 안녕하세요 BellaDent 치과입니다!');
   };
 
-  const insertRevisit = () => {
-    setCalendarShow(true);
-  };
-
-  const getKoreanDay = (dateStr) => {
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
-    const date = new Date(dateStr);
-    return days[date.getDay()];
-  };
-
-  const formatDate = (date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
-
-  const handleDateSelect = (date) => {
-    const formatted = formatDate(date);
-    const day = getKoreanDay(formatted);
-    const content = `안녕하세요! BellaDent 치과입니다!\n${formatted} (${day})요일은 님의 재진일입니다!`;
-    setMessage(content);
-    setCalendarShow(false);
-  };
-
   const sendSms = async () => {
-    if (!message.trim()) return alert('메시지를 입력하세요.');
-    if (selected.length === 0) return alert('수신 대상을 선택하세요.');
+    if (!message.trim()) {
+      alert('메시지를 입력하세요.');
+      return;
+    }
+    if (selectedRecipients.length === 0) {
+      alert('수신 대상을 선택하세요.');
+      return;
+    }
+    if (!userToken) {
+      alert('로그인 정보가 유효하지 않습니다. 다시 로그인해주세요.');
+      return;
+    }
+    if (!sendingPhone) {
+      // 발신번호가 없으면 발송 불가
+      alert('발신번호를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
 
     try {
-      const selectedPatients = patients.filter((p) => selected.includes(p.id));
-      const destPhones = selectedPatients.map((p) => p.phone);
-      const destIds = selectedPatients.map((p) => p.id);
+      const destPhones = selectedRecipients.map((p) => p.phone);
+      const destIds = selectedRecipients.map((p) => p.id);
 
       const smsData = {
-        senderId: 'admin',
+        senderId: 'admin', // 실제 발신 관리자 ID로 대체 필요
         smsLogType: message.includes('(광고)') ? '광고' : '진료알림',
         destId: destIds,
         dest_phone: destPhones,
-        send_phone: '010-1234-5678',
+        send_phone: sendingPhone, // ★★★ GetSendNumber API로 가져온 발신번호 사용 ★★★
         msg_body: message,
         msg_ad: message.includes('(광고)') ? 'Y' : 'N',
       };
 
-      const response = await axios.post('http://localhost:3000/sms/send', smsData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await axios.post(
+        'http://localhost:3000/sms/send',
+        smsData,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
 
       if (response.status === 201) {
-        alert(`총 ${selected.length}명에게 문자 발송 완료`);
+        alert(`총 ${selectedRecipients.length}명에게 문자 발송 완료`);
         setMessage('');
+        setSelectedRecipients([]);
+        setPatients([]);
+        setSearchExecuted(false);
+        setSearchTerm('');
       } else {
-        alert('발송 실패: ' + response.data?.message);
+        alert(
+          '발송 실패: ' +
+            (response.data?.message || '알 수 없는 오류 발생') +
+            (response.data?.apiError
+              ? ` (API 오류: ${response.data.apiError})`
+              : '')
+        );
       }
     } catch (err) {
       console.error(err);
-      alert('오류 발생: ' + err.message);
+      alert('오류 발생: ' + (err.response?.data?.message || err.message));
     }
   };
 
   return (
-    <Container>
-      <Title>📱 단체 문자 발송</Title>
+    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+      <h2 className="text-2xl font-semibold mb-5 text-gray-800">
+        sms 발송
+      </h2>
 
-      <div style={{ marginBottom: '20px' }}>
-        <Button onClick={insertAd}>📢 광고 보내기</Button>
-        <Button onClick={toggleAll} color="#6c757d">전체 선택</Button>
-        <Button onClick={insertRevisit} color="#17a2b8">재진 안내</Button>
+      <div className="mb-5 flex space-x-2">
+        <button
+          onClick={insertAd}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          광고 보내기
+        </button>
       </div>
 
-      <SearchInput
-        type="text"
-        placeholder="이름 검색"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      {/* 발신번호 표시 */}
+      <div className="mb-5 text-gray-700">
+        <span className="font-semibold">발신번호: </span>
+        {sendPhoneLoading ? (
+          <span className="text-sm text-gray-500">불러오는 중...</span>
+        ) : sendPhoneError ? (
+          <span className="text-sm text-red-500">{sendPhoneError}</span>
+        ) : (
+          <span className="text-sm text-blue-700">{sendingPhone}</span>
+        )}
+      </div>
 
-      <Table>
-        <thead>
-          <tr>
-            <Th>선택</Th>
-            <Th>이름</Th>
-            <Th>전화번호</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedPatients.map((p) => (
-            <tr key={p.id}>
-              <Td>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(p.id)}
-                  onChange={() => toggleSelect(p.id)}
-                />
-              </Td>
-              <Td>{p.name}</Td>
-              <Td>{p.phone}</Td>
+      <div className="flex space-x-2 mb-5">
+        <input
+          type="text"
+          placeholder="환자 이름 검색"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              searchPatientsByName();
+            }
+          }}
+          className="flex-grow px-4 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        />
+        <button
+          onClick={searchPatientsByName}
+          className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50"
+        >
+          검색
+        </button>
+      </div>
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow mb-4">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-blue-600">
+            <tr>
+              <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider rounded-tl-lg">
+                선택
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                이름
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider rounded-tr-lg">
+                전화번호
+              </th>
             </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="3"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  환자 정보를 검색 중입니다...
+                </td>
+              </tr>
+            ) : searchError ? (
+              <tr>
+                <td
+                  colSpan="3"
+                  className="px-6 py-4 text-center text-sm text-red-500"
+                >
+                  {searchError}
+                </td>
+              </tr>
+            ) : searchExecuted && paginatedPatients.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="3"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  검색된 환자 정보가 없습니다.
+                </td>
+              </tr>
+            ) : !searchExecuted ? (
+              <tr>
+                <td
+                  colSpan="3"
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  이름을 입력하여 환자를 검색해주세요.
+                </td>
+              </tr>
+            ) : (
+              paginatedPatients.map((p) => (
+                <tr key={p.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-800">
+                    <input
+                      type="checkbox"
+                      checked={selectedRecipients.some(
+                        (rec) => rec.id === p.id
+                      )}
+                      onChange={() => toggleSelectRecipient(p)}
+                      className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-800">
+                    {p.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-800">
+                    {p.phone}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {patients.length > 0 && (
+        <div className="flex justify-center space-x-1 mb-5">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 text-sm rounded ${
+                i + 1 === currentPage
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              {i + 1}
+            </button>
           ))}
-        </tbody>
-      </Table>
+        </div>
+      )}
 
-      <Pagination>
-        {Array.from({ length: totalPages }, (_, i) => (
-          <PageButton
-            key={i + 1}
-            active={i + 1 === currentPage}
-            onClick={() => setCurrentPage(i + 1)}
-          >
-            {i + 1}
-          </PageButton>
-        ))}
-      </Pagination>
+      <div className="mb-5 bg-white p-4 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-3 text-gray-800">
+          선택된 수신인 ({selectedRecipients.length}명)
+        </h3>
+        {selectedRecipients.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {selectedRecipients.map((recipient) => (
+              <span
+                key={recipient.id}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+              >
+                {recipient.name} ({recipient.phone})
+                <button
+                  type="button"
+                  onClick={() => removeRecipient(recipient.id)}
+                  className="ml-2 -mr-0.5 h-4 w-4 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-200 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                >
+                  <svg
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-500 text-sm">수신인을 선택해주세요.</p>
+        )}
+      </div>
 
-      <MessageInput
+      <textarea
         placeholder="메시지를 입력하세요 (최대 80자)"
         value={message}
         onChange={(e) => setMessage(e.target.value.slice(0, 80))}
-      />
+        className="w-full h-28 p-3 text-sm border border-gray-300 rounded-md resize-none shadow-sm focus:ring-blue-500 focus:border-blue-500 mb-5"
+      ></textarea>
 
-      <div>
-        <Button onClick={sendSms}>발송</Button>
-        <Button color="#dc3545" onClick={() => setMessage('')}>초기화</Button>
+      <div className="flex space-x-2">
+        <button
+          onClick={sendSms}
+          className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50"
+        >
+          발송
+        </button>
+        <button
+          onClick={() => setMessage('')}
+          className="px-5 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-opacity-50"
+        >
+          초기화
+        </button>
       </div>
-
-      <CalendarOverlay show={calendarShow} onClick={() => setCalendarShow(false)}>
-        <CalendarBox onClick={(e) => e.stopPropagation()}>
-          <DarkCalendarWrapper>
-            <Calendar
-              onClickDay={handleDateSelect}
-              locale="ko-KR"
-              calendarType="gregory"
-            />
-          </DarkCalendarWrapper>
-        </CalendarBox>
-      </CalendarOverlay>
-    </Container>
+    </div>
   );
 };
 

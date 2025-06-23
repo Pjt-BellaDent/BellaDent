@@ -1,9 +1,8 @@
-import { useState } from 'react';
-
+import React, { useState } from 'react'; // React 임포트 확인
 import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
-import Title from '../../../../components/web/Title';
-import Text from '../../../../components/web/Text';
+import Title from '../../../../components/web/Title'; // 수정된 Title 컴포넌트
+import Text from '../../../../components/web/Text'; // 수정된 Text 컴포넌트
 import ImageBox from '../../../../components/web/ImageBox';
 
 import line_banner from '../../../../assets/images/line_banner.png';
@@ -15,7 +14,6 @@ import home_sec_7_5 from '../../../../assets/images/home_sec_7_5.png';
 import home_sec_7_6 from '../../../../assets/images/home_sec_7_6.png';
 import home_sec_7_7 from '../../../../assets/images/home_sec_7_7.png';
 import home_sec_7_8 from '../../../../assets/images/home_sec_7_8.png';
-
 
 function Tour() {
   const [thumbnail, setThumbnail] = useState(home_sec_7_1);
@@ -37,8 +35,14 @@ function Tour() {
         image={line_banner}
       >
         <div className="flex flex-col justify-center items-center">
-          <Title CN="text-4xl text-center"><b>치과병원 내부 둘러 보기</b></Title>
-          <Text CN="text-xl text-center">Take a look inside our dental clinic</Text>{' '}
+          {/* Title 컴포넌트에 size prop 적용, <b> 태그 제거 */}
+          <Title as="h1" size="lg" CN="text-center">
+            치과병원 내부 둘러 보기
+          </Title>
+          {/* Text 컴포넌트에 size prop 적용 */}
+          <Text size="md" CN="text-center">
+            Take a look inside our dental clinic
+          </Text>{' '}
         </div>
       </LineImageBanner>
       <Container CN="py-40">

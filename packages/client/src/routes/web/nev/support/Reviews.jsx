@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUserInfo } from '../../../../contexts/UserInfoContext';
 
@@ -19,44 +19,87 @@ function Reviews() {
   const [disabledPosts, setDisabledPosts] = useState([]);
   const { userInfo, userToken } = useUserInfo();
 
+  // --- 1. 전체 후기 목록 가져오기 ---
   useEffect(() => {
-    const url = 'http://localhost:3000/reviews';
-    const readPosts = async () => {
-      try {
-        const res = await axios.get(url);
-        setPosts(res.data.reviews);
-      } catch (error) {
-        if (error.status !== 404) {
-          console.error('Error fetching reviews:', error);
-        }
-      }
-    };
-    readPosts();
-  }, []);
-
-  if (userInfo !== null) {
-    const url = `http://localhost:3000/reviews/${userInfo.id}`;
-    const readDisabledGets = async () => {
-      try {
-        const res = await axios.get(
-          url,
-          {},
-          {
+    if (userToken) {
+      const url = 'http://localhost:3000/reviews';
+      const readPosts = async () => {
+        try {
+          const res = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${userToken}`,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              Pragma: 'no-cache',
+              Expires: '0',
             },
             withCredentials: true,
+          });
+          setPosts(res.data.reviews || []);
+          console.log('Successfully fetched all reviews:', res.data.reviews);
+        } catch (error) {
+          console.error('Error fetching all reviews:', error);
+          if (axios.isAxiosError(error) && error.response?.status === 401) {
+            alert('인증 오류: 전체 후기를 불러올 수 없습니다. 로그인해주세요.');
           }
-        );
-        setDisabledPosts(res.data.reviews);
-      } catch (error) {
-        if (error.status !== 404) {
-          console.error('Error fetching reviews:', error);
+          setPosts([]);
         }
-      }
-    };
-    readDisabledGets();
-  }
+      };
+      readPosts();
+    } else {
+      setPosts([]);
+      console.log(
+        'Reviews: User token not available for all reviews fetch, skipping.'
+      );
+    }
+  }, [userToken]);
+
+  // --- 2. 내가 작성한 후기 중 비활성화 목록 가져오기 (authorId로 조회) ---
+  useEffect(() => {
+    if (userInfo?.id && userToken) {
+      // URL을 /reviews/:id (authorId로 조회)로 그대로 사용
+      const url = `http://localhost:3000/reviews/${userInfo.id}`;
+      const readDisabledGets = async () => {
+        try {
+          const res = await axios.get(url, {
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              Pragma: 'no-cache',
+              Expires: '0',
+            },
+            withCredentials: true,
+          });
+          setDisabledPosts(res.data.reviews || []); // { reviews: [...] } 형태
+        } catch (error) {
+          if (axios.isAxiosError(error) && error.response?.status === 404) {
+            console.log(`No disabled reviews found for user ${userInfo.id}.`);
+            setDisabledPosts([]);
+          } else if (
+            axios.isAxiosError(error) &&
+            error.response?.status === 401
+          ) {
+            console.error(
+              'Authentication error fetching disabled reviews:',
+              error
+            );
+            alert(
+              '인증 오류: 비활성화 후기를 불러올 수 없습니다. 다시 로그인해주세요.'
+            );
+            setDisabledPosts([]);
+          } else {
+            console.error('Error fetching disabled reviews:', error);
+            setDisabledPosts([]);
+          }
+        }
+      };
+      readDisabledGets();
+    } else {
+      setDisabledPosts([]);
+      console.log(
+        'Reviews: User info or token not available, skipping disabled reviews fetch.'
+      );
+    }
+  }, [userInfo, userToken]);
 
   return (
     <>
@@ -64,16 +107,24 @@ function Reviews() {
         CN="w-full h-40 flex justify-center items-center overflow-hidden"
         image={line_banner}
       >
-        <Title CN="text-4xl text-center">Welcome to Our Clinic</Title>
-        <Text CN="text-xl text-center">Your health is our priority</Text>
+        <Title as="h2" size="lg" CN="text-center">
+          Welcome to Our Clinic
+        </Title>
+        <Text size="xl" CN="text-center">
+          Your health is our priority
+        </Text>
       </LineImageBanner>
       {userInfo && (
         <Container CN="py-40">
           <RowBox CN="justify-start items-center">
-            <Title CN="text-4xl">비활성화 이용 후기 목록</Title>
+            <Title as="h2" size="lg">
+              비활성화 이용 후기 목록
+            </Title>
           </RowBox>
           <hr className="my-4" />
-          <Text CN="text-2xl text-center my-4">제목</Text>
+          <Text size="xl" CN="text-center my-4">
+            제목
+          </Text>
           <BoardAdd
             posts={disabledPosts}
             UL="mt-4 text-2xl cursor-pointer select-none"
@@ -83,11 +134,13 @@ function Reviews() {
       )}
       <Container CN="py-40">
         <RowBox CN="justify-between items-center">
-          <Title CN="text-4xl">이용 후기 목록</Title>
+          <Title as="h2" size="lg">
+            이용 후기 목록
+          </Title>
           <Button
-            CN="px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
-            CLICK={() => {
-              if (activeReview == false) {
+            size="lg"
+            onClick={() => {
+              if (activeReview === false) {
                 setActiveReview(!activeReview);
               }
             }}
@@ -103,7 +156,9 @@ function Reviews() {
           />
         ) : (
           <>
-            <Text CN="text-2xl text-center my-4">제목</Text>
+            <Text size="xl" CN="text-center my-4">
+              제목
+            </Text>
             <BoardAdd
               posts={posts}
               CN="border-y divide-y border-gray-300 divide-gray-300"
