@@ -143,20 +143,22 @@ const OnsiteRegister = () => {
     }
 
     const payload = {
-      email: patientEmail,
-      password: patientPassword,
-      name: formData.name,
-      birth: formData.birth,
-      gender: formData.gender,
-      phone: formData.phone,
-      address: formData.address || '',
-      patientInfo: {
-        insuranceNumber: formData.insuranceNumber || '',
-        allergies: formData.allergies || '',
-        medications: formData.medications || '',
-        memo: formData.memo || '',
-      },
-    };
+  role: 'patient',
+  email: patientEmail,
+  password: patientPassword,
+  name: formData.name,
+  birth: formData.birth,
+  gender:
+    formData.gender === '남' ? 'M' : formData.gender === '여' ? 'F' : formData.gender,
+  phone: formData.phone,
+  address: formData.address || '',
+  patientInfo: {
+    insuranceNumber: formData.insuranceNumber || '',
+    allergies: formData.allergies || '',
+    medications: formData.medications || '',
+    memo: formData.memo || '',
+  },
+};
 
     console.log('최종 제출 payload:', payload);
 
@@ -166,7 +168,7 @@ const OnsiteRegister = () => {
         payload,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // 스태프 토큰 필요
+            Authorization: `Bearer ${userToken}`// 스태프 토큰 필요
           },
         }
       );
