@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = [] }) => {
+const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = [], selectedStaffId, selectedDate }) => {
   const [form, setForm] = useState({
     position: '',
     name: '',
@@ -23,7 +23,19 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
         department: initialData.department || '',
         startTime: initialData.startTime || '',
         endTime: initialData.endTime || '',
+        scheduleDate: initialData.scheduleDate || '',
       });
+    } else if (selectedStaffId && selectedStaffId !== '전체') {
+      // 직원이 선택되어 있고, 전체가 아니면 해당 직원으로 세팅
+      const staff = staffList.find(s => s.uid === selectedStaffId);
+      setForm(prev => ({
+        ...prev,
+        uid: staff?.uid || '',
+        name: staff?.name || '',
+        position: staff?.position || '',
+        department: staff?.department || '',
+        scheduleDate: selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : '',
+      }));
     } else {
       setForm({
         position: '',
@@ -34,10 +46,10 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
         endTime: '',
         memo: '',
         off: false,
-        scheduleDate: '',
+        scheduleDate: selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : '',
       });
     }
-  }, [initialData, open]);
+  }, [initialData, open, selectedStaffId, selectedDate, staffList]);
 
   // 직원 선택 시 자동으로 position, department, uid 채우기
   const handleStaffChange = (e) => {
@@ -62,6 +74,8 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
     onSave(form);
   };
 
+  const isEdit = !!form.id;
+
   if (!open) return null;
 
   return (
@@ -69,7 +83,7 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
       <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
       <div className="relative bg-white rounded-lg w-[400px] shadow-lg max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center px-4 py-3">
-          <h3 className="text-lg font-medium">{initialData ? '스케줄 수정' : '스케줄 등록'}</h3>
+          <h3 className="text-lg font-medium">{isEdit ? '스케줄 수정' : '스케줄 등록'}</h3>
           <button 
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -89,10 +103,19 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
               onChange={handleStaffChange}
             >
               <option value="">직원 선택</option>
-              {staffList.map(staff => (
-                <option key={staff.uid} value={staff.uid}>{staff.name} ({staff.position}/{staff.department})</option>
-              ))}
+              {staffList.length > 0 ? (
+                staffList.map(staff => (
+                  <option key={staff.uid} value={staff.uid}>
+                    {staff.name} ({staff.position}/{staff.department})
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>직원 목록을 불러오는 중...</option>
+              )}
             </select>
+            {staffList.length === 0 && (
+              <p className="text-xs text-red-500 mt-1">직원 목록을 불러올 수 없습니다.</p>
+            )}
           </div>
           {/* 시간 입력 */}
           <div className="mb-4 flex gap-2">
@@ -140,7 +163,7 @@ const SchedulePopup = ({ open, onClose, onSave, initialData = null, staffList = 
               onClick={handleSubmit}
               className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
             >
-              {initialData ? '수정' : '등록'}
+              {isEdit ? '수정' : '등록'}
             </button>
             <button
               onClick={onClose}

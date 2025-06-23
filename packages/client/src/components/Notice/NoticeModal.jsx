@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
@@ -89,6 +89,24 @@ const Button = styled.button`
   }
 `;
 
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 6px;
+`;
+
+const PageButton = styled.button`
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: ${({ active }) => (active ? '#d4b080' : '#eee')};
+  color: ${({ active }) => (active ? '#fff' : '#333')};
+  font-weight: ${({ active }) => (active ? 'bold' : 'normal')};
+  cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
+`;
+
 const EmptyMessage = styled.div`
   text-align: center;
   color: #999;
@@ -105,6 +123,8 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [body, setBody] = useState('');
   const [showOnMain, setShowOnMain] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   const baseURL = 'http://localhost:3000/api/notice';
 
@@ -140,23 +160,10 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
       const token = await user.getIdToken();
 
       const data = editId
-        ? {
-            title,
-            content: body,
-            isPublic: !!showOnMain
-          }
-        : {
-            title,
-            content: body,
-            authorId: user.uid,
-            isPublic: !!showOnMain
-          };
+        ? { title, content: body, isPublic: !!showOnMain }
+        : { title, content: body, authorId: user.uid, isPublic: !!showOnMain };
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
       if (editId) {
         await axios.put(`${baseURL}/${editId}`, data, config);
@@ -168,7 +175,6 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
       resetForm();
       setShowForm(false);
       fetchNotices();
-
     } catch (err) {
       console.error('공지 저장 실패:', err.response?.data || err.message);
       alert('저장 실패');
@@ -181,7 +187,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
       const token = await user.getIdToken();
 
       await axios.delete(`${baseURL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setDetailShow(false);
@@ -205,6 +211,9 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
     setDetailShow(false);
   };
 
+  const totalPages = Math.ceil(notices.length / itemsPerPage);
+  const visibleNotices = notices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <>
       <Overlay show={show} onClick={onClose}>
@@ -212,8 +221,8 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
           <Title>📢 직원 공지사항</Title>
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {!showForm && (
-              Array.isArray(notices) && notices.length > 0 ? (
-                notices.map((n) => (
+              Array.isArray(visibleNotices) && visibleNotices.length > 0 ? (
+                visibleNotices.map((n) => (
                   <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
                     <strong>{n.title}</strong>
                   </NoticeItem>
@@ -263,6 +272,22 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
               </NoticeItem>
             )}
           </ul>
+
+          {!showForm && totalPages > 1 && (
+            <Pagination>
+              <PageButton onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>이전</PageButton>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <PageButton
+                  key={i + 1}
+                  active={currentPage === i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </PageButton>
+              ))}
+              <PageButton onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>다음</PageButton>
+            </Pagination>
+          )}
 
           {!showForm && (
             <>

@@ -1,9 +1,12 @@
+// backend/routes/reviews.js
+
 import express from "express";
 import multer from "multer";
 import {
   createReview,
-  readAllReviews,
-  readReviewById,
+  readAllReviews, // 이 함수
+  readReviewsByAuthorId, // <-- readReviewById 대신 이 함수 임포트
+  readSingleReviewById, // <-- 새로 추가된 함수 임포트
   readDisabledReviewsByAuthorId,
   readPendingReviews,
   updateReview,
@@ -13,61 +16,50 @@ import {
   deleteReview,
 } from "../controllers/reviewController.js";
 import {
-  authenticateFirebaseToken, // 모든 보호된 라우트에 적용
-  patientRoleCheck, // 환자 포함 모든 인증 사용자
-  managerRoleCheck, // 매니저 이상
-  adminRoleCheck, // 어드민만
+  authenticateFirebaseToken,
+  patientRoleCheck,
+  managerRoleCheck,
+  adminRoleCheck,
 } from "../middleware/roleCheck.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+const auth = authenticateFirebaseToken;
 
 router.post(
   "/",
-  authenticateFirebaseToken,
+  auth,
   patientRoleCheck,
   upload.fields([{ name: "reviewImg", maxCount: 10 }]),
   createReview
-); //  치료 후기 작성 (환자 포함 모든 인증 사용자)
-router.get("/", readAllReviews); // 모든 리뷰 조회
-router.get("/:id", authenticateFirebaseToken, patientRoleCheck, readReviewById); // 리뷰 ID로 조회
+);
+
+router.get("/", auth, readAllReviews); // <-- 'auth' 미들웨어 추가! 이제 로그인해야 전체 리뷰 조회 가능
+// 특정 작성자(Author ID)의 리뷰 목록 조회
+router.get("/:id", auth, patientRoleCheck, readReviewsByAuthorId); // <-- 기존 /:id 라우트 연결 함수 변경
+
+// 특정 리뷰(Review ID)의 상세 정보 조회 (수정 폼에 사용)
+router.get("/single/:id", auth, patientRoleCheck, readSingleReviewById); // <-- 새로운 라우트 추가!
+
 router.get(
   "/disabled/:id",
-  authenticateFirebaseToken,
+  auth,
   patientRoleCheck,
   readDisabledReviewsByAuthorId
-); // 비활성화된 리뷰 작성자 ID로 조회
-router.get(
-  "/pending/",
-  authenticateFirebaseToken,
-  managerRoleCheck,
-  readPendingReviews
-); // 재활성화 요청 치료 후기 조회 (매니저 이상)
+);
+router.get("/pending/", auth, managerRoleCheck, readPendingReviews);
+
 router.put(
   "/:id",
-  authenticateFirebaseToken,
+  auth,
   patientRoleCheck,
   upload.fields([{ name: "reviewImg", maxCount: 10 }]),
   updateReview
-); // 리뷰 수정 (환자 포함 모든 인증 사용자)
-router.put(
-  "/reapproval/:id",
-  authenticateFirebaseToken,
-  patientRoleCheck,
-  requestReapproval
-); // 리뷰 재승인 요청 (환자 포함 모든 인증 사용자)
-router.put(
-  "/enable/:id",
-  authenticateFirebaseToken,
-  managerRoleCheck,
-  enableReview
-); // 리뷰 활성화 (매니저 이상)
-router.put(
-  "/disabled/:id",
-  authenticateFirebaseToken,
-  managerRoleCheck,
-  disabledReview
-); // 리뷰 비활성화 (매니저 이상)
-router.delete("/:id", authenticateFirebaseToken, adminRoleCheck, deleteReview); // 리뷰 삭제 (관리자만)
+);
+router.put("/reapproval/:id", auth, patientRoleCheck, requestReapproval);
+router.put("/enable/:id", auth, managerRoleCheck, enableReview);
+router.put("/disabled/:id", auth, managerRoleCheck, disabledReview);
+
+router.delete("/:id", auth, adminRoleCheck, deleteReview);
 
 export default router;

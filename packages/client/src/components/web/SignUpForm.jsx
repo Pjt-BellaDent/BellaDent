@@ -1,13 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function SignUpForm() {
   const navigate = useNavigate();
-  const { userToken } = useUserInfo();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,7 +17,7 @@ function SignUpForm() {
   });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('');
+  const [modalType, setModalType] = useState(''); // 'success', 'error'
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,54 +25,72 @@ function SignUpForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // 모달 초기화
+    setShowModal(false);
+    setModalMessage('');
+    setModalType('');
+
     try {
       if (formData.password !== formData.password_check) {
-        alert('비밀번호가 일치하지 않습니다. 다시 확인하세요.');
+        setModalType('error');
+        setModalMessage('비밀번호가 일치하지 않습니다. 다시 확인하세요.');
+        setShowModal(true);
         return;
       }
       const url = 'http://localhost:3000/users/signUp';
-      const response = await axios
-        .post(
-          url,
-          {
-            email: formData.email,
-            password: formData.password,
-            name: formData.name,
-            phone: formData.phone,
-            address: formData.address,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${userToken}`,
-            },
-            withCredentials: true,
-          }
-        )
-        .then((res) => {
-          if (res.status === 201) {
-            setModalType('success');
-            setModalMessage('회원가입이 완료되었습니다.');
-            setShowModal(true);
-          }
-        });
-    } catch (err) {
-      if (err.status === 404) {
-        setModalType('error');
-        setModalMessage('이미 사용중인 이메일입니다.');
+      const response = await axios.post(url, {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+      });
+
+      if (response.status === 201) {
+        setModalType('success');
+        setModalMessage('회원가입이 완료되었습니다.');
         setShowModal(true);
-      } else if (err.status === 400) {
+      } else {
+        // 예상치 못한 성공 응답 (201이 아닌 다른 2xx)
         setModalType('error');
-        setModalMessage('입력값이 형식을 벗어났습니다.');
+        setModalMessage(`회원가입 중 예상치 못한 응답: ${response.status}`);
         setShowModal(true);
       }
+    } catch (err) {
       console.error(err);
+      let displayMessage = '회원가입 중 알 수 없는 오류가 발생했습니다.';
+
+      // Axios 에러 객체에서 상태 코드 확인
+      if (axios.isAxiosError(err) && err.response) {
+        switch (err.response.status) {
+          case 400:
+            displayMessage =
+              err.response.data.message || '입력값이 형식을 벗어났습니다.';
+            break;
+          case 409: // 충돌 (예: 이미 사용중인 이메일)
+            displayMessage =
+              err.response.data.message || '이미 사용중인 이메일입니다.';
+            break;
+          default:
+            displayMessage = `회원가입 중 오류 발생: ${
+              err.response.data.message || err.message
+            }`;
+            break;
+        }
+      } else {
+        displayMessage = `회원가입 중 오류 발생: ${err.message}`;
+      }
+
+      setModalType('error');
+      setModalMessage(displayMessage);
+      setShowModal(true);
     }
   };
 
   return (
     <>
-      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
-        <form className="w-120" onSubmit={handleSubmit}>
+      <div className="px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 shadow-xl bg-BD-PureWhite text-BD-CharcoalBlack text-md font-BD-sans">
+        <form className="min-w-140" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
               <label htmlFor="email" className="block text-nowrap">
@@ -87,7 +104,7 @@ function SignUpForm() {
               placeholder="example@email.com"
               required
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-8">
@@ -103,7 +120,7 @@ function SignUpForm() {
               minLength={6}
               required
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-8">
@@ -118,7 +135,7 @@ function SignUpForm() {
               id="password_check"
               required
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
             {formData.password_check &&
               formData.password !== formData.password_check && (
@@ -139,7 +156,7 @@ function SignUpForm() {
               id="name"
               required
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-8">
@@ -156,7 +173,7 @@ function SignUpForm() {
               required
               placeholder="01X-XXXX-XXXX"
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-8">
@@ -170,7 +187,7 @@ function SignUpForm() {
               name="address"
               id="address"
               onChange={handleChange}
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-CoolGray focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-center mt-12">
@@ -213,16 +230,14 @@ function SignUpForm() {
             </div>
           </div>
           <div className="flex items-center justify-center mt-4">
-            <button
-              type="submit"
-              className="w-full flex justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
-            >
+            <Button type="submit" size="lg" className="w-full">
               등록
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-      {modalType === 'success' && (
+
+      {showModal && modalType === 'success' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
@@ -234,13 +249,14 @@ function SignUpForm() {
           <Title>{modalMessage}</Title>
         </Modal>
       )}
-      {modalType === 'error' && (
+
+      {showModal && modalType === 'error' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            navigate(0);
+            // navigate(0); // 오류 시 새로고침 대신 모달만 닫도록
           }}
         >
           <Title>{modalMessage}</Title>
