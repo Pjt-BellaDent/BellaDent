@@ -31,93 +31,43 @@ function ChatForm() {
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState("");
 
-  const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const consultationId = userInfo?.id; // consultationId로 명칭 통일
+  const consultationId = userInfo?.id;
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const fetchMessages = useCallback(async () => {
+    if (!consultationId || !userToken) return;
+    try {
+      const response = await axiosInstance.get(`/consultations/${consultationId}`);
+      if (response.data && response.data.messages) {
+        const formattedMessages = response.data.messages.map(msg => ({
+          ...msg,
+          sentAt: formatMessageDate(msg.sentAt),
+        }));
+        setMessages(formattedMessages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt)));
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      if (error.response?.status !== 404) {
+        console.error("메시지 가져오기 오류:", error);
+      }
+      setMessages([]);
+    }
+  }, [consultationId, userToken]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const handleNewMessage = useCallback(
-    msg => {
-      // 메시지 객체와 consultationId 유효성 검사
-      if (msg && msg.consultationId === consultationId) {
-        setMessages(prev => {
-          // id를 기준으로 중복 메시지 방지
-          const isDuplicate = prev.some(m => m.id === msg.id);
-          if (isDuplicate) return prev;
-          // 새 메시지를 추가하고 시간 순으로 정렬
-          const newMessages = [...prev, { ...msg, sentAt: formatMessageDate(msg.sentAt) }];
-          return newMessages.sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime());
-        });
-      }
-    },
-    [consultationId]
-  );
-
   useEffect(() => {
-    if (!userInfo || !userToken || !consultationId) {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      setMessages([]); // 로그아웃 시 메시지 초기화
-      return;
+    if (userInfo && userToken && consultationId) {
+      fetchMessages();
     }
-
-    const newSocket = io(import.meta.env.VITE_API_URL, {
-      auth: { token: userToken },
-      withCredentials: true,
-    });
-
-    socketRef.current = newSocket;
-
-    // 서버에 방 참가를 요청할 때 consultationId를 객체에 담아 전달
-    newSocket.on("connect", () => {
-      newSocket.emit("join", { consultationId });
-    });
-
-    newSocket.on("newMessage", handleNewMessage);
-    
-    // 에러 핸들링
-    newSocket.on("error", (error) => {
-      console.error("Socket.IO error:", error);
-    });
-
-    const fetchMessages = async () => {
-      try {
-        const response = await axiosInstance.get(`/consultations/${consultationId}`);
-        const fetchedMessages = response.data.messages || [];
-        const formattedMessages = fetchedMessages.map(msg => ({
-          ...msg,
-          sentAt: formatMessageDate(msg.sentAt),
-        }));
-        setMessages(formattedMessages.sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime()));
-      } catch (error) {
-        if (error.response?.status !== 404) {
-          console.error("초기 메시지 가져오기 오류:", error);
-        }
-        setMessages([]); // 404 또는 다른 에러 시 메시지 목록 초기화
-      }
-    };
-
-    fetchMessages();
-
-    return () => {
-      if (newSocket) {
-        newSocket.emit("leave", { consultationId });
-        newSocket.off("connect");
-        newSocket.off("newMessage", handleNewMessage);
-        newSocket.off("error");
-        newSocket.disconnect();
-      }
-    };
-  }, [userInfo, userToken, consultationId, handleNewMessage, navigate]);
+  }, [userInfo, userToken, consultationId, fetchMessages]);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -131,38 +81,21 @@ function ChatForm() {
       return;
     }
     
-    const tempMessageId = `temp_${Date.now()}`;
-    // 사용자 메시지 낙관적 업데이트
-    const userMessage = {
-      id: tempMessageId,
-      consultationId: consultationId,
-      senderId: consultationId,
-      senderType: "patient",
-      content: messageContent,
-      sentAt: new Date(),
-    };
-    setMessages(prev => [...prev, userMessage].sort((a, b) => a.sentAt.getTime() - b.sentAt.getTime()));
-    setQuestion(""); // 질문 전송 후 입력창 비우기
+    const tempQuestion = question;
+    setQuestion("");
 
     try {
-      // 서버에 메시지 전송 (Socket.IO)
-      if (socketRef.current && socketRef.current.connected) {
-        socketRef.current.emit("chatMessage", {
-          consultationId: consultationId,
-          content: messageContent,
-        });
-      }
-
-      // AI 응답 요청 (HTTP)
       await axiosInstance.post("/ai", {
         message: messageContent,
         consultationId: consultationId,
       });
 
+      // 메시지 전송 후 새로고침
+      await fetchMessages();
+
     } catch (error) {
       console.error("메시지 전송 또는 AI 응답 요청 실패:", error);
-      // 실패 시 낙관적 업데이트된 메시지 제거
-      setMessages(prev => prev.filter(msg => msg.id !== tempMessageId));
+      setQuestion(tempQuestion); // 실패 시 입력했던 텍스트 복원
       setModalType("error");
       setModalMessage("메시지 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       setShowModal(true);

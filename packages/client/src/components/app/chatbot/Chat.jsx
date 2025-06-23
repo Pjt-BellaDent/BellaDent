@@ -98,9 +98,6 @@ const Chat = () => {
   useEffect(() => {
     if (!userToken || !staffUid) {
       if (socketRef.current) {
-        console.warn(
-          'Socket: UserToken 또는 StaffUID 없음. 기존 소켓 연결 해제.'
-        );
         socketRef.current.disconnect();
         socketRef.current = null;
       }
@@ -108,8 +105,7 @@ const Chat = () => {
     }
 
     if (socketRef.current) {
-      console.log('Socket: 이미 연결된 소켓이 있습니다. 재연결 건너뜜.');
-      return;
+      return; // 이미 연결된 소켓이 있으면 재연결 방지
     }
 
     const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
@@ -118,62 +114,43 @@ const Chat = () => {
     });
 
     newSocket.on('connect', () => {
-      console.log('Socket 연결됨:', newSocket.id);
+      console.log('Socket 연결됨 (직원):', newSocket.id);
     });
+
     newSocket.on('connect_error', (err) => {
       console.error('Socket 연결 오류:', err.message);
     });
-    newSocket.on('error', (err) => {
-      console.error('Socket 오류:', err);
+
+    newSocket.on('newMessage', (msg) => {
+      if (msg && msg.consultationId === activeUserRef.current) {
+        // 메시지 ID로 중복을 체크하여 이미 있으면 추가하지 않음
+        setChatData((prev) => {
+          const currentMessages = prev[msg.consultationId] || [];
+          if (currentMessages.some(m => m.id === msg.id)) {
+            return prev;
+          }
+          return {
+            ...prev,
+            [msg.consultationId]: [...currentMessages, { ...msg, sentAt: formatMessageDate(msg.sentAt) }],
+          };
+        });
+      }
+      // 상담 목록을 새로고침하여 상태(예: 읽음/안읽음)를 업데이트
+      fetchConsultations();
     });
 
     newSocket.on('consultationListUpdated', fetchConsultations);
 
-    newSocket.on('newMessage', (msg) => {
-      const currentActiveRoomId = activeUserRef.current;
-      const currentStaffId = userInfo?.id;
-
-      if (msg.consultationId === currentActiveRoomId) {
-        if (msg.senderId === currentStaffId) return;
-
-        setChatData((prev) => {
-          const messagesForCurrentRoom = prev[currentActiveRoomId] || [];
-          if (
-            messagesForCurrentRoom.some(
-              (existingMsg) => existingMsg.id === msg.id
-            )
-          ) {
-            return prev;
-          }
-          const updatedMessages = [
-            ...messagesForCurrentRoom,
-            { 
-              ...msg, 
-              content: msg.message || msg.content || '',
-              sentAt: formatMessageDate(msg.sentAt)
-            },
-          ];
-          return { ...prev, [currentActiveRoomId]: updatedMessages };
-        });
-      }
-      fetchConsultations();
-    });
 
     socketRef.current = newSocket;
 
     return () => {
-      if (socketRef.current) {
-        console.log(`Socket 연결 해제 요청 (클린업): ${socketRef.current.id}`);
-        socketRef.current.off('consultationListUpdated', fetchConsultations);
-        socketRef.current.off('newMessage');
-        socketRef.current.off('connect');
-        socketRef.current.off('connect_error');
-        socketRef.current.off('error');
-        socketRef.current.disconnect();
+      if (newSocket) {
+        newSocket.disconnect();
         socketRef.current = null;
       }
     };
-  }, [userToken, staffUid, userInfo, fetchConsultations]);
+  }, [userToken, staffUid, fetchConsultations]);
 
   // --- 4. userToken이 유효할 때 상담 목록 초기 로드 ---
   useEffect(() => {
@@ -303,60 +280,38 @@ const Chat = () => {
   // --- 8. 메시지 전송 핸들러 ---
   const sendMessage = useCallback(async () => {
     const text = inputText.trim();
-    if (
-      !text ||
-      !activeUser ||
-      !staffUid ||
-      !userToken ||
-      !socketRef.current ||
-      !socketRef.current.connected
-    ) {
-      console.warn('메시지 전송 조건 미달:', {
-        text,
-        activeUser,
-        staffUid,
-        userToken,
-        socketConnected: socketRef.current?.connected,
-      });
+    if (!text || !activeUser || !staffUid || !userToken) {
       return;
     }
 
-    const tempMessageId = Date.now().toString();
-    const staffMessage = {
-      id: tempMessageId,
+    if (!socketRef.current || !socketRef.current.connected) {
+      alert('연결이 불안정합니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    const tempMessage = {
+      id: `temp_${Date.now()}`,
       senderId: staffUid,
       senderType: 'staff',
       content: text,
-      sentAt: new Date(),
+      sentAt: new Date().toISOString(),
       isActive: true,
+      consultationId: activeUser,
     };
 
     setChatData((prev) => ({
       ...prev,
-      [activeUser]: [...(prev[activeUser] || []), staffMessage],
+      [activeUser]: [...(prev[activeUser] || []), tempMessage],
     }));
-    setInputText('');
 
-    try {
-      await axiosInstance.post(
-        `/consultations/staff/${activeUser}`,
-        { answer: text },
-        {
-          headers: { Authorization: `Bearer ${userToken}` },
-          withCredentials: true,
-        }
-      );
-      fetchConsultations();
-    } catch (error) {
-      console.error('메시지 전송 실패:', error.response?.data || error.message);
-      setChatData((prev) => ({
-        ...prev,
-        [activeUser]: (prev[activeUser] || []).filter(
-          (msg) => msg.id !== tempMessageId
-        ),
-      }));
-    }
-  }, [activeUser, staffUid, userToken, inputText, fetchConsultations]);
+    setInputText('');
+    
+    socketRef.current.emit('chatMessage', {
+      consultationId: activeUser,
+      senderType: 'staff',
+      content: text,
+    });
+  }, [activeUser, staffUid, userToken, inputText]);
 
   // --- 9. 상담 목록 클릭 핸들러 (다른 직원 상담중인 경우 접근 차단) ---
   const handleChatClick = useCallback(
