@@ -17,6 +17,9 @@ const PROCEDURE_MAP = {
   '보철과': ['라미네이트', '임플란트', '올세라믹 크라운'],
   '교정과': ['클리피씨 교정', '투명교정', '설측교정'],
   '치주과': ['치석제거', '치근활택술', '치은성형술'],
+  '심미치료': ['라미네이트', '잇몸성형', '전문가 미백'],
+  '교정/미백': ['클리피씨 교정', '투명교정', '전문가 미백'],
+  '일반 진료/보철': ['스케일링', '충치치료', '임플란트'],
 };
 const DEPARTMENT_TO_CHAIR = { '보철과': '1', '교정과': '2', '치주과': '3' };
 const DOCTOR_MAP = {
@@ -42,7 +45,7 @@ const INITIAL_FORM = {
   status: '대기'
 };
 
-const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, eventsForDate = [] }) => {
+const ReservationModal = ({ isOpen, onClose, onSave, initialData, date, staffList = [] }) => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
@@ -53,19 +56,54 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const latestFetch = useRef(0);
 
+  const availableDoctors = useMemo(() => {
+    if (!form.department) return [];
+    return staffList.filter(staff => staff.department === form.department);
+  }, [form.department, staffList]);
+
   const reservedTimes = useMemo(() => {
-    if (!form.department || !form.date || !Array.isArray(eventsForDate)) return [];
-    return eventsForDate.filter(e => e.department === form.department && e.date === form.date)
-      .flatMap(e => {
-        const idxStart = HOUR_MAP.indexOf(e.startTime);
-        const idxEnd = HOUR_MAP.indexOf(e.endTime);
-        return HOUR_MAP.slice(idxStart, idxEnd + 1);
-      });
-  }, [form.department, form.date, eventsForDate]);
+    if (!form.department || !form.date) return [];
+    
+    // 이 부분은 서버에서 받아온 eventsForDate를 사용해야 합니다.
+    // 현재는 이 prop이 전달되지 않으므로, 임시로 비활성화하거나 수정 필요.
+    // return eventsForDate.filter(e => e.department === form.department && e.date === form.date)
+    //   ...
+    return []; // 임시로 빈 배열 반환
+  }, [form.department, form.date]);
 
   useEffect(() => {
-    axios.get('/patients').then(res => setPatients(res.data));
+    axios.get('/users/patients/all').then(res => {
+      setPatients(res.data.patientsInfo || []);
+    });
   }, []);
+
+  useEffect(() => {
+    // 모달이 열릴 때마다 상태를 초기화/설정
+    if (isOpen) {
+      if (initialData) {
+        // initialData가 있으면 폼을 채움
+        const newFormState = {
+          ...INITIAL_FORM,
+          ...initialData,
+          date: initialData.date || date,
+        };
+        setForm(newFormState);
+
+        setSelectedTimes(initialData.startTime ? [initialData.startTime] : []);
+        const [yy, mm, dd] = (initialData.birth || '').split('-');
+        setBirthYear(yy || '');
+        setBirthMonth(mm || '');
+        setBirthDay(dd || '');
+      } else {
+        // initialData가 없으면 폼을 리셋
+        setForm({ ...INITIAL_FORM, date });
+        setSelectedTimes([]);
+        setBirthYear('');
+        setBirthMonth('');
+        setBirthDay('');
+      }
+    }
+  }, [isOpen, initialData, date]);
 
   useEffect(() => {
     if (form.name && form.birth) {
@@ -79,43 +117,13 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   }, [form.name, form.birth]);
 
   useEffect(() => {
-    if (initialData) {
-      const [yy, mm, dd] = (initialData.birth || '').split('-');
-      setForm({
-        ...INITIAL_FORM,
-        ...initialData,
-        doctorId: initialData.doctor
-          ? (DOCTOR_MAP[initialData.department]?.find(d => d.name === initialData.doctor)?.id || '')
-          : '',
-        chairNumber: initialData.department
-          ? (DEPARTMENT_TO_CHAIR[initialData.department] || '')
-          : '',
-        memo: initialData.memo || initialData.notes || ''
-      });
-      setBirthYear(yy || '');
-      setBirthMonth(mm || '');
-      setBirthDay(dd || '');
-      if (initialData.startTime && initialData.endTime) {
-        const idxStart = HOUR_MAP.indexOf(initialData.startTime);
-        const idxEnd = HOUR_MAP.indexOf(initialData.endTime);
-        setSelectedTimes(HOUR_MAP.slice(idxStart, idxEnd + 1));
-      }
-    } else {
-      const today = new Date().toISOString().slice(0, 10);
-      setForm({ ...INITIAL_FORM, date: selectedDate || today });
-      setSelectedTimes([]);
-      setBirthYear('');
-      setBirthMonth('');
-      setBirthDay('');
-    }
-  }, [initialData, selectedDate]);
-
-  useEffect(() => {
     if (birthYear && birthMonth && birthDay) {
-      setForm(prev => ({ ...prev, birth: `${birthYear}-${birthMonth}-${birthDay}` }));
-    } else {
-      setForm(prev => ({ ...prev, birth: '' }));
+      const newBirth = `${birthYear}-${birthMonth}-${birthDay}`;
+      if (form.birth !== newBirth) {
+        setForm(prev => ({ ...prev, birth: newBirth }));
+      }
     }
+    // else는 form.birth를 ''로 덮어쓰지 않음
   }, [birthYear, birthMonth, birthDay]);
 
   const handleNameChange = (e) => {
@@ -132,27 +140,23 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     setNameMatches(matches);
     if (matches.length === 1) {
       const found = matches[0];
+      let y = '', m = '', d = '';
+      if (found.birth && found.birth.includes('-')) {
+        [y, m, d] = found.birth.split('-');
+      } else if (found.birth && found.birth.length === 8) {
+        y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
+      }
+      setBirthYear(y); setBirthMonth(m); setBirthDay(d);
       setForm(prev => ({
         ...prev,
         userId: found.id || found.userId || '',
         phone: found.phone || '',
         gender: found.gender || '',
-        ...(found.birth ? (() => {
-          let y = '', m = '', d = '';
-          if (found.birth.includes('-')) {
-            [y, m, d] = found.birth.split('-');
-          } else if (found.birth.length === 8) {
-            y = found.birth.slice(0,4); m = found.birth.slice(4,6); d = found.birth.slice(6,8);
-          }
-          setBirthYear(y); setBirthMonth(m); setBirthDay(d);
-          return { birth: `${y}-${m}-${d}` };
-        })() : {})
+        birth: found.birth || ''
       }));
       setShowPhoneDropdown(false);
     } else if (matches.length > 1) {
       setShowPhoneDropdown(true);
-      setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
-      setBirthYear(''); setBirthMonth(''); setBirthDay('');
     } else {
       setShowPhoneDropdown(false);
       setForm(prev => ({ ...prev, phone: '', gender: '', birth: '', userId: '' }));
@@ -187,14 +191,21 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'doctor') {
-      setForm(prev => ({ ...prev, doctor: value }));
+      const selectedDoctor = availableDoctors.find(doc => doc.name === value);
+      setForm(prev => ({
+        ...prev,
+        doctor: value,
+        doctorId: selectedDoctor ? selectedDoctor.uid : '',
+        chairNumber: selectedDoctor ? (selectedDoctor.chairNumber || DEPARTMENT_TO_CHAIR[prev.department] || '') : ''
+      }));
     } else if (name === 'department') {
       setForm(prev => ({
         ...prev,
         department: value,
         title: '',
         doctor: '',
-        chairNumber: DEPARTMENT_TO_CHAIR[value] || '',
+        doctorId: '',
+        chairNumber: ''
       }));
       setSelectedTimes([]);
     } else {
@@ -235,108 +246,76 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
     if (!form.name) missing.push('이름');
     if (!form.department) missing.push('진료과');
     if (!form.doctor) missing.push('담당의');
-    if (!form.chairNumber) missing.push('체어번호');
     if (!userId) missing.push('환자');
-    if (!selectedTimes.length) missing.push('시간');
+    if (selectedTimes.length === 0) missing.push('예약 시간');
+
     if (missing.length > 0) {
       alert(`${missing.join(', ')} 정보를 모두 선택해 주세요.`);
       return;
     }
-    if (!isContinuous(selectedTimes)) {
-      alert('시간은 연속으로 선택되어야 합니다.');
-      return;
-    }
-    let doctor = form.doctor || initialData?.doctor || '';
-    let department = form.department || initialData?.department || '';
-    let startTime = times.find(t => t === selectedTimes[0]) || selectedTimes[0];
-    let endTime = times.find(t => t === selectedTimes[selectedTimes.length - 1]) || selectedTimes[selectedTimes.length - 1];
-    if (department && doctor) {
-      const validDoctors = DOCTOR_MAP[department];
-      if (validDoctors && !validDoctors.includes(doctor)) {
-        doctor = validDoctors[0];
-      }
-    }
+
     const payload = {
       ...form,
-      userId,
-      chairNumber: Number(form.chairNumber),
-      doctor,
-      department,
-      startTime,
-      endTime,
-      doctorId: doctor,
-      status: form.status || '대기'
+      startTime: selectedTimes[0] || '',
+      endTime: selectedTimes[selectedTimes.length - 1] || '',
+      userId: userId,
     };
-    Object.keys(payload).forEach(key => {
-      if (payload[key] === '' || payload[key] === undefined) delete payload[key];
-    });
-    console.log('예약 등록 payload:', payload);
+    
+    if (!payload.chairNumber) {
+      payload.chairNumber = '1'; // 체어번호가 없으면 1번으로 자동 할당
+    }
+
     onSave(payload);
+    onClose();
   };
 
   const { am, pm } = splitAmPm(HOUR_MAP);
 
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
-      <div className="relative bg-white rounded-lg w-[400px] shadow-lg max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center px-4 py-3">
-          <h3 className="text-lg font-medium">{initialData?.id ? '예약 수정' : '예약 등록'}</h3>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl flex flex-col w-full max-w-md max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6 pb-2">
+            <h2 className="text-xl font-bold">{form.id ? '예약 수정' : '예약 등록'}</h2>
         </div>
 
-        <div className="p-4 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <style>
-            {`
-              .scrollbar-hide::-webkit-scrollbar {
-                display: none;
-              }
-            `}
-          </style>
-
-          <div className="mb-4">
+        <div className="p-6 pt-0 space-y-4 overflow-y-auto scrollbar-hide">
+          <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+          
+          <div className="mb-4 relative">
             <label className="block text-sm text-gray-700 mb-1">이름</label>
             <input
+              type="text"
               name="name"
-              list="patient-names"
-              value={form.name || ''}
+              value={form.name}
               onChange={handleNameChange}
               onBlur={handleNameBlur}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2.5"
               placeholder="이름(을) 입력하세요"
-              autoComplete="off"
             />
-            <datalist id="patient-names">
-              {patients.map(p => (
-                <option key={p.id} value={p.name} />
-              ))}
-            </datalist>
+            {showPhoneDropdown && nameMatches.length > 1 && (
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 shadow-lg">
+                <ul className="max-h-60 overflow-auto">
+                  {nameMatches.map(p => (
+                    <li
+                      key={p.phone}
+                      className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handlePhoneSelect(p.phone)}
+                    >
+                      {p.name} - {p.phone}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-
-          {showPhoneDropdown && (
-            <div className="mb-4">
-              <label className="block text-sm text-gray-700 mb-1">연락처 선택</label>
-              <select
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                value={form.phone}
-                onChange={e => handlePhoneSelect(e.target.value)}
-              >
-                <option value="">연락처를 선택하세요</option>
-                {nameMatches.map(p => (
-                  <option key={p.phone} value={p.phone}>{p.phone}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {!showPhoneDropdown && (
             <div className="mb-4">
@@ -387,29 +366,44 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
             </div>
           </div>
 
-          {[
-            ['성별', 'gender', ['남', '여']],
-            ['진료과', 'department', Object.keys(DOCTOR_MAP)],
-            ['담당의', 'doctor', DOCTOR_MAP[form.department] || []],
-            ['시술명', 'title', PROCEDURE_MAP[form.department] || []]
-          ].map(([label, name, options]) => (
-            (!['담당의', '시술명'].includes(label) || form.department) && (
-              <div className="mb-4" key={label}>
-                <label className="block text-sm text-gray-700 mb-1">{label}</label>
-                <select
-                  name={name}
-                  value={form[name] || ''}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                >
-                  <option value="">선택</option>
-                  {options.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            )
-          ))}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">진료과</label>
+              <select name="department" value={form.department} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">진료과 선택</option>
+                {[...new Set(staffList.map(s => s.department))].map(dep => (
+                  <option key={dep} value={dep}>{dep}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">담당의</label>
+              <select name="doctor" value={form.doctor} onChange={handleChange} disabled={!form.department} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">담당의 선택</option>
+                {availableDoctors.map(doc => <option key={doc.uid} value={doc.name}>{doc.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">성별</label>
+              <select name="gender" value={form.gender} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">선택</option>
+                <option value="M">남</option>
+                <option value="F">여</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">시술명</label>
+              <select name="title" value={form.title} onChange={handleChange} disabled={!form.department} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">선택</option>
+                {(PROCEDURE_MAP[form.department] || []).map(proc => (
+                  <option key={proc} value={proc}>{proc}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           <div className="mb-4">
             {(am.length || pm.length) && <div className="text-sm text-gray-700 font-medium mb-2">오전</div>}
@@ -461,21 +455,15 @@ const ReservationModal = ({ open, onClose, onSave, initialData, selectedDate, ev
               placeholder="메모를 입력하세요"
             />
           </div>
+        </div>
 
-          <div className="flex justify-end gap-2 mt-6">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600"
-            >
-              저장
-            </button>
-          </div>
+        <div className="p-6 flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+            취소
+          </button>
+          <button type="button" onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            저장
+          </button>
         </div>
       </div>
     </div>

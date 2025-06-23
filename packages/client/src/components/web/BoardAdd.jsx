@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import ReviewUpdateForm from './ReviewUpdateForm.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
+import Text from './Text';
 
 function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
   const [onMenu, setOnMenu] = useState(null);
@@ -23,6 +25,27 @@ function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
   const pagedPosts = posts.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
+    setOnMenu(null);
+    textRefs.current = [];
+  }, [page, posts]);
+
+  useEffect(() => {
+    if (onMenu !== null && textRefs.current[onMenu]) {
+      const currentTextRef = textRefs.current[onMenu];
+      const timeoutId = setTimeout(() => {
+        if (currentTextRef) {
+          currentTextRef.style.maxHeight = `${currentTextRef.scrollHeight}px`;
+        }
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    } else if (onMenu === null) {
+      textRefs.current.forEach((ref) => {
+        if (ref) ref.style.maxHeight = '0px';
+      });
+    }
+  }, [onMenu]);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (navRef.current && !navRef.current.contains(event.target)) {
         setOnMenu(null);
@@ -34,12 +57,19 @@ function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
     };
   }, []);
 
-  const handleEdit = () => {
-    setPostId(pagedPosts[onMenu].id);
-    setActiveReview(!activeReview);
+  const handleEdit = (postIdToEdit) => {
+    setPostId(postIdToEdit);
+    setActiveReview(true);
   };
-  const handleDelete = async () => {
-    setPostId(pagedPosts[onMenu].id);
+
+  const confirmDelete = (postIdToDelete) => {
+    setPostId(postIdToDelete);
+    setModalType('choice');
+    setModalMessage('정말로 이 게시글을 삭제하시겠습니까?');
+    setShowModal(true);
+  };
+
+  const executeDelete = async () => {
     try {
       await axios.delete(`http://localhost:3000/${category}/${postId}`, {
         headers: {
@@ -52,7 +82,9 @@ function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
     } catch (error) {
       console.error('Error deleting post:', error);
       setModalType('error');
-      setModalMessage(error);
+      setModalMessage(
+        error.response?.data?.message || '게시글 삭제 중 오류가 발생했습니다.'
+      );
       setShowModal(true);
     }
   };
@@ -72,113 +104,130 @@ function BoardAdd({ category, posts, CN, UL, LI, pageSize = 10 }) {
             ref={navRef}
           >
             {pagedPosts.map((post, i) => (
-              <li key={i + (page - 1) * pageSize}>
+              <li key={post.id || i + (page - 1) * pageSize}>
                 <ul>
-                  <div className="flex justify-between items-center">
-                    <div
-                      className={`w-full`}
-                      onClick={() => setOnMenu(onMenu === i ? null : i)}
-                    >
-                      <h3 className={`${UL}`}>{post.title} </h3>
-                      <p className="text-BD-CoolGray text-sm ">
-                        {post.date}
-                        <span className="mx-5">|</span>
-                        {post.author}
-                      </p>
+                  <div
+                    className="flex justify-between items-center py-4 px-3 cursor-pointer"
+                    onClick={() => setOnMenu(onMenu === i ? null : i)}
+                  >
+                    <div className={`flex-1`}>
+                      <Title as="h3" size="md" CN={`${UL} truncate`}>
+                        {post.title}{' '}
+                      </Title>
+                      <Text as="p" size="xs" CN="text-BD-CoolGray text-sm">
+                        {post.createdAt
+                          ? new Date(post.createdAt).toLocaleDateString('ko-KR')
+                          : ''}
+                        <span className="mx-2">|</span>
+                        {post.authorName || post.authorId || '알 수 없음'}
+                      </Text>
                     </div>
                     {userInfo?.id === post.authorId && (
-                      <div className="flex gap-4">
-                        <button
+                      <div
+                        className="flex gap-4 flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
                           type="button"
-                          className="flex items-center justify-center rounded-xl bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
-                          onClick={handleEdit}
+                          size="md"
+                          onClick={() => handleEdit(post.id)}
                         >
                           수정
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="flex items-center justify-center rounded-xl bg-BD-CoolGray text-BD-SoftGrayLine outline-2 -outline-offset-2 outline-BD-CoolGray px-6 py-3 text-xl text-nowrap shadow-xs hover:bg-BD-SoftGrayLine  hover-visible:outline-BD-SoftGrayLine hover:text-BD-CoolGray focus:bg-BD-SoftGrayLine  focus-visible:outline-BD-SoftGrayLine focus:text-BD-CoolGray duration-300"
-                          onClick={handleDelete}
+                          variant="danger"
+                          size="md"
+                          onClick={() => confirmDelete(post.id)}
                         >
                           삭제
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </div>
                   <li
                     ref={(el) => (textRefs.current[i] = el)}
-                    className={`overflow-hidden ${LI}`}
+                    className={`overflow-hidden transition-all duration-500 ease-in-out ${LI}`}
                     style={{
                       maxHeight:
-                        onMenu === i && textRefs.current[i]
-                          ? textRefs.current[i].scrollHeight + 'px'
+                        onMenu === i
+                          ? textRefs.current[i]?.scrollHeight
+                            ? `${textRefs.current[i].scrollHeight}px`
+                            : 'auto'
                           : '0',
                     }}
                   >
-                    {post.image && (
+                    {post.imageUrls && post.imageUrls.length > 0 && (
                       <div className="flex flex-col w-full justify-center items-center gap-5 my-10">
-                        <img
-                          src={post.image}
-                          alt={post.image}
-                          className="w-full object-cover"
-                        />
+                        {post.imageUrls.map((imageUrl, imgIdx) => (
+                          <img
+                            key={imgIdx}
+                            src={imageUrl}
+                            alt={`review-image-${imgIdx}`}
+                            className="w-full object-cover max-w-lg rounded-md"
+                          />
+                        ))}
                       </div>
                     )}
-                    <p>{post.content}</p>
+                    <Text
+                      as="p"
+                      size="md"
+                      className="p-3 bg-gray-50 rounded-b-lg"
+                    >
+                      {post.content}
+                    </Text>
                   </li>
                 </ul>
               </li>
             ))}
           </ul>
           <div className="flex justify-center gap-2 mt-4">
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 rounded bg-BD-SoftGrayLine disabled:opacity-50"
             >
               이전
-            </button>
+            </Button>
             {Array.from({ length: totalPages }, (_, idx) => (
-              <button
+              <Button
                 key={idx + 1}
+                size="sm"
+                variant={page === idx + 1 ? 'primary' : 'secondary'}
                 onClick={() => setPage(idx + 1)}
-                className={`px-3 py-1 rounded ${
-                  page === idx + 1
-                    ? 'bg-BD-ElegantGold text-BD-PureWhite'
-                    : 'bg-BD-SoftGrayLine'
-                }`}
               >
                 {idx + 1}
-              </button>
+              </Button>
             ))}
-            <button
+            <Button
+              size="sm"
+              variant="secondary"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
             >
               다음
-            </button>
+            </Button>
           </div>
-          {modalType === 'success' && (
+          {showModal && (
             <Modal
               show={showModal}
               setShow={setShowModal}
               activeClick={() => {
                 setShowModal(false);
-                navigate(0);
+                if (modalType === 'success') {
+                  navigate(0);
+                } else if (modalType === 'choice') {
+                  executeDelete();
+                }
               }}
-            >
-              <Title>{modalMessage}</Title>
-            </Modal>
-          )}
-          {modalType === 'error' && (
-            <Modal
-              show={showModal}
-              setShow={setShowModal}
-              activeClick={() => {
-                setShowModal(false);
-                navigate(0);
-              }}
+              activeClose={
+                modalType === 'choice'
+                  ? () => {
+                      setShowModal(false);
+                    }
+                  : undefined
+              }
             >
               <Title>{modalMessage}</Title>
             </Modal>

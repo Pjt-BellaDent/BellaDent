@@ -37,8 +37,9 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
               <div>
                 <p className="text-gray-900">
                   <span className="font-semibold">{item.position}</span> {item.name}
-                  <span className="mx-2">|</span>
-                  <span className="text-blue-600">{item.time}</span>
+                  {item.startTime && item.endTime && (
+                    <span className="mx-2 text-blue-600">{item.startTime}~{item.endTime}</span>
+                  )}
                   {item.off && <span className="ml-2 text-red-500">🌙 휴무</span>}
                 </p>
                 {item.memo && (
@@ -55,7 +56,7 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
                   수정
                 </button>
                 <button
-                  onClick={() => onDelete(item.uid)}
+                  onClick={() => onDelete(item.id)}
                   className="px-3 py-1 bg-red-500 text-white rounded text-sm font-medium hover:bg-red-600"
                 >
                   삭제

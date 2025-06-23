@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import {
@@ -9,92 +9,105 @@ import {
 import { auth } from '../../config/firebase.jsx';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function SignInForm() {
   const navigate = useNavigate();
   const { isLogin, userInfo } = useUserInfo();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState('');
+  const [modalType, setModalType] = useState(''); // 'success', 'error'
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (isLogin) {
+      // 이미 로그인 상태일 때, 불필요한 재로그인 시도 방지
+      setModalType('error');
+      setModalMessage('이미 로그인되어 있습니다.');
+      setShowModal(true);
       return;
     }
 
+    // 모달 초기화
+    setShowModal(false);
+    setModalMessage('');
+    setModalType('');
+
     try {
       await setPersistence(auth, browserSessionPersistence);
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      setModalType('success');
-      setModalMessage('로그인에 성공했습니다!');
-      setShowModal(true);
+      const user = userCredential.user;
+
+      const idTokenResult = await user.getIdTokenResult();
+      const claims = idTokenResult.claims;
+
+      const isActive =
+        claims && claims.isActive !== undefined ? claims.isActive : true;
+
+      if (isActive === false) {
+        setModalType('error');
+        setModalMessage(
+          '회원 계정이 비활성화되었습니다. 관리자에게 문의하세요.'
+        );
+        setShowModal(true);
+
+        await auth.signOut(); // 비활성화 계정은 자동 로그아웃
+        setFormData({ email: '', password: '' });
+      } else {
+        setModalType('success');
+        setModalMessage('로그인에 성공했습니다.');
+        setShowModal(true);
+        setFormData({ email: '', password: '' }); // 폼 데이터 초기화
+      }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
 
-      console.error('로그인 실패:', errorCode, errorMessage);
+      let displayMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
 
       switch (errorCode) {
         case 'auth/invalid-email':
-          // 유효하지 않은 이메일 형식 처리
-          setModalType('error');
-          setModalMessage('유효하지 않은 이메일 주소 형식입니다.');
-          setShowModal(true);
+          displayMessage = '유효하지 않은 이메일 주소 형식입니다.';
           break;
         case 'auth/user-not-found':
-          // 사용자 없음 처리
-          setModalType('error');
-          setModalMessage('등록되지 않은 이메일 주소입니다.');
-          setShowModal(true);
+          displayMessage = '등록되지 않은 이메일 주소입니다.';
           break;
         case 'auth/wrong-password':
-          // 비밀번호 오류 처리
-          setModalType('error');
-          setModalMessage('비밀번호가 틀렸습니다.');
-          setShowModal(true);
+          displayMessage = '비밀번호가 틀렸습니다.';
           break;
         case 'auth/user-disabled':
-          // 계정 비활성화 처리
-          setModalType('error');
-          setModalMessage(
-            '사용자 계정이 비활성화되었습니다. 관리자에게 문의하세요.'
-          );
-          setShowModal(true);
+          displayMessage =
+            '사용자 계정이 비활성화되었습니다. 관리자에게 문의하세요.';
           break;
         case 'auth/too-many-requests':
-          // 과도한 시도 처리
-          setModalType('error');
-          setModalMessage(
-            '로그인을 너무 여러 번 시도하여 계정이 잠겼습니다. 잠시 후 다시 시도해주세요.'
-          );
-          setShowModal(true);
+          displayMessage =
+            '로그인을 너무 여러 번 시도하여 계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도해주세요.';
           break;
         default:
-          // 기타 오류 처리
-          setModalType('error');
-          setModalMessage('로그인 중 오류가 발생했습니다: ' + errorMessage);
-          setShowModal(true);
+          displayMessage = `로그인 중 오류가 발생했습니다: ${errorMessage}`;
       }
+
+      setModalType('error');
+      setModalMessage(displayMessage);
+      setShowModal(true);
+      setFormData({ email: '', password: '' }); // 폼 데이터 초기화
     }
   };
+
   return (
     <>
-      <div className="mx-auto max-w-full px-20 py-20 absolute top-1/2 left-1/2 transform -translate-1/2 rounded-2xl shadow-xl bg-BD-SoftGrayLine text-BD-CharcoalBlack text-lg">
+      <div className="mx-auto max-w-full px-20 py-15 absolute top-1/2 left-1/2 transform -translate-1/2 shadow-xl bg-BD-PureWhite text-BD-CharcoalBlack text-md font-BD-sans">
         <form className="w-100" onSubmit={handleSubmit}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
@@ -106,14 +119,15 @@ function SignInForm() {
               type="email"
               name="email"
               id="email"
+              value={formData.email}
               onChange={handleChange}
               required
-              className="block w-full rounded-md px-4 py-2 outline-1 -outline-offset-1 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-PureWhite focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-between mb-12">
             <div className="flex-2">
-              <label htmlFor="password" className="block text-lg text-nowrap">
+              <label htmlFor="password" className="block text-nowrap">
                 비밀번호
               </label>
             </div>
@@ -121,44 +135,48 @@ function SignInForm() {
               type="password"
               name="password"
               id="password"
+              value={formData.password}
               onChange={handleChange}
               required
-              className="block w-full rounded-md px-4 py-2 outline-2 -outline-offset-2 bg-BD-SoftGrayLine outline-BD-CharcoalBlack placeholder:text-BD-PureWhite focus:outline-BD-PureWhite focus:bg-BD-PureWhite focus:text-BD-CharcoalBlack flex-6 duration-300"
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
             />
           </div>
           <div className="flex items-center justify-center">
-            <button
-              type="submit"
-              className="w-full flex justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
-            >
+            <Button type="submit" size="lg" className="w-full">
               로그인
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-      {modalType === 'success' && (
+
+      {showModal && modalType === 'success' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            if (userInfo?.role === 'patient') {
-              navigate('/');
-            } else {
+            // 로그인 성공 후 페이지 이동 로직은 그대로 유지
+            if (
+              userInfo?.role === 'staff' ||
+              userInfo?.role === 'manager' ||
+              userInfo?.role === 'admin'
+            ) {
               navigate('/Dashboard');
+            } else {
+              navigate('/');
             }
           }}
         >
           <Title>{modalMessage}</Title>
         </Modal>
       )}
-      {modalType === 'error' && (
+
+      {showModal && modalType === 'error' && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            navigate(0);
           }}
         >
           <Title>{modalMessage}</Title>

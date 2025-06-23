@@ -1,23 +1,44 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getHospitalInfo, updateHospitalInfo } from '../api/hospital';
 
 const HospitalContext = createContext();
 
 export const HospitalProvider = ({ children }) => {
-  const [hospitalInfo, setHospitalInfo] = useState(() => {
-    const saved = localStorage.getItem('hospitalInfo');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          name: '벨라덴치과',
-          address: '광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층',
-          ceo: '이서윤',
-          bizNumber: '847-12-34567',
-          phone: '062-987-6543',
-        };
+  const [hospitalInfo, setHospitalInfoState] = useState({
+    name: '', address: '', ceo: '', bizNumber: '', phone: ''
   });
+  const [loading, setLoading] = useState(true);
+
+  // 서버에서 병원 정보 불러오기
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await getHospitalInfo();
+        setHospitalInfoState(data);
+        localStorage.setItem('hospitalInfo', JSON.stringify(data));
+      } catch (e) {
+        // 서버에 정보 없으면 localStorage fallback
+        const saved = localStorage.getItem('hospitalInfo');
+        if (saved) setHospitalInfoState(JSON.parse(saved));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // 병원 정보 저장 (서버+Context+localStorage)
+  const setHospitalInfo = async (info) => {
+    setHospitalInfoState(info);
+    localStorage.setItem('hospitalInfo', JSON.stringify(info));
+    try {
+      await updateHospitalInfo(info);
+    } catch (e) {
+      // 서버 저장 실패 시 fallback
+    }
+  };
 
   return (
-    <HospitalContext.Provider value={{ hospitalInfo, setHospitalInfo }}>
+    <HospitalContext.Provider value={{ hospitalInfo, setHospitalInfo, loading }}>
       {children}
     </HospitalContext.Provider>
   );
