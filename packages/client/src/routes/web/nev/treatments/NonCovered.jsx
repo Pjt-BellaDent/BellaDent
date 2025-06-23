@@ -187,7 +187,7 @@ function NonCovered() {
             <Title as="h3" size="sm" CN="mt-20 mb-6">
               비급여항목임플란트
             </Title>
-            <table className="w-full my-16 border-collapse">
+            <table className="w-full  border-collapse">
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-white p-2 border border-blue-800">
