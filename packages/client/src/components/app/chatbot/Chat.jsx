@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; // <--- 이 부분을 추가하거나 확인해 주세요.
-import axios from 'axios';
+import axiosInstance from '../../../libs/axiosInstance';
 import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
 import io from 'socket.io-client';
+
+// 날짜 변환 유틸리티 함수
+const formatMessageDate = (sentAt) => {
+  if (!sentAt) return new Date();
+  if (typeof sentAt._seconds === 'number') {
+    return new Date(sentAt._seconds * 1000 + (sentAt._nanoseconds || 0) / 1000000);
+  }
+  return new Date(sentAt);
+};
 
 const Chat = () => {
   const { userInfo, userToken } = useUserInfo();
@@ -32,14 +41,12 @@ const Chat = () => {
   const fetchConsultations = useCallback(async () => {
     if (!userToken) return;
     try {
-      const response = await axios.get(`http://localhost:3000/consultations/`, {
+      const response = await axiosInstance.get('/consultations/', {
         headers: {
-          Authorization: `Bearer ${userToken}`,
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
           Expires: '0',
         },
-        withCredentials: true,
       });
       const allConsultations = response.data.consultations;
 
@@ -48,7 +55,6 @@ const Chat = () => {
       );
 
       const sortedConsultations = filteredConsultations.sort((a, b) => {
-        // <-- 'filteredConsultations'로 정확히 수정
         const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
         const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
         return dateA.getTime() - dateB.getTime();
@@ -64,31 +70,18 @@ const Chat = () => {
   const fetchInitialMessages = useCallback(async () => {
     if (!activeUser || !userToken) return;
     try {
-      const response = await axios.get(
-        `http://localhost:3000/consultations/${activeUser}`,
-        {
+      const response = await axiosInstance.get(`/consultations/${activeUser}`, {
           headers: {
-            Authorization: `Bearer ${userToken}`,
             'Cache-Control': 'no-cache',
             Pragma: 'no-cache',
             Expires: '0',
           },
-          withCredentials: true,
-        }
-      );
+      });
       const messages = response.data.messages;
       const formattedMessages = messages.map((msg) => ({
         ...msg,
         content: msg.message || msg.content || '',
-        sentAt:
-          msg.sentAt && typeof msg.sentAt._seconds === 'number'
-            ? new Date(
-                msg.sentAt._seconds * 1000 +
-                  (msg.sentAt._nanoseconds || 0) / 1000000
-              )
-            : msg.sentAt
-            ? new Date(msg.sentAt)
-            : new Date(),
+        sentAt: formatMessageDate(msg.sentAt),
         isActive: msg.isActive !== undefined ? msg.isActive : true,
       }));
       setChatData((prev) => ({ ...prev, [activeUser]: formattedMessages }));
@@ -119,7 +112,7 @@ const Chat = () => {
       return;
     }
 
-    const newSocket = io('http://localhost:3000', {
+    const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
       withCredentials: true,
       auth: { token: userToken },
     });
@@ -154,7 +147,11 @@ const Chat = () => {
           }
           const updatedMessages = [
             ...messagesForCurrentRoom,
-            { ...msg, content: msg.message || msg.content || '' },
+            { 
+              ...msg, 
+              content: msg.message || msg.content || '',
+              sentAt: formatMessageDate(msg.sentAt)
+            },
           ];
           return { ...prev, [currentActiveRoomId]: updatedMessages };
         });
@@ -231,9 +228,9 @@ const Chat = () => {
           console.log(
             `[API] activeUser null 전환: 상담 ${previousConsultationId} 담당자 해제 요청.`
           );
-          axios
+          axiosInstance
             .post(
-              `http://localhost:3000/consultations/handler/${previousConsultationId}`,
+              `/consultations/handler/${previousConsultationId}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -273,9 +270,9 @@ const Chat = () => {
           console.log(
             `[API] 컴포넌트 언마운트 클린업: 상담 ${lastActiveUser} 담당자 해제 요청.`
           );
-          axios
+          axiosInstance
             .post(
-              `http://localhost:3000/consultations/handler/${lastActiveUser}`,
+              `/consultations/handler/${lastActiveUser}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -341,8 +338,8 @@ const Chat = () => {
     setInputText('');
 
     try {
-      await axios.post(
-        `http://localhost:3000/consultations/staff/${activeUser}`,
+      await axiosInstance.post(
+        `/consultations/staff/${activeUser}`,
         { answer: text },
         {
           headers: { Authorization: `Bearer ${userToken}` },
@@ -421,8 +418,8 @@ const Chat = () => {
             console.log(
               `[API] 클릭: 이전 상담 ${previousActiveUser} 담당자 해제 요청 시작.`
             );
-            await axios.post(
-              `http://localhost:3000/consultations/handler/${previousActiveUser}`,
+            await axiosInstance.post(
+              `/consultations/handler/${previousActiveUser}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -439,8 +436,8 @@ const Chat = () => {
         console.log(
           `[API] 클릭: 새 상담 ${consultationId} 담당자 설정 요청 시작.`
         );
-        await axios.post(
-          `http://localhost:3000/consultations/handler/${consultationId}`,
+        await axiosInstance.post(
+          `/consultations/handler/${consultationId}`,
           { handlerId: staffUid },
           {
             headers: { Authorization: `Bearer ${userToken}` },
@@ -564,12 +561,11 @@ const Chat = () => {
               : '';
 
             let dateSeparator = null;
-            // `lastDate`는 `map` 함수 외부의 클로저 변수로 유지되어야 함
             if (
               idx === 0 ||
               (messageDate &&
                 messageDate !==
-                  messages[idx - 1]?.sentAt?.toLocaleDateString('ko-KR', {
+                  new Date(messages[idx - 1]?.sentAt).toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -593,7 +589,7 @@ const Chat = () => {
                   className={`
                     max-w-[60%] my-1 break-words relative flex flex-col
                     ${
-                      msg.senderType === 'staff' || msg.senderType === 'ai'
+                      msg.senderId === 'AI_Bot' || msg.senderType === 'staff' || msg.senderType === 'ai'
                         ? 'self-end items-end'
                         : 'self-start items-start'
                     }
@@ -603,7 +599,7 @@ const Chat = () => {
                     className={`
                       p-3 rounded-xl
                       ${
-                        msg.senderType === 'staff'
+                        msg.senderId === 'AI_Bot' || msg.senderType === 'staff'
                           ? 'bg-yellow-200 text-gray-800'
                           : msg.senderType === 'ai'
                           ? 'bg-purple-100 text-purple-800'
@@ -619,7 +615,7 @@ const Chat = () => {
                     className={`
                       text-xs text-gray-500 mt-1 mx-2
                       ${
-                        msg.senderType === 'staff' || msg.senderType === 'ai'
+                        msg.senderId === 'AI_Bot' || msg.senderType === 'staff' || msg.senderType === 'ai'
                           ? 'text-right'
                           : 'text-left'
                       }

@@ -1,44 +1,46 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getHospitalInfo, updateHospitalInfo } from '../api/hospital';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getHospitalInfo, updateHospitalInfo as updateHospitalInfoApi } from '../api/hospital';
 
 const HospitalContext = createContext();
 
 export const HospitalProvider = ({ children }) => {
-  const [hospitalInfo, setHospitalInfoState] = useState({
-    name: '', address: '', ceo: '', bizNumber: '', phone: ''
-  });
+  const [hospitalInfo, setHospitalInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 서버에서 병원 정보 불러오기
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await getHospitalInfo();
-        setHospitalInfoState(data);
-        localStorage.setItem('hospitalInfo', JSON.stringify(data));
-      } catch (e) {
-        // 서버에 정보 없으면 localStorage fallback
-        const saved = localStorage.getItem('hospitalInfo');
-        if (saved) setHospitalInfoState(JSON.parse(saved));
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const fetchHospitalInfo = useCallback(async () => {
+    try {
+      setLoading(true);
+      const info = await getHospitalInfo();
+      setHospitalInfo(info);
+    } catch (error) {
+      console.error("병원 정보를 불러오는데 실패했습니다:", error);
+      // 실패 시 기본값 또는 빈 객체 설정 가능
+      setHospitalInfo({});
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // 병원 정보 저장 (서버+Context+localStorage)
-  const setHospitalInfo = async (info) => {
-    setHospitalInfoState(info);
-    localStorage.setItem('hospitalInfo', JSON.stringify(info));
+  useEffect(() => {
+    fetchHospitalInfo();
+  }, [fetchHospitalInfo]);
+
+  // 병원 정보 업데이트 함수
+  const saveHospitalInfo = useCallback(async (newInfo) => {
     try {
-      await updateHospitalInfo(info);
-    } catch (e) {
-      // 서버 저장 실패 시 fallback
+      await updateHospitalInfoApi(newInfo);
+      // 로컬 상태를 즉시 업데이트하여 빠른 피드백 제공
+      setHospitalInfo(prevInfo => ({ ...prevInfo, ...newInfo }));
+    } catch (error) {
+      console.error("병원 정보 업데이트 실패:", error);
+      throw error; // 에러를 호출한 컴포넌트로 다시 던져서 처리할 수 있도록 함
     }
-  };
+  }, []);
+
+  const value = { hospitalInfo, loading, fetchHospitalInfo, updateHospitalInfo: saveHospitalInfo };
 
   return (
-    <HospitalContext.Provider value={{ hospitalInfo, setHospitalInfo, loading }}>
+    <HospitalContext.Provider value={value}>
       {children}
     </HospitalContext.Provider>
   );
