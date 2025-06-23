@@ -1,250 +1,670 @@
-import { useState, useEffect } from 'react';
-import styled from '@emotion/styled';
-import {
-  collection,
-  doc,
-  query,
-  orderBy,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-  getDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { db } from '../../../config/firebase';
-
-const ChatWrapper = styled.div`
-  display: flex;
-  height: 100%;
-  overflow: hidden;
-`;
-
-const ChatList = styled.div`
-  width: 220px;
-  background: #f7f7f7;
-  border-right: 1px solid #ccc;
-  overflow-y: auto;
-`;
-
-const ChatRoom = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-`;
-
-const ChatHeader = styled.div`
-  background: #fff;
-  padding: 10px 16px;
-  font-weight: bold;
-  border-bottom: 1px solid #ddd;
-`;
-
-const ChatMessages = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  background: #e9edf5;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Message = styled.div`
-  align-self: ${({ type }) => (type === 'staff' ? 'flex-start' : 'flex-end')};
-  background: ${({ type }) => (type === 'staff' ? '#cfe2ff' : '#fff3cd')};
-  color: black;
-  padding: 10px;
-  margin: 6px 0;
-  border-radius: 6px;
-  max-width: 60%;
-  word-break: break-word;
-`;
-
-const TypingBubble = styled.div`
-  font-style: italic;
-  color: #888;
-  margin: 8px 0 0 12px;
-`;
-
-const ChatInput = styled.div`
-  display: flex;
-  padding: 12px;
-  border-top: 1px solid #ccc;
-  background: #fff;
-  height: 60px;
-  box-sizing: border-box;
-  flex-shrink: 0;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 10px;
-  margin-right: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-`;
-
-const Button = styled.button`
-  padding: 10px 16px;
-  background-color: #2f80ed;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-`;
-
-const ChatItem = styled.div`
-  padding: 12px 16px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  &:hover {
-    background: #eee;
-  }
-`;
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // <--- 이 부분을 추가하거나 확인해 주세요.
+import axios from 'axios';
+import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
+import io from 'socket.io-client';
 
 const Chat = () => {
+  const { userInfo, userToken } = useUserInfo();
   const [inputText, setInputText] = useState('');
   const [activeUser, setActiveUser] = useState(null);
   const [userList, setUserList] = useState([]);
   const [chatData, setChatData] = useState({});
-  const [isTyping, setIsTyping] = useState(false);
-  const auth = getAuth();
-  const staffUid = auth.currentUser?.uid;
+
+  const staffUid = userInfo?.id;
+
+  const socketRef = useRef(null);
+  const activeUserRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
 
-  const getUserNameById = async (userId) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      return userDoc.exists() ? userDoc.data().name : '(이름 없음)';
-    } catch {
-      return '(조회 실패)';
-    }
+  // --- 스크롤을 가장 아래로 이동시키는 함수 ---
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // --- 메시지가 업데이트될 때마다 스크롤 이동 ---
   useEffect(() => {
-    const q = query(collection(db, 'consultations'), orderBy('updatedAt', 'desc'));
-    const unsub = onSnapshot(q, async (snapshot) => {
-      const users = await Promise.all(
-        snapshot.docs.map(async (docSnap) => {
-          const data = docSnap.data();
-          const name = await getUserNameById(data.userId);
-          return {
-            id: docSnap.id,
-            name,
-            status: data.status,
-            hasUnread: data.hasUnread || false,
-          };
-        })
-      );
-      setUserList(users);
-    });
-    return () => unsub();
-  }, []);
+    scrollToBottom();
+  }, [messages]);
 
-  useEffect(() => {
-    if (!activeUser) return;
-    const msgRef = collection(db, `consultations/${activeUser}/messages`);
-    const q = query(msgRef, orderBy('sentAt'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          ...data,
-          content: data.content || data.message || '',
-          senderType: data.senderType,
-        };
+  // --- 1. 상담 목록 가져오기 ---
+  const fetchConsultations = useCallback(async () => {
+    if (!userToken) return;
+    try {
+      const response = await axios.get(`http://localhost:3000/consultations/`, {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+        withCredentials: true,
       });
-      setChatData(prev => ({ ...prev, [activeUser]: msgs }));
-    });
+      const allConsultations = response.data.consultations;
 
-    updateDoc(doc(db, 'consultations', activeUser), {
-      hasUnread: false,
-    });
+      const filteredConsultations = allConsultations.filter(
+        (c) => c.status === 'pending' || c.handlerId === staffUid
+      );
 
-    return () => unsub();
-  }, [activeUser]);
+      const sortedConsultations = filteredConsultations.sort((a, b) => {
+        // <-- 'filteredConsultations'로 정확히 수정
+        const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
+        const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
+        return dateA.getTime() - dateB.getTime();
+      });
 
+      setUserList(sortedConsultations);
+    } catch (error) {
+      console.error('상담 목록 가져오기 오류:', error);
+    }
+  }, [userToken, staffUid]);
+
+  // --- 2. 특정 상담방의 초기 메시지 가져오기 ---
+  const fetchInitialMessages = useCallback(async () => {
+    if (!activeUser || !userToken) return;
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/consultations/${activeUser}`,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+          withCredentials: true,
+        }
+      );
+      const messages = response.data.messages;
+      const formattedMessages = messages.map((msg) => ({
+        ...msg,
+        content: msg.message || msg.content || '',
+        sentAt:
+          msg.sentAt && typeof msg.sentAt._seconds === 'number'
+            ? new Date(
+                msg.sentAt._seconds * 1000 +
+                  (msg.sentAt._nanoseconds || 0) / 1000000
+              )
+            : msg.sentAt
+            ? new Date(msg.sentAt)
+            : new Date(),
+        isActive: msg.isActive !== undefined ? msg.isActive : true,
+      }));
+      setChatData((prev) => ({ ...prev, [activeUser]: formattedMessages }));
+    } catch (error) {
+      console.error(
+        `상담방 (${activeUser}) 메시지 가져오기 오류:`,
+        error.response?.data || error.message
+      );
+      setChatData((prev) => ({ ...prev, [activeUser]: [] }));
+    }
+  }, [activeUser, userToken]);
+
+  // --- 3. Socket.IO 클라이언트 초기화 및 이벤트 등록 ---
   useEffect(() => {
-    if (!activeUser) return;
-    const unsub = onSnapshot(doc(db, 'consultations', activeUser), (docSnap) => {
-      const data = docSnap.data();
-      setIsTyping(data?.typing || false);
+    if (!userToken || !staffUid) {
+      if (socketRef.current) {
+        console.warn(
+          'Socket: UserToken 또는 StaffUID 없음. 기존 소켓 연결 해제.'
+        );
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    if (socketRef.current) {
+      console.log('Socket: 이미 연결된 소켓이 있습니다. 재연결 건너뜜.');
+      return;
+    }
+
+    const newSocket = io('http://localhost:3000', {
+      withCredentials: true,
+      auth: { token: userToken },
     });
-    return () => unsub();
-  }, [activeUser]);
 
-  const sendMessage = async () => {
+    newSocket.on('connect', () => {
+      console.log('Socket 연결됨:', newSocket.id);
+    });
+    newSocket.on('connect_error', (err) => {
+      console.error('Socket 연결 오류:', err.message);
+    });
+    newSocket.on('error', (err) => {
+      console.error('Socket 오류:', err);
+    });
+
+    newSocket.on('consultationListUpdated', fetchConsultations);
+
+    newSocket.on('newMessage', (msg) => {
+      const currentActiveRoomId = activeUserRef.current;
+      const currentStaffId = userInfo?.id;
+
+      if (msg.consultationId === currentActiveRoomId) {
+        if (msg.senderId === currentStaffId) return;
+
+        setChatData((prev) => {
+          const messagesForCurrentRoom = prev[currentActiveRoomId] || [];
+          if (
+            messagesForCurrentRoom.some(
+              (existingMsg) => existingMsg.id === msg.id
+            )
+          ) {
+            return prev;
+          }
+          const updatedMessages = [
+            ...messagesForCurrentRoom,
+            { ...msg, content: msg.message || msg.content || '' },
+          ];
+          return { ...prev, [currentActiveRoomId]: updatedMessages };
+        });
+      }
+      fetchConsultations();
+    });
+
+    socketRef.current = newSocket;
+
+    return () => {
+      if (socketRef.current) {
+        console.log(`Socket 연결 해제 요청 (클린업): ${socketRef.current.id}`);
+        socketRef.current.off('consultationListUpdated', fetchConsultations);
+        socketRef.current.off('newMessage');
+        socketRef.current.off('connect');
+        socketRef.current.off('connect_error');
+        socketRef.current.off('error');
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [userToken, staffUid, userInfo, fetchConsultations]);
+
+  // --- 4. userToken이 유효할 때 상담 목록 초기 로드 ---
+  useEffect(() => {
+    if (userToken) {
+      fetchConsultations();
+    }
+  }, [userToken, fetchConsultations]);
+
+  // --- 5. activeUser 변경 시 (방 조인/나가기 및 메시지 로드) ---
+  useEffect(() => {
+    activeUserRef.current = activeUser;
+
+    const currentConsultationId = activeUser;
+
+    if (currentConsultationId) {
+      fetchInitialMessages();
+
+      if (socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('join', currentConsultationId);
+        console.log(
+          `[Socket:join] 방 참가 (activeUser 변경): ${currentConsultationId} by ${staffUid}`
+        );
+      }
+    } else {
+      setChatData({});
+    }
+
+    return () => {
+      const userToLeave = activeUserRef.current;
+      if (userToLeave && socketRef.current && socketRef.current.connected) {
+        socketRef.current.emit('leave', userToLeave);
+        console.log(
+          `[Socket:leave] 방 나가기 (클린업): ${userToLeave} by ${staffUid}`
+        );
+      }
+    };
+  }, [activeUser, fetchInitialMessages, staffUid]);
+
+  // --- 6. 컴포넌트 언마운트 시 또는 activeUser가 명시적으로 null이 될 때의 최종 담당자 해제 ---
+  useEffect(() => {
+    if (activeUser === null) {
+      const previousConsultationId = activeUserRef.current;
+
+      if (previousConsultationId && staffUid && userToken) {
+        const previousConsultation = userList.find(
+          (c) => c.id === previousConsultationId
+        );
+        if (
+          previousConsultation &&
+          previousConsultation.handlerId === staffUid
+        ) {
+          console.log(
+            `[API] activeUser null 전환: 상담 ${previousConsultationId} 담당자 해제 요청.`
+          );
+          axios
+            .post(
+              `http://localhost:3000/consultations/handler/${previousConsultationId}`,
+              { handlerId: null },
+              {
+                headers: { Authorization: `Bearer ${userToken}` },
+                withCredentials: true,
+              }
+            )
+            .then(() => {
+              console.log(
+                `[API] activeUser null 전환: 상담 ${previousConsultationId} 담당자 해제 성공.`
+              );
+              fetchConsultations();
+            })
+            .catch((err) => {
+              console.error(
+                `[API Error] activeUser null 전환: 상담 ${previousConsultationId} 담당자 해제 실패:`,
+                err.response?.data || err.message
+              );
+            });
+        }
+      }
+    }
+
+    return () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(
+          'Development StrictMode: 언마운트 클린업에서 API 호출 건너뜀.'
+        );
+        return;
+      }
+
+      const lastActiveUser = activeUserRef.current;
+      if (lastActiveUser && staffUid && userToken) {
+        const currentConsultation = userList.find(
+          (c) => c.id === lastActiveUser
+        );
+        if (currentConsultation && currentConsultation.handlerId === staffUid) {
+          console.log(
+            `[API] 컴포넌트 언마운트 클린업: 상담 ${lastActiveUser} 담당자 해제 요청.`
+          );
+          axios
+            .post(
+              `http://localhost:3000/consultations/handler/${lastActiveUser}`,
+              { handlerId: null },
+              {
+                headers: { Authorization: `Bearer ${userToken}` },
+                withCredentials: true,
+              }
+            )
+            .then(() => {
+              console.log(
+                `[API] 컴포넌트 언마운트 클린업: 상담 ${lastActiveUser} 담당자 해제 성공.`
+              );
+            })
+            .catch((err) => {
+              console.error(
+                `[API Error] 컴포넌트 언마운트 클린업: 상담 ${lastActiveUser} 담당자 해제 실패:`,
+                err.response?.data || err.message
+              );
+            });
+        }
+      }
+    };
+  }, [activeUser, staffUid, userToken, fetchConsultations, userList]);
+
+  // --- 7. 메시지 입력 필드 변경 핸들러 ---
+  const handleInputChange = (e) => {
+    setInputText(e.target.value);
+  };
+
+  // --- 8. 메시지 전송 핸들러 ---
+  const sendMessage = useCallback(async () => {
     const text = inputText.trim();
-    if (!text || !activeUser || !staffUid) return;
+    if (
+      !text ||
+      !activeUser ||
+      !staffUid ||
+      !userToken ||
+      !socketRef.current ||
+      !socketRef.current.connected
+    ) {
+      console.warn('메시지 전송 조건 미달:', {
+        text,
+        activeUser,
+        staffUid,
+        userToken,
+        socketConnected: socketRef.current?.connected,
+      });
+      return;
+    }
 
-    const msgRef = collection(db, `consultations/${activeUser}/messages`);
-    await addDoc(msgRef, {
+    const tempMessageId = Date.now().toString();
+    const staffMessage = {
+      id: tempMessageId,
       senderId: staffUid,
       senderType: 'staff',
       content: text,
-      sentAt: serverTimestamp()
-    });
+      sentAt: new Date(),
+      isActive: true,
+    };
 
-    await updateDoc(doc(db, 'consultations', activeUser), {
-      updatedAt: serverTimestamp(),
-      handlerId: staffUid,
-      status: 'responded',
-      typing: false,
-      hasUnread: false,
-    });
-
+    setChatData((prev) => ({
+      ...prev,
+      [activeUser]: [...(prev[activeUser] || []), staffMessage],
+    }));
     setInputText('');
-  };
 
-  const handleChatClick = (consultationId) => {
-    setActiveUser(consultationId);
-  };
+    try {
+      await axios.post(
+        `http://localhost:3000/consultations/staff/${activeUser}`,
+        { answer: text },
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+          withCredentials: true,
+        }
+      );
+      fetchConsultations();
+    } catch (error) {
+      console.error('메시지 전송 실패:', error.response?.data || error.message);
+      setChatData((prev) => ({
+        ...prev,
+        [activeUser]: (prev[activeUser] || []).filter(
+          (msg) => msg.id !== tempMessageId
+        ),
+      }));
+    }
+  }, [activeUser, staffUid, userToken, inputText, fetchConsultations]);
+
+  // --- 9. 상담 목록 클릭 핸들러 (다른 직원 상담중인 경우 접근 차단) ---
+  const handleChatClick = useCallback(
+    async (consultationId) => {
+      if (!staffUid || !userToken) {
+        return;
+      }
+
+      // 클릭한 상담 정보를 userList에서 찾습니다.
+      const clickedConsultation = userList.find((c) => c.id === consultationId);
+
+      // 다른 직원이 담당 중인 상담인지 확인
+      // handlerId가 있고 (null이 아니며), 그 handlerId가 현재 직원(staffUid)의 ID와 다르면
+      if (
+        clickedConsultation &&
+        clickedConsultation.handlerId &&
+        clickedConsultation.handlerId !== staffUid
+      ) {
+        // AI 챗봇이 담당 중인 경우는 허용 (필요시 AI 담당방은 들어갈 수 있도록)
+        if (clickedConsultation.handlerId === 'aiChatBot') {
+          // AI 챗봇 담당방은 들어갈 수 있도록 허용. 단, 여기서는 담당자를 AI에서 나로 변경하는 로직이 필요.
+          // 현재는 AI 답변 완료 상태에서 직원이 재상담하는 시나리오가 아닐 수 있으므로,
+          // 일단 AI 챗봇 담당방도 다른 직원처럼 접근 차단하거나,
+          // 아니면 AI 챗봇 담당방은 자유롭게 들어가서 답변을 이어갈 수 있도록 할 수 있습니다.
+          // 일단은 다른 직원처럼 차단하는 방향으로 하겠습니다.
+          console.log(
+            `[handleChatClick] AI 챗봇이 담당 중인 상담 ${consultationId}입니다. 접근 차단.`
+          );
+          alert(`AI 챗봇이 답변 중인 상담입니다.`); // 사용자에게 알림
+          return;
+        }
+
+        console.log(
+          `[handleChatClick] 다른 직원이 담당 중인 상담 ${consultationId}입니다. 접근 차단.`
+        );
+        alert(`다른 직원이 상담 중인 채팅방입니다.`); // 사용자에게 알림
+        return; // 접근 차단
+      }
+
+      // 이미 활성 상태이거나 같은 상담을 클릭했다면 무시
+      if (activeUser === consultationId) {
+        console.log(
+          `[handleChatClick] 이미 선택된 상담: ${consultationId}. 재선택 무시.`
+        );
+        return;
+      }
+
+      const previousActiveUser = activeUser;
+
+      setActiveUser(consultationId);
+
+      try {
+        // 이전 상담 담당자 해제 (내가 담당하고 있었다면)
+        if (previousActiveUser) {
+          const prevConsultation = userList.find(
+            (c) => c.id === previousActiveUser
+          );
+          if (prevConsultation && prevConsultation.handlerId === staffUid) {
+            console.log(
+              `[API] 클릭: 이전 상담 ${previousActiveUser} 담당자 해제 요청 시작.`
+            );
+            await axios.post(
+              `http://localhost:3000/consultations/handler/${previousActiveUser}`,
+              { handlerId: null },
+              {
+                headers: { Authorization: `Bearer ${userToken}` },
+                withCredentials: true,
+              }
+            );
+            console.log(
+              `[API] 클릭: 이전 상담 ${previousActiveUser} 담당자 해제 성공.`
+            );
+          }
+        }
+
+        // 새로운 상담 담당자 지정
+        console.log(
+          `[API] 클릭: 새 상담 ${consultationId} 담당자 설정 요청 시작.`
+        );
+        await axios.post(
+          `http://localhost:3000/consultations/handler/${consultationId}`,
+          { handlerId: staffUid },
+          {
+            headers: { Authorization: `Bearer ${userToken}` },
+            withCredentials: true,
+          }
+        );
+        console.log(`[API] 클릭: 새 상담 ${consultationId} 담당자 설정 성공.`);
+
+        await fetchConsultations(); // 최종 상담 목록 새로고침
+      } catch (error) {
+        console.error(
+          `[API Error] 담당자 변경 실패:`,
+          error.response?.data || error.message
+        );
+        setActiveUser(previousActiveUser); // 실패 시 이전 activeUser로 롤백
+        await fetchConsultations(); // 목록 새로고침 (UI 원상복구)
+      }
+    },
+    [activeUser, staffUid, userToken, fetchConsultations, userList]
+  );
+
+  let lastDate = ''; // 날짜 구분선 표시를 위한 변수 (return 문 내부에서 초기화되어야 함)
 
   return (
-    <ChatWrapper>
-      <ChatList>
-        <h3 style={{ padding: '16px', margin: 0 }}>상담 목록</h3>
-        {userList.map(user => (
-          <ChatItem key={user.id} onClick={() => handleChatClick(user.id)}>
-            <span>{user.name}</span>
-            {user.hasUnread && <span style={{ color: 'red' }}>●</span>}
-          </ChatItem>
-        ))}
-      </ChatList>
+    <div className="flex h-screen overflow-hidden">
+      {/* 상담 목록 섹션 */}
+      <div className="w-80 bg-bd-pure-white border-r border-bd-soft-gray-line flex flex-col flex-shrink-0">
+        <h3 className="p-4 font-bold m-0 text-bd-charcoal-black flex-shrink-0">
+          미답변 상담 목록
+        </h3>
+        <div className="flex-1 overflow-y-auto">
+          {userList.length === 0 && (
+            <div className="p-4 text-bd-cool-gray">
+              새로운 미답변 상담이 없습니다.
+            </div>
+          )}
+          <table className="min-w-full divide-y divide-bd-soft-gray-line">
+            <thead className="bg-bd-pure-white sticky top-0 z-10">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium text-bd-cool-gray uppercase tracking-wider">
+                  고객명
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-bd-cool-gray uppercase tracking-wider">
+                  상담 상태
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-bd-cool-gray uppercase tracking-wider w-28">
+                  담당자
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-bd-soft-gray-line">
+              {userList.map((user) => (
+                <tr
+                  key={user.id}
+                  onClick={() => handleChatClick(user.id)}
+                  className={`
+                    cursor-pointer hover:bg-bd-cancel-gray-hover
+                    ${activeUser === user.id ? 'bg-blue-100' : ''}
+                  `}
+                >
+                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-bd-charcoal-black">
+                    {user.name || user.userId}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm text-bd-charcoal-black">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      대기중
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap text-sm w-28">
+                    {user.handlerId ? (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          user.handlerId === staffUid
+                            ? 'bg-green-100 text-green-800'
+                            : user.handlerId === 'aiChatBot'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {user.handlerId === staffUid
+                          ? '내가 상담중'
+                          : user.handlerId === 'aiChatBot'
+                          ? 'AI 답변 완료'
+                          : `${user.handlerName || '다른 직원'} 대응중`}
+                      </span>
+                    ) : (
+                      <span className="text-bd-cool-gray text-xs">없음</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-      <ChatRoom>
-        <ChatHeader>
-          {activeUser ? `${userList.find(u => u.id === activeUser)?.name} 상담 중` : '상담 선택 대기 중'}
-        </ChatHeader>
+      {/* 채팅방 섹션 */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="bg-white p-4 font-bold border-b border-bd-soft-gray-line text-bd-charcoal-black flex-shrink-0">
+          {activeUser
+            ? `${
+                userList.find((u) => u.id === activeUser)?.name || activeUser
+              } 상담 중`
+            : '상담 선택 대기 중'}
+        </div>
 
-        <ChatMessages>
-          {messages.map((msg, idx) => (
-            <Message key={idx} type={msg.senderType === 'patient' ? 'patient' : 'staff'}>
-              {msg.content}
-            </Message>
-          ))}
-          {isTyping && <TypingBubble>입력 중...</TypingBubble>}
-        </ChatMessages>
+        {/* 메시지 목록 부분: flex-1과 overflow-y-auto로 스크롤 가능하게 합니다. */}
+        <div className="flex-1 overflow-y-auto p-4 bg-[#e9edf5] flex flex-col">
+          {messages.length === 0 && activeUser && (
+            <div className="text-center text-bd-cool-gray mt-10">
+              메시지가 없습니다.
+            </div>
+          )}
+          {messages.map((msg, idx) => {
+            const messageDate = msg.sentAt
+              ? new Date(msg.sentAt).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : '';
 
-        <ChatInput>
-          <Input
+            let dateSeparator = null;
+            // `lastDate`는 `map` 함수 외부의 클로저 변수로 유지되어야 함
+            if (
+              idx === 0 ||
+              (messageDate &&
+                messageDate !==
+                  messages[idx - 1]?.sentAt?.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  }))
+            ) {
+              dateSeparator = (
+                <div key={`date-${messageDate}`} className="text-center my-4">
+                  <span className="inline-block bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                    {messageDate}
+                  </span>
+                </div>
+              );
+            }
+
+            return (
+              <React.Fragment key={msg.id || idx}>
+                {' '}
+                {/* key는 React.Fragment에 주는 것이 아니라, 실제 요소에 줘야 합니다. */}
+                {dateSeparator}
+                <div
+                  className={`
+                    max-w-[60%] my-1 break-words relative flex flex-col
+                    ${
+                      msg.senderType === 'staff' || msg.senderType === 'ai'
+                        ? 'self-end items-end'
+                        : 'self-start items-start'
+                    }
+                  `}
+                >
+                  <div
+                    className={`
+                      p-3 rounded-xl
+                      ${
+                        msg.senderType === 'staff'
+                          ? 'bg-yellow-200 text-gray-800'
+                          : msg.senderType === 'ai'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-white text-gray-800'
+                      }
+                    `}
+                  >
+                    <span className="text-bd-charcoal-black">
+                      {msg.content}
+                    </span>
+                  </div>
+                  <div
+                    className={`
+                      text-xs text-gray-500 mt-1 mx-2
+                      ${
+                        msg.senderType === 'staff' || msg.senderType === 'ai'
+                          ? 'text-right'
+                          : 'text-left'
+                      }
+                    `}
+                  >
+                    {msg.sentAt
+                      ? new Date(msg.sentAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : ''}
+                  </div>
+                </div>
+              </React.Fragment>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* 메시지 입력 및 전송 섹션 */}
+        <div className="flex p-3 border-t border-bd-soft-gray-line bg-white h-16 box-border flex-shrink-0">
+          <input
             type="text"
+            className="flex-1 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray hover:-outline-offset-2 hover:outline-BD-CharcoalBlack focus:-outline-offset-2 focus:outline-BD-CharcoalBlack duration-300"
             placeholder="답변을 입력하세요..."
             value={inputText}
-            onChange={e => setInputText(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendMessage()}
+            onChange={handleInputChange}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
             disabled={!activeUser}
           />
-          <Button onClick={sendMessage} disabled={!activeUser}>전송</Button>
-        </ChatInput>
-      </ChatRoom>
-    </ChatWrapper>
+          <button
+            onClick={sendMessage}
+            disabled={!activeUser}
+            className="px-6 py-2 rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+          >
+            전송
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function ReviewCreateForm({ activeReview, setActiveReview }) {
   const navigate = useNavigate();
   const { userInfo, userToken } = useUserInfo();
   const [inputData, setInputData] = useState({
-    review: '',
+    title: '', // ★★★ 제목 필드 추가 ★★★
+    content: '',
   });
   const [images, setImages] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -31,10 +33,14 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowModal(false);
+    setModalMessage('');
+    setModalType('');
+
     const formData = new FormData();
+    formData.append('title', inputData.title); // ★★★ 제목 필드 추가 ★★★
     formData.append('review', inputData.review);
-    formData.append('author', userInfo.id);
-    formData.append('createdAt', new Date());
+    formData.append('authorId', userInfo.id); // 백엔드 스키마에 authorId로 되어있음
     images.forEach((image) => {
       formData.append('reviewImg', image);
     });
@@ -52,44 +58,72 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
         setModalType('success');
         setModalMessage('이용 후기가 등록되었습니다.');
         setShowModal(true);
+      } else {
+        setModalType('error');
+        setModalMessage(
+          `이용 후기 등록 중 예상치 못한 응답: ${response.status}`
+        );
+        setShowModal(true);
       }
     } catch (err) {
       console.error(err);
       setModalType('error');
-      setModalMessage('err');
+      setModalMessage(
+        err.response?.data?.message || '이용 후기 등록 중 오류이 발생했습니다.'
+      );
       setShowModal(true);
     }
   };
 
   const handleCancel = () => {
-    setActiveReview(!activeReview);
+    setActiveReview(false);
   };
 
   return (
     <>
       <div className="mt-10 mx-auto w-full max-w-300">
         <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* ★★★ 제목 입력 필드 추가 ★★★ */}
           <div className="flex items-center justify-between">
             <label
-              htmlFor="review"
-              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
+              htmlFor="title"
+              className="block text-sm/6 font-medium text-BD-CharcoalBlack flex-1/4"
+            >
+              제목
+            </label>
+            <div className="mt-2 flex-3/4">
+              <input
+                type="text"
+                name="title"
+                id="title"
+                value={inputData.title}
+                onChange={handleChange}
+                required
+                className="block w-full rounded-md bg-BD-PureWhite px-3 py-1.5 text-base text-BD-CharcoalBlack outline-1 -outline-offset-1 outline-BD-SoftGrayLine placeholder:text-BD-SoftGrayLine focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold sm:text-sm/6"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="content"
+              className="block text-sm/6 font-medium text-BD-CharcoalBlack flex-1/4"
             >
               후기
             </label>
             <div className="mt-2 flex-3/4">
               <textarea
-                name="review"
-                id="review"
-                value={inputData.review}
+                name="content"
+                id="content"
+                value={inputData.content}
                 onChange={handleChange}
-                className="block w-full h-120 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                className="block w-full h-120 rounded-md bg-BD-PureWhite px-3 py-1.5 text-base text-BD-CharcoalBlack outline-1 -outline-offset-1 outline-BD-SoftGrayLine placeholder:text-BD-SoftGrayLine focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold sm:text-sm/6"
               />
             </div>
           </div>
           <div className="flex items-center justify-between">
             <label
               htmlFor="reviewImg"
-              className="block text-sm/6 font-medium text-gray-900 flex-1/4"
+              className="block text-sm/6 font-medium text-BD-CharcoalBlack flex-1/4"
             >
               이미지 첨부
             </label>
@@ -99,7 +133,7 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
                 multiple
                 accept="image/*"
                 onChange={handleAddImages}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-BD-CharcoalBlack outline-1 -outline-offset-1 outline-BD-SoftGrayLine placeholder:text-BD-SoftGrayLine focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold sm:text-sm/6"
               />
               <div className="flex flex-wrap gap-4 mt-2">
                 {images.map((img, index) => (
@@ -114,7 +148,7 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
                       onClick={() => removeImage(index)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
                     >
-                      ×
+                      {/* X 아이콘 등 */}
                     </button>
                   </div>
                 ))}
@@ -122,41 +156,30 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
             </div>
           </div>
           <div className="flex gap-4 justify-end">
-            <button
-              type="submit"
-              className="flex items-center justify-center rounded-md bg-BD-CharcoalBlack text-BD-ElegantGold outline-2 -outline-offset-2 outline-BD-CharcoalBlack px-6 py-3 shadow-xs hover:bg-BD-ElegantGold  hover-visible:outline-BD-ElegantGold hover:text-BD-CharcoalBlack focus:bg-BD-ElegantGold  focus-visible:outline-BD-ElegantGold focus:text-BD-CharcoalBlack duration-300"
-            >
+            <Button type="submit" size="lg">
               등록
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
+              size="lg"
               onClick={handleCancel}
-              className="flex items-center justify-center rounded-md bg-BD-CoolGray text-BD-SoftGrayLine outline-2 -outline-offset-2 outline-BD-CoolGray px-6 py-3 shadow-xs hover:bg-BD-SoftGrayLine  hover-visible:outline-BD-SoftGrayLine hover:text-BD-CoolGray focus:bg-BD-SoftGrayLine  focus-visible:outline-BD-SoftGrayLine focus:text-BD-CoolGray duration-300"
             >
               취소
-            </button>
+            </Button>
           </div>
         </form>
       </div>
-      {modalType === 'success' && (
+
+      {showModal && (
         <Modal
           show={showModal}
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            navigate('/reviews');
-          }}
-        >
-          <Title>{modalMessage}</Title>
-        </Modal>
-      )}
-      {modalType === 'error' && (
-        <Modal
-          show={showModal}
-          setShow={setShowModal}
-          activeClick={() => {
-            setShowModal(false);
-            navigate(0);
+            if (modalType === 'success') {
+              navigate('/reviews');
+            }
           }}
         >
           <Title>{modalMessage}</Title>

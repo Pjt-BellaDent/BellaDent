@@ -33,17 +33,57 @@ export const createNotice = async (req, res) => {
 // 공지 사항 조회
 export const readAllNotices = async (req, res) => {
   try {
-    const noticesDoc = await db.collection("notices").get();
-    const noticesData = noticesDoc.docs.map((doc) => doc.data());
+    const noticesDoc = await db
+      .collection("notices")
+      .orderBy("createdAt", "desc")
+      .get();
+
+    // Promise.all을 사용하여 각 공지사항의 작성자 이름을 병렬로 조회
+    const noticesData = await Promise.all(
+      noticesDoc.docs.map(async (doc) => {
+        const data = doc.data();
+        let authorName = "알 수 없음"; // 기본값
+
+        if (data.authorId) {
+          // 공지사항에도 authorId 필드가 있다고 가정
+          try {
+            const userDoc = await db
+              .collection("users")
+              .doc(data.authorId)
+              .get();
+            if (userDoc.exists) {
+              authorName = userDoc.data().name || "이름 없음";
+            }
+          } catch (userErr) {
+            console.warn(
+              `Error fetching author name for notice ${doc.id}:`,
+              userErr.message
+            );
+          }
+        }
+
+        return {
+          id: doc.id,
+          ...data,
+          authorName: authorName, // <-- authorName 필드 추가
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+        };
+      })
+    );
 
     if (noticesDoc.empty) {
-      return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
+      console.log("readAllNotices: 공지사항 내용이 없습니다.");
+      return res
+        .status(200)
+        .json({ notices: [], message: "내용을 찾을 수 없습니다." });
     }
 
     res
       .status(200)
       .json({ notices: noticesData, message: "전체 공지 사항 조회 성공" });
   } catch (err) {
+    console.error("readAllNotices 에러:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -53,18 +93,42 @@ export const readDisabledNoticesById = async (req, res) => {
   try {
     const disabledNoticesData = await db
       .collection("notices")
-      .where("isPublic", "==", false) // isPublic이 false인 조건 추가
-      .get(); // 조건에 맞는 모든 문서 가져오기
+      .where("isPublic", "==", false)
+      .get();
 
     if (disabledNoticesData.empty) {
-      return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
+      console.log("readDisabledNoticesById: 비활성화된 공지사항 내용이 없습니다.");
+      return res.status(200).json({ notices: [], message: "비활성화된 내용을 찾을 수 없습니다." });
     }
 
-    const disabledNotices = disabledNoticesData.docs.map((doc) => doc.data());
+    // Promise.all을 사용하여 각 공지사항의 작성자 이름을 병렬로 조회
+    const disabledNotices = await Promise.all(disabledNoticesData.docs.map(async doc => {
+      const data = doc.data();
+      let authorName = '알 수 없음';
+
+      if (data.authorId) {
+        try {
+          const userDoc = await db.collection('users').doc(data.authorId).get();
+          if (userDoc.exists) {
+            authorName = userDoc.data().name || '이름 없음';
+          }
+        } catch (userErr) {
+          console.warn(`Error fetching author name for disabled notice ${doc.id}:`, userErr.message);
+        }
+      }
+
+      return {
+        id: doc.id,
+        ...data,
+        authorName: authorName, // <-- authorName 필드 추가
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+      };
+    }));
 
     res.status(200).json({
-      notices: disabledNotices, // 배열 형태로 반환
-      message: "작성자의 비활성화 공지 사항 조회 성공", // 메시지 수정
+      notices: disabledNotices,
+      message: "작성자의 비활성화 공지 사항 조회 성공",
     });
   } catch (err) {
     console.error("작성자의 비활성화 공지 사항 조회 에러:", err);
@@ -158,7 +222,7 @@ export const disabledNotice = async (req, res) => {
 };
 
 // 공지 사항 삭제
-export const deleteNotice= async (req, res) => {
+export const deleteNotice = async (req, res) => {
   try {
     const reviewId = req.params.id;
     const noticeRef = db.collection("notices").doc(reviewId);

@@ -19,6 +19,7 @@ export const signUp = async (req, res) => {
 
   const { email, password, name, phone } = value;
   const defaultRole = "patient"; // 기본 역할은 환자
+  const isActive = true; // 기본 활성화 상태
 
   try {
     const userRecord = await auth.createUser({
@@ -29,7 +30,10 @@ export const signUp = async (req, res) => {
     const userId = userRecord.uid; // 생성된 유저의 Auth UID
 
     // Auth Custom Claims에 기본 역할 설정 ('patient')
-    await auth.setCustomUserClaims(userId, { role: defaultRole });
+    await auth.setCustomUserClaims(userId, {
+      role: defaultRole,
+      isActive: isActive,
+    });
     console.log(`Custom claim role:${defaultRole} set for user ${userId}`);
 
     // Firestore에 회원 공통 정보 및 환자 정보 저장 (Batch Writes 사용)
@@ -44,16 +48,13 @@ export const signUp = async (req, res) => {
       role: defaultRole,
       name: name,
       phone: phone,
-      isActive: true,
+      isActive: isActive,
       createdAt: now,
       updatedAt: now,
     };
     batch.set(userDocRef, commonUserData);
 
     await batch.commit();
-    console.log(
-      `사용자 개정 생성 성공: User ID ${userId}, Role ${defaultRole}`
-    );
 
     res.status(201).json({ message: "사용자 개정 생성 성공" });
   } catch (err) {
@@ -80,6 +81,7 @@ export const CreatePatient = async (req, res) => {
   const { email, password, name, phone, address, gender, birth, patientInfo } =
     value;
   const defaultRole = "patient"; // 기본 역할은 환자
+  const isActive = true; // 기본 활성화 상태
 
   try {
     // ** 1. Firebase Authentication 계정 생성 **
@@ -91,7 +93,10 @@ export const CreatePatient = async (req, res) => {
     const userId = userRecord.uid; // 생성된 유저의 Auth UID
 
     // ** 2. Auth Custom Claims에 지정된 역할 설정 **
-    await auth.setCustomUserClaims(userId, { role: defaultRole });
+    await auth.setCustomUserClaims(userId, {
+      role: defaultRole,
+      isActive: isActive,
+    });
     console.log(`Custom claim role:${defaultRole} set for user ${userId}`);
 
     // ** 3. Firestore에 회원 공통 정보 및 환자 추가 정보 저장 (Batch Writes 사용) **
@@ -110,7 +115,7 @@ export const CreatePatient = async (req, res) => {
       address: address || null,
       gender: gender || null,
       birth: birth || null,
-      isActive: true, // 기본 활성화 상태
+      isActive: isActive, // 기본 활성화 상태
       createdAt: now, // Timestamp 저장
       updatedAt: now, // Timestamp 저장
     };
@@ -130,7 +135,6 @@ export const CreatePatient = async (req, res) => {
 
     // ** 4. Batch 실행 **
     await batch.commit();
-    console.log(`환자 계정 생성 성공: User ID ${userId}, Role ${defaultRole}`);
 
     res.status(201).json({ message: `${defaultRole} 환자 계정 생성 성공` });
   } catch (err) {
@@ -166,6 +170,7 @@ export const CreateStaff = async (req, res) => {
     birth,
     staffInfo,
   } = value;
+  const isActive = true; // 기본 활성화 상태
 
   try {
     // ** 1. Firebase Authentication 계정 생성 **
@@ -177,7 +182,7 @@ export const CreateStaff = async (req, res) => {
     const userId = userRecord.uid; // 생성된 유저의 Auth UID
 
     // ** 2. Auth Custom Claims에 지정된 역할 설정 **
-    await auth.setCustomUserClaims(userId, { role: role });
+    await auth.setCustomUserClaims(userId, { role: role, isActive: isActive });
     console.log(`Custom claim role:${role} set for user ${userId}`);
 
     // ** 3. Firestore에 회원 공통 정보 및 역할별 추가 정보 저장 (Batch Writes 사용) **
@@ -196,7 +201,7 @@ export const CreateStaff = async (req, res) => {
       address: address || null,
       gender: gender || null,
       birth: birth || null,
-      isActive: true, // 기본 활성화 상태
+      isActive: isActive, // 기본 활성화 상태
       createdAt: now, // Timestamp 저장
       updatedAt: now, // Timestamp 저장
     };
@@ -216,7 +221,6 @@ export const CreateStaff = async (req, res) => {
 
     // ** 4. Batch 실행 **
     await batch.commit();
-    console.log(`직원 계정 생성 성공: User ID ${userId}, Role ${role}`);
 
     res.status(201).json({ message: `${role} 직원 계정 생성 성공` });
   } catch (err) {
