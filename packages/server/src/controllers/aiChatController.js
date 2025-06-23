@@ -67,7 +67,16 @@ export const GeminiChat = async (req, res) => {
       content: message,
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-    await db.collection("consultations").doc(consultationId).collection("messages").add(userMessageData);
+    const userMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add(userMessageData);
+
+    // [수정] 저장된 사용자 메시지를 즉시 클라이언트에 전송
+    const savedUserMessage = (await userMessageRef.get()).data();
+    io.to(consultationId).emit('newMessage', {
+      id: userMessageRef.id,
+      ...savedUserMessage
+    });
+    // [추가] 상담 목록도 새로고침하도록 전체 알림
+    io.emit('consultationListUpdated');
     
     // 운영 시간이 아닐 경우 안내 메시지 전송 후 종료
     if (isOffHours) {
@@ -98,21 +107,40 @@ export const GeminiChat = async (req, res) => {
       faqReply = matchedFaq.answer;
     }
 
-    const aiReplyContent = faqReply || "죄송합니다, 지금은 답변하기 어렵습니다. 관리자가 곧 확인 후 답변드릴 예정입니다.";
+    let aiReplyContent;
+    // FAQ에서 답변을 찾았을 경우
+    if (faqReply) {
+      aiReplyContent = faqReply;
+    } 
+    // FAQ에 답변이 없을 경우, 외부 AI (Gemini) 호출
+    else {
+      try {
+        const response = await axios.post(
+          process.env.FIREBASE_FUNCTION_URL,
+          { message: message },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        aiReplyContent = response.data.answer || "죄송합니다, 지금은 답변하기 어렵습니다. 잠시 후 다시 시도해주세요.";
+      } catch (e) {
+        console.error("External AI call failed:", e.message);
+        aiReplyContent = "AI 응답 생성 중 오류가 발생했습니다. 관리자에게 문의해주세요.";
+      }
+    }
 
     const aiMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add({
-      senderId: "AI_Bot_FAQ",
+      senderId: faqReply ? "AI_Bot_FAQ" : "AI_Bot_Gemini",
       senderType: "ai",
       content: aiReplyContent,
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-    const aiMessage = (await aiMessageRef.get()).data();
+    // DB에서 방금 저장한 AI 메시지 데이터를 다시 가져옴 (Timestamp 변환 등)
+    const aiMessageData = (await aiMessageRef.get()).data();
     
     // 실시간으로 클라이언트에 새 AI 메시지 전송
     io.to(consultationId).emit('newMessage', {
-      id: aiMessageRef.id,
-      ...aiMessage
+      id: aiMessageRef.id, // 문서 ID
+      ...aiMessageData   // 문서 데이터
     });
         
     return res.status(200).json({ answer: aiReplyContent });
