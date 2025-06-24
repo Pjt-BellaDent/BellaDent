@@ -15,5 +15,9 @@
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev",
     "function": "yarn workspace functions run deploy"
+  },
+  "dependencies": {
+    "prop-types": "^15.8.1",
+    "socket.io-client": "^4.8.1"
   }
 }

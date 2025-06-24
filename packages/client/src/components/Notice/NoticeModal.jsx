@@ -126,7 +126,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const baseURL = 'http://localhost:3000/api/notice';
+  const baseURL = 'http://localhost:3000/notices';
 
   const fetchNotices = async () => {
     try {
@@ -293,14 +293,15 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
             <>
               <ButtonRow>
                 <Button
-                  onClick={() => {
-                    setEditId(null);
-                    resetForm();
-                    setShowForm(true);
-                  }}
-                >
-                  추가
-                </Button>
+  onClick={() => {
+    setEditId(null);
+    resetForm();
+    setShowForm(true);
+  }}
+  color="#d4b080"
+>
+  추가
+</Button>
                 <Button onClick={onClose} color="#343a40">닫기</Button>
               </ButtonRow>
               <div style={{ marginTop: '6px', fontSize: '13px', textAlign: 'right', color: '#555' }}>
