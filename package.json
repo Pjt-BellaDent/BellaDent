@@ -15,6 +15,7 @@
   "scripts": {
     "server": "yarn workspace server run dev",
     "client": "yarn workspace client run dev",
+    "build": "yarn workspace client run build",
     "function": "yarn workspace functions run deploy"
   }
 }
