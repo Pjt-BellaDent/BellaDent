@@ -257,12 +257,12 @@ const Chat = () => {
     }
 
     return () => {
-      if (process.env.NODE_ENV === 'development') {
+/*       if (process.env.NODE_ENV === 'development') {
         console.warn(
           'Development StrictMode: 언마운트 클린업에서 API 호출 건너뜀.'
         );
         return;
-      }
+      } */
 
       const lastActiveUser = activeUserRef.current;
       if (lastActiveUser && staffUid && userToken) {
