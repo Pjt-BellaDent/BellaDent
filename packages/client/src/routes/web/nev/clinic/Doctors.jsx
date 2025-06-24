@@ -106,7 +106,7 @@ function Doctors() {
           <Text size="lg" CN="mt-6 text-center">
             전문 분야: 심미치료 (라미네이트, 잇몸성형, 세라믹보철)
           </Text>
-          <Title as="h3" size="md" CN="mt-6 text-center">
+          <Text as="h3" size="lg" CN="mt-6 text-center">
             BellaDent 을 찾아주셔서 감사합니다. 대표원장 정하늘입니다. 저는
             라미네이트, 잇몸성형, 세라믹 보철 등 심미치료 분야에 대한 깊은
             연구와 풍부한 임상 경험을 바탕으로 진료합니다. 단순히 보기 좋은
@@ -114,7 +114,7 @@ function Doctors() {
             추구하며, 진료 과정의 모든 순간을 사진 기록으로 꼼꼼히 관리하여
             신뢰할 수 있는 결과를 약속드립니다. BellaDent 에서 당신의 완벽한
             미소를 경험하세요.
-          </Title>
+          </Text>
           <Text size="lg" CN="mt-6 text-center">
             - 상담/진료 전후 사진 관리 - 환자 유형별 추천 치료코스 저장 기능 -
             카카오채널 기반 1:1 상담 로그 연동

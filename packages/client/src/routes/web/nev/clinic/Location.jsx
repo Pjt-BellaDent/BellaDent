@@ -76,7 +76,7 @@ function Location() {
           <hr className="my-6" />
           {/* Title 컴포넌트에 size prop 적용 */}
           <Title as="h3" size="lg">
-            버스노선 : 01, 45, 47, 26. . . . .
+            버스노선 : 01, 45, 47, 26. 37. . . . .
           </Title>
         </CardMap>
       </Container>
