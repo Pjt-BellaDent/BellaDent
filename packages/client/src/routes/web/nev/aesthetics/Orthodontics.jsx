@@ -48,10 +48,11 @@ function Orthodontics() {
             치아교정안내
           </Title>
           {/* h3를 Title 컴포넌트로 변경 */}
-          <Title as="h3" size="sm" CN="mx-5">
+          
+          <hr className="my-20  " />
+          <Title as="h3" size="sm" CN="flex justify-center md:text-balance mb-6 mx-5">
             치아교정 치료의 주요 목적
           </Title>
-          <hr className="my-20  " />
           <div className="flex gap-7 mx-5">
             <img src={teeth1} alt="teeth1" />
 
@@ -124,12 +125,13 @@ function Orthodontics() {
         </div>
         <div className="max-w-300 mx-auto mt-15 mx-15">
           {/* b 태그 제거하고 Text 컴포넌트로 변경 */}
-          <Text
+          <Title
+            as="h3"
             size="sm"
             CN="flex justify-center md:text-balance mt-[80px] mb-6 mx-5"
           >
-            턱관절치료안내
-          </Text>
+            턱관절 치료안내
+          </Title>
           <div className="mx-5">
             {/* p 태그를 Text 컴포넌트로 변경 */}
             <Text size="lg" CN="line-clamp-15">
