@@ -30,39 +30,127 @@ const defaultFaqs = [
 
 export const GeminiChat = async (req, res) => {
   try {
-    const question = req.body.message;
     const { message, consultationId } = req.body;
-if (!message || !consultationId) {
-  return res.status(400).json({ error: "'message' 또는 'consultationId' 누락" });
-}
+    const { io } = req; // 소켓 인스턴스 가져오기
 
-    if (!question) {
-      return res.status(400).json({ error: "'message' not found." });
+    if (!message || !consultationId) {
+      return res.status(400).json({ error: "'message' 또는 'consultationId'가 누락되었습니다." });
     }
 
-    const functionResponse = await axios.post(
-      process.env.FIREBASE_FUNCTION_URL,
-      { message: question },
-      { headers: { "Content-Type": "application/json" } }
-    );
+    // 1. 챗봇 설정 및 운영 시간 확인
+    const settingsDoc = await db.collection('hospital').doc('chatbot_settings').get();
+    const settings = settingsDoc.exists ? settingsDoc.data() : {};
+    const { answerTimeRange } = settings;
 
-    const aiReply = functionResponse.data.reply || "응답 없음";
+    let isOffHours = false;
+    if (answerTimeRange && answerTimeRange.start && answerTimeRange.end) {
+      const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTime = currentHours * 60 + currentMinutes;
 
-    // 🔥 Firestore에 저장
-    await db.collection("consultations")
-      .doc(consultationId)
-      .collection("messages")
-      .add({
-        senderId: "AI_Bot",
-        senderType: "staff",
-        content: aiReply,
-        sentAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      const [startHours, startMinutes] = answerTimeRange.start.split(':').map(Number);
+      const startTime = startHours * 60 + startMinutes;
 
-    res.status(200).json({ answer: aiReply });
+      const [endHours, endMinutes] = answerTimeRange.end.split(':').map(Number);
+      const endTime = endHours * 60 + endMinutes;
+
+      if (currentTime < startTime || currentTime > endTime) {
+        isOffHours = true;
+      }
+    }
+
+    // 사용자 메시지 저장
+    const userMessageData = {
+      senderId: consultationId,
+      senderType: "patient",
+      content: message,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const userMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add(userMessageData);
+
+    // [수정] 저장된 사용자 메시지를 즉시 클라이언트에 전송
+    const savedUserMessage = (await userMessageRef.get()).data();
+    io.to(consultationId).emit('newMessage', {
+      id: userMessageRef.id,
+      ...savedUserMessage
+    });
+    // [추가] 상담 목록도 새로고침하도록 전체 알림
+    io.emit('consultationListUpdated');
+    
+    // 운영 시간이 아닐 경우 안내 메시지 전송 후 종료
+    if (isOffHours) {
+      const offHoursMessage = `현재는 AI 챗봇 운영 시간이 아닙니다. 운영 시간은 ${answerTimeRange.start}부터 ${answerTimeRange.end}까지입니다.`;
+      const aiMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add({
+          senderId: "AI_Bot_System",
+          senderType: "ai",
+          content: offHoursMessage,
+          sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      const aiMessage = (await aiMessageRef.get()).data();
+      io.to(consultationId).emit('newMessage', { id: aiMessageRef.id, ...aiMessage });
+      return res.status(200).json({ answer: offHoursMessage, isOffHours: true });
+    }
+
+    // 2. FAQ에서 답변 검색
+    let faqReply = null;
+    const faqs = settings.faqs || [];
+    const matchedFaq = faqs.find(faq => {
+      if (!faq.isPublic) return false;
+      if (faq.question.includes(message)) return true;
+      if (faq.keywords && faq.keywords.length > 0) {
+        return faq.keywords.some(keyword => message.includes(keyword));
+      }
+      return false;
+    });
+    if (matchedFaq) {
+      faqReply = matchedFaq.answer;
+    }
+
+    let aiReplyContent;
+    // FAQ에서 답변을 찾았을 경우
+    if (faqReply) {
+      aiReplyContent = faqReply;
+    } 
+    // FAQ에 답변이 없을 경우, 외부 AI (Gemini) 호출
+    else {
+      try {
+        const response = await axios.post(
+          process.env.FIREBASE_FUNCTION_URL,
+          { message: message },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        aiReplyContent = response.data.answer || "죄송합니다, 지금은 답변하기 어렵습니다. 잠시 후 다시 시도해주세요.";
+      } catch (e) {
+        console.error("External AI call failed:", e.message);
+        aiReplyContent = "AI 응답 생성 중 오류가 발생했습니다. 관리자에게 문의해주세요.";
+      }
+    }
+
+    const aiMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add({
+      senderId: faqReply ? "AI_Bot_FAQ" : "AI_Bot_Gemini",
+      senderType: "ai",
+      content: aiReplyContent,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // DB에서 방금 저장한 AI 메시지 데이터를 다시 가져옴 (Timestamp 변환 등)
+    const aiMessageData = (await aiMessageRef.get()).data();
+    
+    // 실시간으로 클라이언트에 새 AI 메시지 전송
+    io.to(consultationId).emit('newMessage', {
+      id: aiMessageRef.id, // 문서 ID
+      ...aiMessageData   // 문서 데이터
+    });
+        
+    return res.status(200).json({ answer: aiReplyContent });
+
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Internal error" });
+    console.error("GeminiChat Error:", error.message);
+    if (error.response) {
+      console.error("Error Response Body:", error.response.data);
+    }
+    res.status(500).json({ error: "AI 응답 처리 중 서버 오류가 발생했습니다." });
   }
 };
 
