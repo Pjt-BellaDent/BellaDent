@@ -42,7 +42,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://belladent.duckdns.org",
+      "https://belladent.duckdns.org",
+    ],
     credentials: true,
   })
 );
@@ -54,7 +59,6 @@ app.use("/reviews", reviewsRouter);
 app.use("/sms", smsLogsRouter);
 app.use("/faqs", faqsRouter);
 app.use("/notices", noticeRoutes);
-
 
 // ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/appointments", appointmentsRouter);
