@@ -511,24 +511,24 @@ const Chat = () => {
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm w-28">
                     {user.handlerId ? (
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          user.handlerId === staffUid
-                            ? 'bg-green-100 text-green-800'
-                            : user.handlerId === 'aiChatBot'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}
-                      >
-                        {user.handlerId === staffUid
-                          ? '내가 상담중'
-                          : user.handlerId === 'aiChatBot'
-                          ? 'AI 답변 완료'
-                          : `${user.handlerName || '다른 직원'} 대응중`}
-                      </span>
-                    ) : (
-                      <span className="text-bd-cool-gray text-xs">없음</span>
-                    )}
+  <span
+    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+      user.handlerId === staffUid && activeUser === user.id
+        ? 'bg-green-100 text-green-800'
+        : user.handlerId === 'aiChatBot'
+        ? 'bg-purple-100 text-purple-800'
+        : 'bg-blue-100 text-blue-800'
+    }`}
+  >
+    {user.handlerId === staffUid && activeUser === user.id
+      ? '내가 상담중'
+      : user.handlerId === 'aiChatBot'
+      ? 'AI 답변 완료'
+      : `${user.handlerName || '다른 직원'} 대응중`}
+  </span>
+) : (
+  <span className="text-bd-cool-gray text-xs">없음</span>
+)},
                   </td>
                 </tr>
               ))}
