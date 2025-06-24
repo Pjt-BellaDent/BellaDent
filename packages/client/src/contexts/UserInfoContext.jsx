@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import axios from 'axios';
+import axiosInstance from '../libs/axiosInstance';
 
 const UserInfoContext = createContext({
   userInfo: null,
@@ -9,19 +9,9 @@ const UserInfoContext = createContext({
   signOutUser: async () => {},
 });
 
-const fetchServerUserInfo = async (idToken) => {
-  const url = 'http://localhost:3000/users/signIn';
+const fetchServerUserInfo = async () => {
   try {
-    const res = await axios.post(
-      url,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
-        withCredentials: true,
-      }
-    );
+    const res = await axiosInstance.post('/users/signIn');
     return res.data.userInfo;
   } catch (fetchError) {
     console.error(
@@ -34,44 +24,41 @@ const fetchServerUserInfo = async (idToken) => {
 
 export const UserInfoProvider = ({ children }) => {
   const [userInfo, setUserInfo] = useState(null);
-  const [userToken, setUserToken] = useState(null);
-  const [isLogin, setIsLogin] = useState(false);
+  const [userToken, setUserToken] = useState(
+    () => localStorage.getItem('userToken') || null
+  );
+  const [isLogin, setIsLogin] = useState(!!userToken);
 
   const auth = getAuth();
 
   useEffect(() => {
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-
       if (user) {
+        const idToken = await user.getIdToken();
+        localStorage.setItem('userToken', idToken);
+        setUserToken(idToken);
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+        
         try {
-          const idToken = await user.getIdToken();
-          const serverUserInfo = await fetchServerUserInfo(idToken);
+          const serverUserInfo = await fetchServerUserInfo();
           setUserInfo(serverUserInfo);
-          setUserToken(idToken);
           setIsLogin(true);
-        } catch (tokenOrFetchError) {
-          console.error(
-            'Error during onAuthStateChanged token/fetch:',
-            tokenOrFetchError
-          );
+        } catch (error) {
+          console.error('Failed to fetch server user info after auth change:', error);
           setUserInfo(null);
-          setUserToken(null);
           setIsLogin(false);
         }
       } else {
-        setUserInfo(null);
+        localStorage.removeItem('userToken');
         setUserToken(null);
+        setUserInfo(null);
         setIsLogin(false);
+        delete axiosInstance.defaults.headers.common['Authorization'];
       }
-
     });
 
-    return () => {
-      unsubscribe();
-    };
-
-  }, []);
+    return () => unsubscribe();
+  }, [auth]);
 
   const signOutUser = async () => {
     try {
@@ -87,9 +74,6 @@ export const UserInfoProvider = ({ children }) => {
         userInfo,
         isLogin,
         userToken,
-        setIsLogin,
-        setUserToken,
-        setUserInfo,
         signOutUser,
       }}
     >

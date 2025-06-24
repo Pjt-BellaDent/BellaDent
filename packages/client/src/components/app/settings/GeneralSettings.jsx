@@ -123,9 +123,6 @@ const GeneralSettings = () => {
     { id: 'general', label: '기본 설정', icon: '⚙️' },
     { id: 'hospital', label: '병원 관리', icon: '🏥' },
     { id: 'users', label: '사용자 관리', icon: '👥' },
-    { id: 'system', label: '시스템 설정', icon: '🔧' },
-    { id: 'security', label: '보안 설정', icon: '🔒' },
-    { id: 'backup', label: '백업/복원', icon: '💾' }
   ];
 
   const handleEditQuickSettings = () => {
@@ -335,216 +332,21 @@ const GeneralSettings = () => {
     </div>
   );
 
-  const renderSystemTab = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">🔧 시스템 설정</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block font-medium mb-2">알림 수신</label>
-            <select
-              value={system.notify}
-              onChange={e => setSystem({ ...system, notify: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="ON">ON</option>
-              <option value="OFF">OFF</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-medium mb-2">진료 예약 간격 (분)</label>
-            <input
-              type="number"
-              value={system.interval}
-              onChange={e => setSystem({ ...system, interval: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-2">EMR 연동</label>
-            <select
-              value={system.emr}
-              onChange={e => setSystem({ ...system, emr: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="사용">사용</option>
-              <option value="미사용">미사용</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-medium mb-2">언어 설정</label>
-            <select
-              value={system.language}
-              onChange={e => setSystem({ ...system, language: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="ko">한국어</option>
-              <option value="en">English</option>
-              <option value="ja">日本語</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="font-medium">다크 모드</label>
-              <p className="text-sm text-gray-500">어두운 테마 사용</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={system.darkMode}
-                onChange={e => setSystem({ ...system, darkMode: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="font-medium">자동 백업</label>
-              <p className="text-sm text-gray-500">매일 자동으로 데이터 백업</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={system.autoBackup}
-                onChange={e => setSystem({ ...system, autoBackup: e.target.checked })}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-        </div>
-
-        <button
-          onClick={saveSystemSettings}
-          className="mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          시스템 설정 저장
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderSecurityTab = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">🔒 보안 설정</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block font-medium mb-2">세션 타임아웃 (분)</label>
-            <input
-              type="number"
-              defaultValue="30"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium mb-2">비밀번호 정책</label>
-            <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option>기본 (8자 이상)</option>
-              <option>강화 (12자 이상, 특수문자 포함)</option>
-              <option>최강 (16자 이상, 대소문자+숫자+특수문자)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="font-medium">2단계 인증</label>
-              <p className="text-sm text-gray-500">SMS 또는 이메일 인증</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="font-medium">IP 접근 제한</label>
-              <p className="text-sm text-gray-500">허용된 IP에서만 접근</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-        </div>
-
-        <button className="mt-6 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-          보안 설정 저장
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderBackupTab = () => (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4">💾 백업 및 복원</h3>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">수동 백업</h4>
-              <p className="text-sm text-blue-600 mb-3">지금 바로 데이터를 백업합니다.</p>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                백업 시작
-              </button>
-            </div>
-            
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium text-green-800 mb-2">데이터 복원</h4>
-              <p className="text-sm text-green-600 mb-3">백업된 데이터를 복원합니다.</p>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                복원 시작
-              </button>
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <h4 className="font-medium mb-3">최근 백업 기록</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span className="text-sm">2025-01-15 14:30:00</span>
-                <span className="text-green-600 text-sm">완료</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span className="text-sm">2025-01-14 14:30:00</span>
-                <span className="text-green-600 text-sm">완료</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                <span className="text-sm">2025-01-13 14:30:00</span>
-                <span className="text-green-600 text-sm">완료</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'general': return renderGeneralTab();
-      case 'hospital': return renderHospitalTab();
-      case 'users': return renderUsersTab();
-      case 'system': return renderSystemTab();
-      case 'security': return renderSecurityTab();
-      case 'backup': return renderBackupTab();
-      default: return renderGeneralTab();
+      case 'general':
+        return renderGeneralTab();
+      case 'hospital':
+        return renderHospitalTab();
+      case 'users':
+        return renderUsersTab();
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">⚙️ 전체 설정</h2>
         <p className="text-gray-600 mt-1">시스템의 모든 설정을 관리합니다.</p>
@@ -571,8 +373,10 @@ const GeneralSettings = () => {
       </div>
 
       {/* 탭 콘텐츠 */}
-      <div className="min-h-[500px]">
-        {renderTabContent()}
+      <div className="bg-white rounded-lg shadow-md mt-6">
+        <div className="p-4 sm:p-6">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );

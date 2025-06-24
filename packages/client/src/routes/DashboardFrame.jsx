@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../layout/Sidebar';
 import NoticeModal from '../components/Notice/NoticeModal.jsx';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx'
@@ -7,6 +7,13 @@ import { useUserInfo } from '../contexts/UserInfoContext.jsx'
 // DashboardFrame 컴포넌트 정의
 function DashboardFrame() {
   const { userInfo, isLogin } = useUserInfo();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLogin) {
+      navigate('/login');
+    }
+  }, [isLogin, navigate]);
 
   // --- 공지사항 모달 관련 상태 관리 ---
 
@@ -123,8 +130,9 @@ function DashboardFrame() {
   };
 
   // --- 컴포넌트 렌더링 ---
-  if (!userInfo) {
-    return <div>로그인이 필요합니다.</div>;
+  if (!isLogin || !userInfo) {
+    // 리디렉션 중이거나 로딩 중일 때 아무것도 렌더링하지 않음
+    return null; 
   }
 
   return (
