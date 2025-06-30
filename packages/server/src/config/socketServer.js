@@ -43,7 +43,12 @@ const socketAuthMiddleware = async (socket, next) => {
 export default function initSocketServer(server) {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:5174"], // 허용할 클라이언트 도메인
+      origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://belladent.duckdns.org",
+        "https://belladent.duckdns.org",
+      ], // 허용할 클라이언트 도메인
       credentials: true, // 크로스-오리진 요청 시 자격 증명 허용
     },
   });
@@ -58,10 +63,10 @@ export default function initSocketServer(server) {
     // 'join' 이벤트: 특정 상담방에 소켓을 조인시킵니다.
     socket.on("join", (consultationId) => {
       // consultationId가 객체로 전달된 경우 처리
-      if (typeof consultationId === 'object' && consultationId.consultationId) {
+      if (typeof consultationId === "object" && consultationId.consultationId) {
         consultationId = consultationId.consultationId;
       }
-      
+
       if (!consultationId) {
         console.warn(
           `[Socket:join] consultationId가 제공되지 않았습니다. User: ${userUid}`
@@ -194,10 +199,10 @@ export default function initSocketServer(server) {
     // 'leave' 이벤트: 특정 상담방에서 소켓을 나갑니다.
     socket.on("leave", (consultationId) => {
       // consultationId가 객체로 전달된 경우 처리
-      if (typeof consultationId === 'object' && consultationId.consultationId) {
+      if (typeof consultationId === "object" && consultationId.consultationId) {
         consultationId = consultationId.consultationId;
       }
-      
+
       if (!consultationId) {
         console.warn(
           `[Socket:leave] consultationId가 제공되지 않았습니다. User: ${userUid}`

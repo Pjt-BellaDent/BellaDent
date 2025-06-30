@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
-import axios from 'axios';
+import axios from '../../libs/axiosInstance.js';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
 import Button from '../web/Button';
 
-function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
+function ReviewUpdateForm({
+  postId,
+  activeReview,
+  setActiveReview,
+  onReviewUpdated,
+}) {
   const navigate = useNavigate();
   const { userToken } = useUserInfo();
   const [inputData, setInputData] = useState({
@@ -19,33 +24,23 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState('');
 
-  // 컴포넌트 마운트 시 postId를 이용하여 기존 리뷰 데이터를 불러와 초기화
   useEffect(() => {
     const fetchReviewData = async () => {
       if (!postId || !userToken) {
-        console.warn(
-          'ReviewUpdateForm: postId 또는 userToken 없음. 리뷰 데이터 로딩 건너뜜.'
-        );
         return;
       }
       try {
-        const url = `http://localhost:3000/reviews/single/${postId}`;
-        const response = await axios.get(url, {
-          headers: { Authorization: `Bearer ${userToken}` },
-          withCredentials: true,
-        });
+        const url = `/reviews/single/${postId}`;
+        const response = await axios.get(url);
 
-        // ★★★ 이 부분을 수정합니다: response.data 자체가 리뷰 객체입니다. ★★★
         const reviewData = response.data;
 
         setInputData({
           title: reviewData.title || '',
-          content: reviewData.content || '', // content가 null/undefined일 경우 빈 문자열로
+          content: reviewData.content || '',
         });
         setImages(reviewData.imageUrls || []);
-        console.log(`리뷰 ${postId} 데이터 로드 성공:`, reviewData);
       } catch (error) {
-        console.error('리뷰 데이터 불러오기 오류:', error);
         setModalType('error');
         setModalMessage(
           error.response?.data?.message ||
@@ -82,6 +77,13 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
     setModalMessage('');
     setModalType('');
 
+    if (!inputData.title.trim() || !inputData.content.trim()) {
+      setModalType('error');
+      setModalMessage('제목과 후기 내용을 모두 입력해주세요.');
+      setShowModal(true);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('title', inputData.title);
     formData.append('content', inputData.content);
@@ -92,14 +94,15 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
       }
     });
 
-    formData.append('deleteImageUrls', JSON.stringify(imagesToDelete));
+    imagesToDelete.forEach((url) => {
+      formData.append('deleteImageUrls', url);
+    });
 
     try {
-      const url = `http://localhost:3000/reviews/${postId}`;
+      const url = `/reviews/${postId}`;
       const response = await axios.put(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${userToken}`,
         },
         withCredentials: true,
       });
@@ -108,6 +111,12 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
         setModalType('success');
         setModalMessage('이용 후기가 수정되었습니다.');
         setShowModal(true);
+
+        setActiveReview(false);
+
+        if (onReviewUpdated) {
+          onReviewUpdated();
+        }
       } else {
         setModalType('error');
         setModalMessage(
@@ -116,9 +125,8 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
         setShowModal(true);
       }
     } catch (err) {
-      console.error(err);
-      setModalType('error');
-      setModalMessage(
+        setModalType('error');
+        setModalMessage(
         err.response?.data?.message || '이용 후기 수정 중 오류가 발생했습니다.'
       );
       setShowModal(true);
@@ -207,7 +215,7 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
             </div>
           </div>
           <div className="flex gap-4 justify-end">
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" variant="positive">
               수정
             </Button>
             <Button
@@ -228,9 +236,6 @@ function ReviewUpdateForm({ postId, activeReview, setActiveReview }) {
           setShow={setShowModal}
           activeClick={() => {
             setShowModal(false);
-            if (modalType === 'success') {
-              navigate('/reviews');
-            }
           }}
         >
           <Title>{modalMessage}</Title>

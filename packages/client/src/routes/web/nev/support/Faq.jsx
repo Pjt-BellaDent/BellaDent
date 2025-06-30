@@ -1,6 +1,6 @@
 // src/routes/web/nev/support/Faq.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../../../libs/axiosInstance.js';
 
 import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
@@ -12,21 +12,17 @@ import line_banner from '../../../../assets/images/line_banner.png';
 
 function Faq() {
   const [posts, setPosts] = useState([]);
-  // const { userToken } = useUserInfo(); // userToken은 이제 API 호출 조건에 사용되지 않음
 
   useEffect(() => {
-    const url = 'http://localhost:3000/faqs';
     const readPosts = async () => {
       try {
-        const res = await axios.get(url, {
+        const res = await axios.get('/faqs', {
           headers: {
-            // Authorization 헤더는 userToken이 없으므로 제거 (로그인 없이 접근 가능)
-            // 'Authorization': `Bearer ${userToken}`, // <-- 이 줄을 제거합니다!
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
             Expires: '0',
           },
-          withCredentials: true, // 크리덴셜은 계속 보내지만, 토큰이 없으면 무시됨
+          withCredentials: true,
         });
         setPosts(res.data.faqs || []);
         console.log('FAQ 데이터 로드 성공:', res.data.faqs);
@@ -42,16 +38,28 @@ function Faq() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <Title as="h2" size="lg" CN="text-center">Welcome to Our Clinic</Title>
-        <Text size="xl" CN="text-center">Your health is our priority</Text>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          자주 묻는 질문
+        </Title>
+        <Text size="xl" CN="text-center">
+          Faq
+        </Text>
       </LineImageBanner>
       <Container CN="py-40">
-        <Title as="h2" size="lg">Welcome to Our Clinic</Title>
+        <Title as="h2" size="lg">
+          자주 묻는 질문
+        </Title>
         <hr className="my-4" />
-        <Text size="xl" CN="text-center my-4">제목</Text>
+        <Text size="xl" CN="text-center my-4">
+          제목
+        </Text>
         <Board
           posts={posts}
           CN="border-y divide-y border-gray-300 divide-gray-300"

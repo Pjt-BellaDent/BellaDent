@@ -24,7 +24,7 @@ function Title({ children, CN, as: Component = 'h3', size = 'default' }) {
       fontSizeClass = 'text-xl md:text-2xl';
       break;
     default: // 기본값 (md와 동일하게)
-      fontSizeClass = 'text-3xl md:text-4xl';
+      fontSizeClass = 'text-xl md:text-2xl';
       break;
   }
 

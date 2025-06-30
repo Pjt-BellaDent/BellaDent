@@ -16,21 +16,19 @@ function Equipment() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <div className="flex flex-col justify-center items-center">
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
-            장비소개
-          </Title>
-          <Text size="md" CN="text-center">
-            introduction of equipment
-          </Text>
-        </div>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          장비소개
+        </Title>
+        <Text size="md" CN="text-center">
+          introduction of equipment
+        </Text>
       </LineImageBanner>
       <Container>
         <Title

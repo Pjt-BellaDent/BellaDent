@@ -1,118 +1,7 @@
 import { useEffect, useState } from 'react';
-import styled from '@emotion/styled';
-import axios from 'axios';
+import axios from '../../libs/axiosInstance';
 import { getAuth } from 'firebase/auth';
 import NoticeDetailModal from './NoticeDetailModal';
-
-const Overlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: ${({ show }) => (show ? 'flex' : 'none')};
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
-
-const Container = styled.div`
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-`;
-
-const Title = styled.h3`
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const NoticeItem = styled.li`
-  margin-bottom: 10px;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover {
-    background: #f9f9f9;
-  }
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 8px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-`;
-
-const Textarea = styled.textarea`
-  width: 100%;
-  height: 80px;
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  resize: none;
-`;
-
-const ButtonRow = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-`;
-
-const Button = styled.button`
-  background: ${({ color }) => color || '#007bff'};
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  &:hover {
-    background: ${({ color }) =>
-      color === '#dc3545' ? '#c82333' :
-      color === '#6c757d' ? '#5a6268' :
-      '#0056b3'};
-  }
-`;
-
-const Pagination = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-  gap: 6px;
-`;
-
-const PageButton = styled.button`
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background: ${({ active }) => (active ? '#d4b080' : '#eee')};
-  color: ${({ active }) => (active ? '#fff' : '#333')};
-  font-weight: ${({ active }) => (active ? 'bold' : 'normal')};
-  cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
-  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'auto')};
-`;
-
-const EmptyMessage = styled.div`
-  text-align: center;
-  color: #999;
-  margin: 20px 0;
-  font-size: 14px;
-`;
 
 const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [notices, setNotices] = useState([]);
@@ -126,7 +15,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const baseURL = 'http://localhost:3000/notices';
+  const baseURL = '/notices';
 
   const fetchNotices = async () => {
     try {
@@ -157,18 +46,15 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
 
     try {
       const user = getAuth().currentUser;
-      const token = await user.getIdToken();
 
       const data = editId
         ? { title, content: body, isPublic: !!showOnMain }
         : { title, content: body, authorId: user.uid, isPublic: !!showOnMain };
 
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
       if (editId) {
-        await axios.put(`${baseURL}/${editId}`, data, config);
+        await axios.put(`${baseURL}/${editId}`, data);
       } else {
-        await axios.post(baseURL, data, config);
+        await axios.post(baseURL, data);
       }
 
       setEditId(null);
@@ -183,13 +69,7 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
 
   const handleDelete = async (id) => {
     try {
-      const user = getAuth().currentUser;
-      const token = await user.getIdToken();
-
-      await axios.delete(`${baseURL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      await axios.delete(`${baseURL}/${id}`);
       setDetailShow(false);
       fetchNotices();
     } catch (err) {
@@ -212,114 +92,164 @@ const NoticeModal = ({ show, onClose, onSkipToday }) => {
   };
 
   const totalPages = Math.ceil(notices.length / itemsPerPage);
-  const visibleNotices = notices.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const visibleNotices = notices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <>
-      <Overlay show={show} onClick={onClose}>
-        <Container onClick={(e) => e.stopPropagation()}>
-          <Title>📢 직원 공지사항</Title>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {!showForm && (
-              Array.isArray(visibleNotices) && visibleNotices.length > 0 ? (
-                visibleNotices.map((n) => (
-                  <NoticeItem key={n.id} onClick={() => openDetailModal(n)}>
-                    <strong>{n.title}</strong>
-                  </NoticeItem>
-                ))
-              ) : (
-                <EmptyMessage>공지사항이 없습니다.</EmptyMessage>
-              )
+      {show && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div
+            className="bg-white p-5 rounded-lg w-full max-w-xl max-h-[80vh] overflow-y-auto shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-5">
+              📢 직원 공지사항
+            </h3>
+
+            <ul>
+              {!showForm &&
+                (visibleNotices.length > 0 ? (
+                  visibleNotices.map((n) => (
+                    <li
+                      key={n.id}
+                      onClick={() => openDetailModal(n)}
+                      className="border-b py-2 cursor-pointer hover:bg-gray-100 transition"
+                    >
+                      <strong>{n.title}</strong>
+                    </li>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 my-5 text-sm">
+                    공지사항이 없습니다.
+                  </div>
+                ))}
+
+              {showForm && (
+                <li>
+                  <input
+                    type="text"
+                    placeholder="제목 입력"
+                    className="w-full p-2 mb-2 border rounded text-sm"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                  />
+                  <textarea
+                    placeholder="내용 입력"
+                    className="w-full p-2 h-24 border rounded text-sm resize-none"
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                  ></textarea>
+                  <div className="text-xs mt-1">
+                    <label>
+                      <input
+                        type="checkbox"
+                        className="mr-1"
+                        checked={showOnMain}
+                        onChange={(e) => setShowOnMain(e.target.checked)}
+                      />
+                      홈페이지에 표시
+                    </label>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      onClick={handleSubmit}
+                      className="bg-green-600 text-white text-sm rounded px-3 py-1 hover:bg-green-700"
+                    >
+                      {editId ? '수정 완료' : '등록'}
+                    </button>
+                    <button
+                      onClick={() => setShowForm(false)}
+                      className="bg-gray-600 text-white text-sm rounded px-3 py-1 hover:bg-gray-700"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </li>
+              )}
+            </ul>
+
+            {!showForm && totalPages > 1 && (
+              <div className="flex justify-center mt-4 gap-1">
+                <button
+                  className="px-2 py-1 rounded border text-xs"
+                  disabled={currentPage === 1}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  이전
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    className={`px-2 py-1 rounded border text-xs ${
+                      currentPage === i + 1
+                        ? 'bg-yellow-600 text-white font-bold'
+                        : 'bg-gray-200'
+                    }`}
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  className="px-2 py-1 rounded border text-xs"
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  다음
+                </button>
+              </div>
             )}
 
-            {showForm && (
-              <NoticeItem>
-                <Input
-                  placeholder="제목 입력"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                />
-                <Textarea
-                  placeholder="내용 입력"
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-                <div style={{ marginTop: '6px', fontSize: '13px' }}>
+            {!showForm && (
+              <>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    className="bg-yellow-600 text-white text-sm rounded px-3 py-1 hover:bg-yellow-700"
+                    onClick={() => {
+                      setEditId(null);
+                      resetForm();
+                      setShowForm(true);
+                    }}
+                  >
+                    추가
+                  </button>
+                  <button
+                    className="bg-gray-800 text-white text-sm rounded px-3 py-1 hover:bg-gray-900"
+                    onClick={onClose}
+                  >
+                    닫기
+                  </button>
+                </div>
+                <div className="mt-1 text-xs text-right text-gray-600">
                   <label>
                     <input
                       type="checkbox"
-                      checked={showOnMain}
-                      onChange={(e) => setShowOnMain(e.target.checked)}
-                      style={{ marginRight: '6px' }}
+                      className="mr-1"
+                      onChange={(e) => {
+                        if (e.target.checked && onSkipToday) onSkipToday();
+                      }}
                     />
-                    홈페이지에 표시
+                    오늘은 다시 보지 않기
                   </label>
                 </div>
-                <ButtonRow>
-                  <Button onClick={handleSubmit} color="#28a745">
-                    {editId ? '수정 완료' : '등록'}
-                  </Button>
-                  <Button onClick={() => setShowForm(false)} color="#6c757d">
-                    취소
-                  </Button>
-                </ButtonRow>
-              </NoticeItem>
+              </>
             )}
-          </ul>
-
-          {!showForm && totalPages > 1 && (
-            <Pagination>
-              <PageButton onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>이전</PageButton>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PageButton
-                  key={i + 1}
-                  active={currentPage === i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                >
-                  {i + 1}
-                </PageButton>
-              ))}
-              <PageButton onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>다음</PageButton>
-            </Pagination>
-          )}
-
-          {!showForm && (
-            <>
-              <ButtonRow>
-                <Button
-  onClick={() => {
-    setEditId(null);
-    resetForm();
-    setShowForm(true);
-  }}
-  color="#d4b080"
->
-  추가
-</Button>
-                <Button onClick={onClose} color="#343a40">닫기</Button>
-              </ButtonRow>
-              <div style={{ marginTop: '6px', fontSize: '13px', textAlign: 'right', color: '#555' }}>
-                <label>
-                  <input
-                    type="checkbox"
-                    onChange={(e) => {
-                      if (e.target.checked && onSkipToday) onSkipToday();
-                    }}
-                    style={{ marginRight: '6px' }}
-                  />
-                  오늘은 다시 보지 않기
-                </label>
-              </div>
-            </>
-          )}
-        </Container>
-      </Overlay>
+          </div>
+        </div>
+      )}
 
       <NoticeDetailModal
         show={detailShow}

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
-import axios from 'axios';
+import axios from '../../libs/axiosInstance.js';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
 import Button from '../web/Button';
 
-function ReviewCreateForm({ activeReview, setActiveReview }) {
+function ReviewCreateForm({ activeReview, setActiveReview, onReviewCreated }) {
   const navigate = useNavigate();
   const { userInfo, userToken } = useUserInfo();
   const [inputData, setInputData] = useState({
-    title: '', // ★★★ 제목 필드 추가 ★★★
+    title: '',
     content: '',
   });
   const [images, setImages] = useState([]);
@@ -37,27 +37,46 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
     setModalMessage('');
     setModalType('');
 
+    if (!inputData.title.trim() || !inputData.content.trim()) {
+      setModalType('error');
+      setModalMessage('제목과 후기 내용을 모두 입력해주세요.');
+      setShowModal(true);
+      return;
+    }
+
     const formData = new FormData();
-    formData.append('title', inputData.title); // ★★★ 제목 필드 추가 ★★★
-    formData.append('review', inputData.review);
-    formData.append('authorId', userInfo.id); // 백엔드 스키마에 authorId로 되어있음
+    formData.append('title', inputData.title);
+    formData.append('content', inputData.content);
+    formData.append('authorId', userInfo.id);
+    formData.append('isPublic', true);
+    formData.append('approved', true);
     images.forEach((image) => {
       formData.append('reviewImg', image);
     });
+
     try {
-      const url = `http://localhost:3000/reviews/`;
+      const url = `/reviews/`;
 
       const response = await axios.post(url, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${userToken}`,
         },
         withCredentials: true,
       });
+
       if (response.status === 201) {
         setModalType('success');
         setModalMessage('이용 후기가 등록되었습니다.');
         setShowModal(true);
+
+        setInputData({ title: '', content: '' });
+        setImages([]);
+
+        setActiveReview(false);
+
+        if (onReviewCreated) {
+          onReviewCreated();
+        }
       } else {
         setModalType('error');
         setModalMessage(
@@ -66,10 +85,10 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
         setShowModal(true);
       }
     } catch (err) {
-      console.error(err);
+      console.error('이용 후기 등록 에러:', err);
       setModalType('error');
       setModalMessage(
-        err.response?.data?.message || '이용 후기 등록 중 오류이 발생했습니다.'
+        err.response?.data?.message || '이용 후기 등록 중 오류가 발생했습니다.'
       );
       setShowModal(true);
     }
@@ -77,13 +96,14 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
 
   const handleCancel = () => {
     setActiveReview(false);
+    setInputData({ title: '', content: '' });
+    setImages([]);
   };
 
   return (
     <>
       <div className="mt-10 mx-auto w-full max-w-300">
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* ★★★ 제목 입력 필드 추가 ★★★ */}
           <div className="flex items-center justify-between">
             <label
               htmlFor="title"
@@ -148,7 +168,7 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
                       onClick={() => removeImage(index)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
                     >
-                      {/* X 아이콘 등 */}
+                      X
                     </button>
                   </div>
                 ))}
@@ -156,7 +176,7 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
             </div>
           </div>
           <div className="flex gap-4 justify-end">
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" variant="positive">
               등록
             </Button>
             <Button
@@ -178,7 +198,6 @@ function ReviewCreateForm({ activeReview, setActiveReview }) {
           activeClick={() => {
             setShowModal(false);
             if (modalType === 'success') {
-              navigate('/reviews');
             }
           }}
         >

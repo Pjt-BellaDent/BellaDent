@@ -42,12 +42,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://belladent.duckdns.org",
-      "https://belladent.duckdns.org",
-    ],
+    origin: [process.env.DEVELOP_URL, process.env.PRODUCTION_URL],
     credentials: true,
   })
 );
@@ -76,7 +71,14 @@ app.use((req, res) => {
   res.status(404).json({ error: "Not Found" });
 });
 
-// 서버 실행
-server.listen(port, () => {
+// development 환경에서 에러 핸들러
+/* server.listen(port, () => {
   console.log(`BellaDent app + Socket.IO 실행: http://localhost:${port}`);
+}); */
+
+// production 환경에서 에러 핸들러
+server.listen(port, () => {
+  console.log(
+    `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
+  );
 });

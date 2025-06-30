@@ -12,23 +12,19 @@ function Whitening() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <div className="flex flex-col justify-center items-center">
-          {/* Title 컴포넌트에 size prop 적용, <b> 태그 제거 */}
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
             미백/라미네이트
           </Title>
-          {/* Text 컴포넌트에 size prop 적용 */}
           <Text size="md" CN="text-center">
             teeth whitening,laminate
           </Text>
-        </div>
       </LineImageBanner>
       <div className="max-w-300 mx-auto mb-15">
         {/* h3를 Title 컴포넌트로 변경 */}

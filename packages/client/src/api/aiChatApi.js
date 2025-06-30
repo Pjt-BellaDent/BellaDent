@@ -1,4 +1,4 @@
-import axiosInstance from '../libs/axiosInstance';
+import axiosInstance from '../libs/axiosInstance.js';
 
 /**
  * AI 챗봇 설정 정보를 서버에서 가져옵니다.

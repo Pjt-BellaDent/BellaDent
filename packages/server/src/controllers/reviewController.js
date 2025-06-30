@@ -41,10 +41,10 @@ export const createReview = async (req, res) => {
     await docRef.set({
       id: docRef.id,
       title: value.title,
-      content: value.content, // Firestore에 'content'로 저장
+      content: value.content,
       authorId: value.authorId,
-      isPublic: value.isPublic,
-      approved: value.approved,
+      isPublic: value.isPublic, // Joi 스키마의 default(true)를 따름
+      approved: value.approved, // Joi 스키마의 default(true)를 따름
       imageUrls,
       createdAt: now,
       updatedAt: now,
@@ -516,6 +516,14 @@ export const deleteReview = async (req, res) => {
     }
 
     const data = doc.data();
+
+    if (req.user.uid !== data.authorId && req.user.role !== "admin") {
+      // req.user.role은 roleCheck 미들웨어에서 추가되어야 함
+      return res
+        .status(403)
+        .json({ message: "자신이 작성한 후기만 삭제할 수 있습니다." });
+    }
+    
     const imageUrls = data.imageUrls || [];
 
     // 1. Storage 이미지 삭제
