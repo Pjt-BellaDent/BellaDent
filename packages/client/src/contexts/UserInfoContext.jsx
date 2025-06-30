@@ -1,77 +1,73 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import axios from 'axios';
+import axiosInstance from '../libs/axiosInstance';
 
 const UserInfoContext = createContext({
   userInfo: null,
   userToken: null,
   isLogin: false,
+  loading: true,
   signOutUser: async () => {},
 });
 
-const fetchServerUserInfo = async (idToken) => {
-  const url = 'http://localhost:3000/users/signIn';
+// fetchServerUserInfo 함수는 signIn API가 반환하는 최소 정보만 가져오도록 유지
+const fetchServerUserInfo = async () => {
   try {
-    const res = await axios.post(
-      url,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
-        withCredentials: true,
-      }
-    );
+    // signIn API는 현재 { id, role, isActive, name } 등 최소 정보만 반환
+    const res = await axiosInstance.post('/users/signIn');
     return res.data.userInfo;
   } catch (fetchError) {
-    console.error(
-      'Error fetching additional user info from server:',
-      fetchError
-    );
+    console.error('Error fetching initial user info from server:', fetchError);
     throw fetchError;
   }
 };
 
 export const UserInfoProvider = ({ children }) => {
   const [userInfo, setUserInfo] = useState(null);
-  const [userToken, setUserToken] = useState(null);
-  const [isLogin, setIsLogin] = useState(false);
+  const [userToken, setUserToken] = useState(
+    () => localStorage.getItem('userToken') || null
+  );
+  const [isLogin, setIsLogin] = useState(!!userToken);
+  const [loading, setLoading] = useState(true);
 
   const auth = getAuth();
 
   useEffect(() => {
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-
       if (user) {
         try {
           const idToken = await user.getIdToken();
-          const serverUserInfo = await fetchServerUserInfo(idToken);
-          setUserInfo(serverUserInfo);
+          localStorage.setItem('userToken', idToken);
           setUserToken(idToken);
+          axiosInstance.defaults.headers.common[
+            'Authorization'
+          ] = `Bearer ${idToken}`;
+
+          // ★★★ signIn API 호출로 최소 정보만 가져오도록 유지 ★★★
+          const serverUserInfo = await fetchServerUserInfo();
+          setUserInfo(serverUserInfo);
           setIsLogin(true);
-        } catch (tokenOrFetchError) {
-          console.error(
-            'Error during onAuthStateChanged token/fetch:',
-            tokenOrFetchError
-          );
+        } catch (error) {
+          console.error('Failed to fetch user info after auth change:', error);
           setUserInfo(null);
-          setUserToken(null);
           setIsLogin(false);
+          localStorage.removeItem('userToken');
+          delete axiosInstance.defaults.headers.common['Authorization'];
+        } finally {
+          setLoading(false);
         }
       } else {
-        setUserInfo(null);
+        localStorage.removeItem('userToken');
         setUserToken(null);
+        setUserInfo(null);
         setIsLogin(false);
+        delete axiosInstance.defaults.headers.common['Authorization'];
+        setLoading(false);
       }
-
     });
 
-    return () => {
-      unsubscribe();
-    };
-
-  }, []);
+    return () => unsubscribe();
+  }, [auth]);
 
   const signOutUser = async () => {
     try {
@@ -87,9 +83,7 @@ export const UserInfoProvider = ({ children }) => {
         userInfo,
         isLogin,
         userToken,
-        setIsLogin,
-        setUserToken,
-        setUserInfo,
+        loading,
         signOutUser,
       }}
     >

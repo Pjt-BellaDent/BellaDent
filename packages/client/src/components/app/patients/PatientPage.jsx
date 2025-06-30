@@ -4,7 +4,7 @@ import PatientTable from "./PatientTable";
 import EditPatientModal from "./EditPatientModal";
 import ProcedureModal from "./ProcedureModal";
 import SurveyModal from "./SurveyModal";
-import axios from '../../../libs/axiosIntance';
+import axios from '../../../libs/axiosInstance.js';
 import { Bar } from 'react-chartjs-2';
 import { Chart, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
 import { fetchAllPatients } from '../../../api/patients';

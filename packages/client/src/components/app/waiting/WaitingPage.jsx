@@ -1,6 +1,6 @@
 // src/components/app/waiting/WaitingPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from '../../../libs/axiosIntance';
+import axios from '../../../libs/axiosInstance.js';
 import { fetchAllStaff } from '../../../api/scheduleApi';
 import WaitingManager from './WaitingManager';
 

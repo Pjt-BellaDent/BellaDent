@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';
+import Modal from '../components/web/Modal.jsx';
+import Title from '../components/web/Title.jsx';
 
 const menuItems = [
   {
@@ -70,11 +72,16 @@ const Sidebar = ({ role = 'admin', name = '홍길동', onOpenNotice }) => {
   const { setIsLogin, signOutUser } = useUserInfo();
   const [open, setOpen] = useState(false);
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState('');
+
   // handleLogout: 로그아웃 처리 함수
-  const handleLogout = async () => {
-    setIsLogin(false);
-    await signOutUser(); // 사용자 정보 초기화
-    navigate('/');
+  const handleLogout = () => {
+    signOutUser();
+    setModalType('success');
+    setModalMessage('로그아웃 되었습니다.');
+    setShowModal(true);
   };
 
   // --- 반응형 사이드바 구조 ---
@@ -235,6 +242,30 @@ const Sidebar = ({ role = 'admin', name = '홍길동', onOpenNotice }) => {
       {Hamburger} {/* 햄버거 버튼 렌더링 (모바일에서만 보임) */}
       {OverlaySidebar} {/* 오버레이 사이드바 렌더링 (모바일에서만 보임) */}
       {DesktopSidebar} {/* 데스크탑 사이드바 렌더링 (데스크탑에서만 보임) */}
+      {modalType === 'success' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
+      {modalType === 'error' && (
+        <Modal
+          show={showModal}
+          setShow={setShowModal}
+          activeClick={() => {
+            setShowModal(false);
+            navigate(0);
+          }}
+        >
+          <Title>{modalMessage}</Title>
+        </Modal>
+      )}
     </>
   );
 };

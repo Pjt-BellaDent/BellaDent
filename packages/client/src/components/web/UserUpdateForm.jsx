@@ -4,6 +4,7 @@ import { useUserInfo } from '../../contexts/UserInfoContext.jsx';
 import axios from 'axios';
 import Modal from '../web/Modal.jsx';
 import Title from '../web/Title.jsx';
+import Button from '../web/Button';
 
 function UserUpdateForm() {
   const navigate = useNavigate();
@@ -42,7 +43,6 @@ function UserUpdateForm() {
             });
           }
         } catch (err) {
-          console.error(err);
           setModalType('error');
           setModalMessage(err);
           setShowModal(true);
@@ -86,7 +86,6 @@ function UserUpdateForm() {
           }
         });
     } catch (err) {
-      console.error(err);
       setModalType('error');
       setModalMessage(err);
       setShowModal(true);
@@ -107,16 +106,14 @@ function UserUpdateForm() {
                 이메일
               </label>
             </div>
-            <div className="mt-2 flex-3/4">
-              <input
-                type="email"
-                name="email"
-                id="email"
-                readOnly
-                value={formData.email || ''}
-                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
-              />
-            </div>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              readOnly
+              value={formData.email || ''}
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
+            />
           </div>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
@@ -124,17 +121,15 @@ function UserUpdateForm() {
                 이름
               </label>
             </div>
-            <div className="mt-2 flex-3/4">
-              <input
-                type="text"
-                name="name"
-                id="name"
-                readOnly
-                value={formData.name || ''}
-                required
-                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
-              />
-            </div>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              readOnly
+              value={formData.name || ''}
+              required
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
+            />
           </div>
           <div className="flex items-center justify-between mb-8">
             <div className="flex-2">
@@ -142,19 +137,17 @@ function UserUpdateForm() {
                 연락처
               </label>
             </div>
-            <div className="mt-2 flex-3/4">
-              <input
-                type="text"
-                name="phone"
-                id="phone"
-                maxLength={13}
-                value={formData.phone || ''}
-                required
-                placeholder="01X-XXXX-XXXX"
-                onChange={handleChange}
-                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
-              />
-            </div>
+            <input
+              type="text"
+              name="phone"
+              id="phone"
+              maxLength={13}
+              value={formData.phone || ''}
+              required
+              placeholder="01X-XXXX-XXXX"
+              onChange={handleChange}
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
+            />
           </div>
           <div className="flex items-center justify-between mb-12">
             <div className="flex-2">
@@ -162,31 +155,33 @@ function UserUpdateForm() {
                 주소
               </label>
             </div>
-            <div className="mt-2 flex-3/4">
-              <input
-                type="text"
-                name="address"
-                id="address"
-                value={formData.address || ''}
-                onChange={handleChange}
-                className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray  focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
-              />
-            </div>
+            <input
+              type="text"
+              name="address"
+              id="address"
+              value={formData.address || ''}
+              onChange={handleChange}
+              className="w-full flex-6 px-6 py-2 rounded outline-1 -outline-offset-1 bg-BD-WarmBeige outline-BD-CoolGray focus:outline-2 focus:-outline-offset-2 focus:outline-BD-ElegantGold"
+            />
           </div>
           <div className="flex gap-4">
-            <button
+            <Button
               type="submit"
-              className="w-full px-6 py-3 text-lg rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
+              size="lg"
+              variant="positive"
+              className="w-full"
             >
               수정
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              size="lg"
+              variant="secondary"
+              className="w-full"
               onClick={handleCancel}
-              className="w-full px-6 py-3 rounded text-lg bg-BD-SoftGrayLine text-BD-CoolGray hover:bg-BD-CancelGrayHover hover:text-BD-CharcoalBlack duration-300 cursor-pointer"
             >
               취소
-            </button>
+            </Button>
           </div>
         </form>
       </div>

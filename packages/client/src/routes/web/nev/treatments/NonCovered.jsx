@@ -10,21 +10,19 @@ function NonCovered() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <div className="flex flex-col justify-center items-center mt-16 mb-3 mx-5">
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
-            비급여 항목 안내
-          </Title>
-          <Text size="md" CN="text-center">
-            Non-covered items information
-          </Text>
-        </div>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          비급여 항목 안내
+        </Title>
+        <Text size="md" CN="text-center">
+          Non-covered items information
+        </Text>
       </LineImageBanner>
       <Container>
         <div className="py-10">
@@ -187,7 +185,7 @@ function NonCovered() {
             <Title as="h3" size="sm" CN="mt-20 mb-6">
               비급여항목임플란트
             </Title>
-            <table className="w-full my-16 border-collapse">
+            <table className="w-full  border-collapse">
               <thead>
                 <tr>
                   <th className="w-60 bg-blue-700 text-white p-2 border border-blue-800">

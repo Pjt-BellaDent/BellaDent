@@ -25,19 +25,19 @@ function Location() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <div className="flex flex-col justify-center items-center">
-          {/* Title 컴포넌트에 size prop 적용, <b> 태그 제거 */}
-          <Title as="h1" size="lg" CN="text-center">
-            오시는 길 안내
-          </Title>
-          {/* Text 컴포넌트에 size prop 적용 */}
-          <Text size="md" CN="text-center">
-            "How to get here?"
-          </Text>{' '}
-        </div>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          오시는 길 안내
+        </Title>
+        <Text size="md" CN="text-center">
+          How to get here
+        </Text>
       </LineImageBanner>
 
       <Container CN="py-40">
@@ -76,7 +76,7 @@ function Location() {
           <hr className="my-6" />
           {/* Title 컴포넌트에 size prop 적용 */}
           <Title as="h3" size="lg">
-            버스노선 : 01, 45, 47, 26. . . . .
+            버스노선 : 01, 45, 47, 26. 37. . . . .
           </Title>
         </CardMap>
       </Container>

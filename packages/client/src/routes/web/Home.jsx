@@ -9,7 +9,7 @@ import Container from '../../components/web/Container';
 import Card from '../../components/web/Card';
 import Title from '../../components/web/Title';
 import Text from '../../components/web/Text';
-import Button from '../../components/web/Button'; // 수정된 Button 컴포넌트 임포트
+import Button from '../../components/web/Button';
 import CarouselCardList from '../../components/web/CarouselCardList';
 import ScrollBgBox from '../../components/web/ScrollBgBox';
 import RowBox from '../../components/web/RowBox';
@@ -73,13 +73,18 @@ function Home() {
   ];
 
   const { hospitalInfo } = useHospitalInfo();
+
+  const address = hospitalInfo?.address || '주소 정보가 없습니다';
+  const phone = hospitalInfo?.phone || '전화번호 정보가 없습니다';
+  const name = hospitalInfo?.name || '병원 이름 정보가 없습니다';
+
   const storeMarkers = [
     {
       id: 'store',
       latitude: 37.5665,
       longitude: 126.978,
-      storeName: hospitalInfo.name,
-      contact: hospitalInfo.phone,
+      storeName: name,
+      contact: phone,
     },
   ];
 
@@ -102,21 +107,15 @@ function Home() {
             <ScrollFadeIn delay={0.3}>
               <Title as="h2" size="lg">
                 BellaDent 치과
-              </Title>{' '}
-              {/* text-4xl -> size="lg" */}
+              </Title>
             </ScrollFadeIn>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
               하얀치아 예쁜미소!!! 충치치료 치아교정 앞으로도 의료계와의 소통을
               통해 정확하고 신뢰받는 심사를 바탕으로 안전하고 수준 높은 적정진료
-              등으로 우리의 건강과 아름다운 치아로 건강한 치아로 하얀치아와
-              미소로 우리의 행복한 삶을 만들어 새로운 미래를 함께 합니다
+              등 우리의 건강과 아름다운 치아로 건강한 치아로 하얀치아와 미소로
+              우리의 행복한 삶을 만들어 새로운 미래를 함께 합니다.
             </Text>
-            {/* Button 컴포넌트 적용 */}
-            <Button size="lg" variant="primary" className="mt-4">
-              {' '}
-              {/* px-6 py-3 text-xl rounded bg-BD-CharcoalBlack text-BD-ElegantGold hover:bg-BD-ElegantGold hover:text-BD-CharcoalBlack duration-300 cursor-pointer */}
+            <Button size="lg" variant="positive" className="mt-4">
               button
             </Button>
           </Card>
@@ -127,12 +126,9 @@ function Home() {
             <ScrollFadeIn delay={0.3}>
               <Title as="h2" size="lg">
                 BellaDent 장점
-              </Title>{' '}
-              {/* text-4xl -> size="lg" */}
+              </Title>
             </ScrollFadeIn>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
               임플란트(implant)는 치과치료에만 아니고, 인체 내부에다 심어
               넣는다는 뜻이다. 일반적으로 의학계에서 쓰일 때는 뭔가를 인체에
               매입하는 수술, 즉 장기나 인공장기 등을 몸에 넣는 수술(흔히 말해
@@ -143,8 +139,7 @@ function Home() {
               않다보니 '임플란트'의 의미 자체가 인공치아 시술을 잘하는 전문
               병원으로 장점이 있습니다.
             </Text>
-            {/* Button 컴포넌트 적용 */}
-            <Button size="lg" variant="primary" className="mt-4">
+            <Button size="lg" variant="positive" className="mt-4">
               button
             </Button>
           </Card>
@@ -169,22 +164,18 @@ function Home() {
       <Container CN="text-center py-40">
         <Title as="h2" size="xl">
           진료과정
-        </Title>{' '}
-        {/* text-6xl -> size="xl" */}
-        <Text size="lg"></Text> {/* text-lg -> size="lg" */}
+        </Title>
+        <Text size="lg"></Text>
         <RowBox CN="justify-center gap-20 pt-20">
           <Card
             Scroll={true}
             image={home_sec_3_1}
             CN="flex flex-col-reverse items-center gap-4 pt-15"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               충치치료
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
+            </Title>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
               치과의 치료법 중 하나로, 충치나 풍치 치료의 최후처방인 발치 이후
               치료법 중 하나이다. 어렵게 충치 치료를 결심했는데 없던 통증이
               생겼다면 환자로서는 고통스러울 수밖에 없다. 치료를 또 해야 해서
@@ -201,23 +192,20 @@ function Home() {
             image={home_sec_3_2}
             CN="flex flex-col-reverse items-center gap-4"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               임플란트
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
+            </Title>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
-              수술 시간은 보통 15분에서 한 시간 반 가량 되는데 수술의 범위,
-              임플란트 개수, 치조골 이식의 동반 여부에 따라 길어질 수도 있다.
+              수술 시간은 보통 15분에서 한 시간 반 가량 되는데 수술의 범위
+              임플란트 개수 치조골 이식의 동반 여부에 따라 길어질 수도 있다.
               여기에서 수술 시간이 짧으면 달인이라 생각할 수도 있지만, 대충 하는
               경우도 있단 걸 기억해두자. 단순 임플란트가 아니라 치조골 이식을
               동반하거나 여러 개를 심는 경우인데 너무 금방 끝났다면 합리적
               의심을 해볼 수도 있으나 사실 그 정도로 양심 없는 치과의사는
-              극소수다. 행여 시간이 오래 걸렸다면 이 양반이 꼼꼼하게 하려고
-              하는구나 생각하면 된다. 임플란트는 그것을 심는 순간부터 죽을
-              때까지 한 사람과 평생을 함께하게 될 인공물이므로, 의식적으로
-              그것에 익숙해지고 자연스러워지는 적응기간을 갖게 된다
+              극소수다. 행여 시간이 오래 걸렸다면 꼼꼼하게 하려고 하는구나
+              생각하면 된다. 임플란트는 그것을 심는 순간부터 죽을 때까지 한
+              사람과 평생을 함께하게 될 인공물이므로, 의식적으로 그것에
+              익숙해지고 자연스러워지는 적응기간을 갖게 된다.
             </Text>
           </Card>
           <Card
@@ -225,17 +213,14 @@ function Home() {
             image={home_sec_3_3}
             CN="flex flex-col-reverse items-center gap-4 pt-30"
           >
-            <Title as="h3" size="lg">
+            <Title as="h3" size="lg" CN={'mb-4'}>
               건강한 치아
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
+            </Title>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
               어렵게 충치 치료를 결심했는데 없던 통증이 생겼다면 환자로서는
               고통스러울 수밖에 없다. 치료를 또 해야 해서 치과 의료 분쟁의 주요
               원인이 되기도 한다. “애초에 신경 치료를 하면 통증 발생 가능성은
-              없겠지만, 신경 등 자연치아는 최대한 보존하는 것이 좋다”고 말했다.
+              없겠지만, 신경 등 자연치아는 최대한 보존하는 것이 좋다”고 한다.
               최근 밝혀진 바에 따르면 치아 신경의 ‘역할’은 생각보다 크다. 온도
               자극을 느끼는 것 뿐만 아니라 고유 수용 감각이 있어 저작 기능이 잘
               이뤄질 수 있도록 돕는다. “애초에 신경 치료를 하면 통증 발생
@@ -255,13 +240,11 @@ function Home() {
         <ScrollFadeIn delay={0.2}>
           <Title as="h2" size="sm" CN="text-right">
             BellaDent
-          </Title>{' '}
-          {/* text-2xl -> size="sm" */}
+          </Title>
         </ScrollFadeIn>
         <Text size="md" CN="text-right">
           PREMIUM DENTAL CARE
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
       </ScrollBgBox>
 
       <Container CN="py-40">
@@ -270,14 +253,11 @@ function Home() {
           CN="mx-auto flex flex-row-reverse justify-end gap-12"
         >
           <ScrollFadeIn delay={0.3}>
-            <Title as="h2" size="lg">
+            <Title as="h2" size="lg" CN={'mb-4'}>
               치아 엑스레이
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
+            </Title>
           </ScrollFadeIn>
           <Text size="lg">
-            {' '}
-            {/* text-lg -> size="lg" */}
             "치아교정치료 목적으로 촬영한 저선량 엑스레이 영상 검사로 뇌,
             안면부의 심각한 질환을 무증상 상태에서 조기 발견이 가능했다는 점에
             주목해야 한다"면서 ”이를 통해 치과적 문제점 외에도 의학적 질환
@@ -285,8 +265,7 @@ function Home() {
             증명했기에 치아 상태 연구라고 평가하여 연구하고 설명을 하여 치아상태
             여러 가지 설명으로 밝혔다.
           </Text>
-          {/* Button 컴포넌트 적용 */}
-          <Button size="lg" variant="primary" className="mt-4">
+          <Button size="lg" variant="positive" className="mt-4">
             button
           </Button>
         </Card>
@@ -299,30 +278,23 @@ function Home() {
         <ScrollFadeIn delay={0.2}>
           <Title as="h2" size="sm" CN="text-right">
             BellaDent PREMIUM DENTAL CARE
-          </Title>{' '}
-          {/* text-2xl -> size="sm" */}
+          </Title>
         </ScrollFadeIn>
         <Text size="md" CN="text-right">
           BellaDent는 보다 일찍 진료가 시작됩니다.
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
         <Text size="md" CN="text-right">
-          {' '}
           점심시간 12:30 - 14:00
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
         <Text size="md" CN="text-right">
           오후진료 14:00 - 18:00
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
         <Text size="md" CN="text-right">
           토요일08:30 - 12:30
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
         <Text size="md" CN="text-right">
           ※ 일요일 및 법정공휴일은 휴진을 합니다
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        </Text>
       </ScrollBgBox>
 
       <Wrapper CN="py-40">
@@ -332,14 +304,11 @@ function Home() {
             CN="mx-auto flex flex-row justify-between gap-12 pb-20"
           >
             <ScrollFadeIn delay={0.3}>
-              <Title as="h2" size="lg">
+              <Title as="h2" size="lg" CN={'mb-4'}>
                 치과 치료 과정
-              </Title>{' '}
-              {/* text-4xl -> size="lg" */}
+              </Title>
             </ScrollFadeIn>
             <Text size="lg">
-              {' '}
-              {/* text-lg -> size="lg" */}
               치과 엑스레이 이미지 분석을 통해 ▲악안면부에 생길 수 있는 낭, 양성
               종양, 악성 종양 및 기타 골질환 ▲턱관절의 퇴행성골관절염 ▲림프절
               석회화 등의 진단에 기여했고 의학적 치료에 연계돼 조기 치료에
@@ -349,8 +318,7 @@ function Home() {
               나타나 병원을 찾게 되면 치료 범위가 너무 광범위하거나 예후가 나쁜
               경우가 많은 질환으로 조기 발견이 중요하다.
             </Text>
-            {/* Button 컴포넌트 적용 */}
-            <Button size="lg" variant="primary" className="mt-4">
+            <Button size="lg" variant="positive" className="mt-4">
               button
             </Button>
           </Card>
@@ -360,37 +328,26 @@ function Home() {
 
         <Container>
           <div className="px-5 py-20">
-            <Text size="md">BellaDent</Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            <Text size="md">BellaDent</Text>
             <Title as="h3" size="lg">
               임플란트(implant)특별한 장점
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
+            </Title>
             <Text size="md" CN="mt-6">
               인공치아 시술을 잘하는 전문 병원
-            </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            </Text>
             <Text size="md">
-              {' '}
-              {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
               보철물의 일종을 심기 때문에 implant 시술로 부르는 것이다.
             </Text>
             <Text size="md" CN="mt-6">
               충치치료
-            </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            </Text>
             <Text size="md">
-              {' '}
-              {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
               충치나 풍치 치료의 최후처방인 발치 이후 치료법 중 하나이다.
             </Text>
             <Text size="md" CN="mt-6">
               임플란트
-            </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            </Text>
             <Text size="md">
-              {' '}
-              {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
               임플란트 개수, 치조골 이식의 동반 여부에 따라 길어질 수도 있다.
             </Text>
           </div>
@@ -406,16 +363,13 @@ function Home() {
         <ScrollFadeIn delay={0.2}>
           <Title as="h2" size="sm" CN="text-right">
             BellaDent PREMIUM DENTAL CARE
-          </Title>{' '}
-          {/* text-2xl -> size="sm" */}
+          </Title>
         </ScrollFadeIn>
         <Text size="md" CN="text-right">
           통합치의학과 전문의 | 대한치과이식임플란트학회 우수임플란트 임상의 |
           대한심미치과학회 인정의
-        </Text>{' '}
-        {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-        {/* Button 컴포넌트 적용 */}
-        <Button size="lg" variant="primary" className="mt-4">
+        </Text>
+        <Button size="lg" variant="positive" className="mt-4">
           button
         </Button>
       </ScrollBgBox>
@@ -427,19 +381,16 @@ function Home() {
             CCN="mx-auto flex flex-row justify-between gap-12 mb-20"
           >
             <ScrollFadeIn delay={0.3}>
-              <Title as="h2" size="lg">
+              <Title as="h2" size="lg" CN={'mb-4'}>
                 장비와 시스템
-              </Title>{' '}
-              {/* text-4xl -> size="lg" */}
+              </Title>
             </ScrollFadeIn>
             <Text size="lg">
               진료를 위해 대학병원급 진료장비를 갖추었습니다. 작은 것 하나도
               놓치지 않고 정확하게 진단하고 진료과정에서 불편함이 느껴지지
               않도록 그리고 더 안전한 진료환경을 갖추었습니다.
-            </Text>{' '}
-            {/* text-lg -> size="lg" */}
-            {/* Button 컴포넌트 적용 */}
-            <Button size="lg" variant="primary" className="mt-4">
+            </Text>
+            <Button size="lg" variant="positive" className="mt-4">
               button
             </Button>
           </CardCarousel>
@@ -450,12 +401,10 @@ function Home() {
         <Container>
           <Title as="h2" size="lg" CN="px-5 text-center mt-20">
             BellaDent 치과 둘러보기
-          </Title>{' '}
-          {/* text-4xl -> size="lg" */}
+          </Title>
           <Text size="md" CN="px-5 text-center">
             우수한 수준의 장비를 통해 보다 정밀하고 꼼꼼한 치료를 합니다
-          </Text>{' '}
-          {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+          </Text>
           <ImageBox
             images={imagesBox_3}
             CCN="w-full mx-auto flex flex-wrap justify-between gap-4 pt-20"
@@ -465,47 +414,34 @@ function Home() {
       </Wrapper>
 
       <LineBanner CN="w-full h-40 bg-BD-CharcoalBlack flex">
-        <Container CN="flex justify-between items-start mt-15">
-          <div className="flex flex-row items-end gap-4 text-BD-ElegantGold">
-            <Title as="h2" size="lg">
-              주소: 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층{' '}
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
-            <Text size="md">오시는 길 안내</Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+        <Container CN="flex justify-between items-start mt-12">
+          <div className="flex-3 flex flex-row items-end gap-4 text-BD-ElegantGold">
+            <Title as="h2" size="1g">
+              BellaDent DENTAL LOCATION
+            </Title>
+            <Text size="md">오시는 길 안내</Text>
           </div>
-          <div className="flex flex-col gap-4 p-12 bg-BD-ElegantGold text-BD-CharcoalBlack z-10">
-            <Title as="h3" size="lg">
-              BellaDent 광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층
-            </Title>{' '}
-            {/* text-4xl -> size="lg" */}
-            <Text size="md">자가용 </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md" CN="mt-4">
+          <div className="flex-1 flex flex-col gap-4 p-12 bg-BD-ElegantGold text-BD-CharcoalBlack z-10">
+            <Title as="h3" size="sm">
+              광주광역시 남구 봉선중앙로 102, 벨라메디타워 4층 BellaDent
+            </Title>
+            <Text size="md">자가용 </Text>
+            <Text size="md">
               ※ 주차는 건물뒷편 기계식주차를 이용하시면 되며 관리인이 주차를
               도와드립니다
-            </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            </Text>
             <Text size="md">
               ※ 주차비 무료를 위해 원무과에서 확인도장을 꼭 받아가시기 바랍니다.
-            </Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md">버스노선안내</Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md">오시는 길 안내</Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
-            <Text size="md">버스노선 : 01, 45, 47, 26. . . . .</Text>{' '}
-            {/* (기존 Text CN에 size=md가 없었을 수 있음. 추가) */}
+            </Text>
+            <Text size="md">버스노선안내</Text>
+            <Text size="md">오시는 길 안내</Text>
+            <Text size="md">버스노선 : 01, 45, 47, 26. 37. . . .</Text>
           </div>
         </Container>
       </LineBanner>
 
       <div className="w-full h-130">
-        <Map
-          markersData={storeMarkers}
-          zoom={17}
-          address={hospitalInfo.address}
-        />
+        <Map markersData={storeMarkers} zoom={17} address={address} />
       </div>
     </>
   );

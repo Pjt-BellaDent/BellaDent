@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react'; // useEffect 임포트
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import axios from '../../../libs/axiosInstance.js';
 import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
-
-const ITEMS_PER_PAGE = 10;
 
 const SmsBroadcast = () => {
   const { userToken } = useUserInfo();
@@ -15,13 +13,16 @@ const SmsBroadcast = () => {
   const [searchExecuted, setSearchExecuted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
-  const [sendingPhone, setSendingPhone] = useState(''); // 발신번호 상태 추가
-  const [sendPhoneLoading, setSendPhoneLoading] = useState(true); // 발신번호 로딩 상태
-  const [sendPhoneError, setSendPhoneError] = useState(null); // 발신번호 에러 상태
+  const [sendingPhone, setSendingPhone] = useState('');
+  const [sendPhoneLoading, setSendPhoneLoading] = useState(true);
+  const [sendPhoneError, setSendPhoneError] = useState(null);
 
-  const pageSize = 10;
+  // ★★★ 추가된 상태: 광고 메시지 체크박스 상태 ★★★
+  const [isAdMessage, setIsAdMessage] = useState(false);
 
-  // 컴포넌트 마운트 시 발신번호를 가져오는 useEffect
+  // 광고 메시지 기본 템플릿
+  const AD_MESSAGE_TEMPLATE = '(광고) 안녕하세요 BellaDent 치과입니다!';
+
   useEffect(() => {
     const fetchSendingNumber = async () => {
       if (!userToken) {
@@ -32,21 +33,23 @@ const SmsBroadcast = () => {
       setSendPhoneLoading(true);
       setSendPhoneError(null);
       try {
-        const response = await axios.get('http://localhost:3000/sms/number', {
+        const response = await axios.get('/sms/number', {
           headers: {
-            Authorization: `Bearer ${userToken}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
           },
         });
         if (
           response.status === 200 &&
-          response.data.data &&
-          response.data.data.number
+          response.data.content &&
+          response.data.content.number
         ) {
-          // API 응답 구조에 따라 'number' 필드가 발신번호라고 가정합니다.
-          // 실제 API 응답을 확인하고 적절한 필드명으로 수정해주세요.
-          setSendingPhone(response.data.data.number);
+          setSendingPhone(response.data.content.number);
         } else {
-          setSendPhoneError('발신번호를 불러오지 못했습니다.');
+          setSendPhoneError(
+            '발신번호를 불러오지 못했습니다: 응답 데이터 불충분.'
+          );
         }
       } catch (err) {
         console.error('발신번호 조회 중 오류 발생:', err);
@@ -57,7 +60,7 @@ const SmsBroadcast = () => {
     };
 
     fetchSendingNumber();
-  }, [userToken]); // userToken이 변경될 때마다 재조회
+  }, [userToken]);
 
   // 이름으로 환자 정보를 검색하는 함수
   const searchPatientsByName = async () => {
@@ -78,12 +81,7 @@ const SmsBroadcast = () => {
 
     try {
       const response = await axios.get(
-        `http://localhost:3000/users/patient/name/${searchTerm.trim()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
+        `/users/patient/name/${searchTerm.trim()}`
       );
 
       if (response.status === 200 && response.data.patientInfo) {
@@ -104,6 +102,7 @@ const SmsBroadcast = () => {
     }
   };
 
+  const pageSize = 10;
   const paginatedPatients = patients.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
@@ -125,8 +124,18 @@ const SmsBroadcast = () => {
     setSelectedRecipients((prev) => prev.filter((p) => p.id !== patientId));
   };
 
-  const insertAd = () => {
-    setMessage('(광고) 안녕하세요 BellaDent 치과입니다!');
+  // ★★★ isAdMessage 상태에 따라 메시지 내용 변경 핸들러 ★★★
+  const handleAdCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsAdMessage(checked);
+    if (checked) {
+      setMessage(AD_MESSAGE_TEMPLATE);
+    } else {
+      // 체크 해제 시 광고 문구 제거 (기존 메시지에 광고 문구가 있다면)
+      if (message.startsWith(AD_MESSAGE_TEMPLATE)) {
+        setMessage('');
+      }
+    }
   };
 
   const sendSms = async () => {
@@ -143,7 +152,6 @@ const SmsBroadcast = () => {
       return;
     }
     if (!sendingPhone) {
-      // 발신번호가 없으면 발송 불가
       alert('발신번호를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.');
       return;
     }
@@ -153,24 +161,16 @@ const SmsBroadcast = () => {
       const destIds = selectedRecipients.map((p) => p.id);
 
       const smsData = {
-        senderId: 'admin', // 실제 발신 관리자 ID로 대체 필요
-        smsLogType: message.includes('(광고)') ? '광고' : '진료알림',
+        senderId: 'admin',
+        smsLogType: isAdMessage ? '광고' : '진료알림', // ★★★ isAdMessage 상태 사용 ★★★
         destId: destIds,
         dest_phone: destPhones,
-        send_phone: sendingPhone, // ★★★ GetSendNumber API로 가져온 발신번호 사용 ★★★
+        send_phone: sendingPhone,
         msg_body: message,
-        msg_ad: message.includes('(광고)') ? 'Y' : 'N',
+        msg_ad: isAdMessage ? 'Y' : 'N', // ★★★ isAdMessage 상태 사용 ★★★
       };
 
-      const response = await axios.post(
-        'http://localhost:3000/sms/send',
-        smsData,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
+      const response = await axios.post('/sms/send', smsData);
 
       if (response.status === 201) {
         alert(`총 ${selectedRecipients.length}명에게 문자 발송 완료`);
@@ -179,6 +179,7 @@ const SmsBroadcast = () => {
         setPatients([]);
         setSearchExecuted(false);
         setSearchTerm('');
+        setIsAdMessage(false); // ★★★ 발송 후 광고 체크박스 초기화 ★★★
       } else {
         alert(
           '발송 실패: ' +
@@ -196,17 +197,20 @@ const SmsBroadcast = () => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
-      <h2 className="text-2xl font-semibold mb-5 text-gray-800">
-        sms 발송
-      </h2>
+      <h2 className="text-2xl font-semibold mb-5 text-gray-800">sms 발송</h2>
 
-      <div className="mb-5 flex space-x-2">
-        <button
-          onClick={insertAd}
-          className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          광고 보내기
-        </button>
+      {/* ★★★ 광고 보내기 체크박스로 변경 ★★★ */}
+      <div className="mb-5 flex items-center">
+        <input
+          type="checkbox"
+          id="isAdMessage"
+          checked={isAdMessage}
+          onChange={handleAdCheckboxChange}
+          className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out mr-2"
+        />
+        <label htmlFor="isAdMessage" className="text-sm text-gray-700">
+          광고 메시지 포함
+        </label>
       </div>
 
       {/* 발신번호 표시 */}
@@ -381,7 +385,14 @@ const SmsBroadcast = () => {
       <textarea
         placeholder="메시지를 입력하세요 (최대 80자)"
         value={message}
-        onChange={(e) => setMessage(e.target.value.slice(0, 80))}
+        onChange={(e) => {
+          const newValue = e.target.value.slice(0, 80);
+          setMessage(newValue);
+          // 사용자가 직접 메시지를 수정하면 광고 체크박스 해제 (선택 사항)
+          if (isAdMessage && !newValue.startsWith(AD_MESSAGE_TEMPLATE)) {
+            setIsAdMessage(false);
+          }
+        }}
         className="w-full h-28 p-3 text-sm border border-gray-300 rounded-md resize-none shadow-sm focus:ring-blue-500 focus:border-blue-500 mb-5"
       ></textarea>
 
@@ -393,7 +404,10 @@ const SmsBroadcast = () => {
           발송
         </button>
         <button
-          onClick={() => setMessage('')}
+          onClick={() => {
+            setMessage('');
+            setIsAdMessage(false); // ★★★ 초기화 버튼 클릭 시 광고 체크박스도 해제 ★★★
+          }}
           className="px-5 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-opacity-50"
         >
           초기화

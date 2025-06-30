@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../config/firebase';
+import axios from '../../../libs/axiosInstance.js';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -17,12 +16,8 @@ const FeedbackList = () => {
       setLoading(true);
       setError(null);
       try {
-        const snapshot = await getDocs(collection(db, 'reviews'));
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setReviews(data);
+        const res = await axios.get('/reviews');
+        setReviews(res.data.reviews || []);
       } catch (err) {
         console.error('리뷰 불러오기 실패:', err);
         setError('리뷰를 불러오는 데 실패했습니다.');
@@ -33,41 +28,40 @@ const FeedbackList = () => {
     fetchReviews();
   }, []);
 
+  // ★★★ 수정된 부분: handleTogglePublicStatus 함수 ★★★
   const handleTogglePublicStatus = async (reviewId, currentIsPublic) => {
     try {
-      const reviewRef = doc(db, 'reviews', reviewId);
-      const updateData = {
-        isPublic: !currentIsPublic, // 현재 상태의 반대로 토글
-        updatedAt: new Date(), // 업데이트 시간 기록
-      };
-
-      // 비활성화 상태에서 활성화로 변경할 때만 approved를 true로 설정
-      if (!currentIsPublic === true) {
-        // currentIsPublic이 false -> true로 변경될 때
-        updateData.approved = true;
+      if (currentIsPublic) {
+        // 현재 isPublic이 true이면 -> 비활성화 (disabledReview 호출)
+        await axios.put(`/reviews/disabled/${reviewId}`); // disabledReview API 호출
+      } else {
+        // 현재 isPublic이 false이면 -> 활성화 (enableReview 호출)
+        await axios.put(`/reviews/enable/${reviewId}`); // enableReview API 호출
       }
 
-      await updateDoc(reviewRef, updateData);
-
-      // UI 업데이트: 해당 리뷰의 isPublic 상태를 변경하고 approved 상태도 업데이트
+      // API 호출 성공 시 로컬 상태 업데이트
       setReviews((prevReviews) =>
-        prevReviews.map((review) =>
-          review.id === reviewId
-            ? {
-                ...review,
-                isPublic: !currentIsPublic,
-                approved: !currentIsPublic === true ? true : review.approved, // 활성화 시 approved: true
-                updatedAt: new Date(),
-              }
-            : review
-        )
+        prevReviews.map((review) => {
+          if (review.id === reviewId) {
+            const newIsPublic = !currentIsPublic;
+            const newApproved = newIsPublic ? true : review.approved; // 활성화 시 approved도 true로
+            return {
+              ...review,
+              isPublic: newIsPublic,
+              approved: newApproved,
+              updatedAt: new Date(), // 업데이트 시간 반영 (필요시)
+            };
+          }
+          return review;
+        })
       );
       console.log(
         `리뷰 ${reviewId}의 공개 상태를 ${!currentIsPublic}으로 변경했습니다.`
       );
     } catch (err) {
       console.error('공개 상태 변경 실패:', err);
-      alert('공개 상태 변경에 실패했습니다.');
+      // 서버에서 403 (권한 없음) 에러가 올 수도 있으므로, 상세 메시지 전달
+      alert(err.response?.data?.message || '공개 상태 변경에 실패했습니다.');
     }
   };
 
@@ -77,12 +71,8 @@ const FeedbackList = () => {
         (r.content || '').includes(search) || (r.title || '').includes(search)
     )
     .sort((a, b) => {
-      const aDate = a.createdAt?.toDate
-        ? a.createdAt.toDate()
-        : new Date(a.createdAt);
-      const bDate = b.createdAt?.toDate
-        ? b.createdAt.toDate()
-        : new Date(b.createdAt);
+      const aDate = new Date(a.createdAt);
+      const bDate = new Date(b.createdAt);
       return sortOrder === 'latest' ? bDate - aDate : aDate - bDate;
     });
 
@@ -93,7 +83,7 @@ const FeedbackList = () => {
   );
 
   const formatDate = (timestamp) => {
-    const d = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
+    const d = new Date(timestamp);
     return d.toISOString().split('T')[0];
   };
 
@@ -187,21 +177,32 @@ const FeedbackList = () => {
                 <h3 className="text-lg font-semibold text-gray-900">
                   {f.title || '제목 없음'}
                 </h3>
-                {/* isPublic이 false이고 approved도 false일 때만 "승인 대기 중" 표시 */}
                 {f.isPublic === false && f.approved === false && (
                   <span className="bg-yellow-200 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                     승인 대기 중
                   </span>
                 )}
+                {/* isPublic 상태에 따라 활성/비활성 상태 표시 */}
+                {f.isPublic === true && f.approved === true && (
+                  <span className="bg-green-200 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    활성화
+                  </span>
+                )}
+                {f.isPublic === false &&
+                  f.approved === true && ( // 승인되었으나 비공개 상태
+                    <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      비활성화 (관리자)
+                    </span>
+                  )}
               </div>
               <div className="text-gray-800 text-base">{f.content}</div>
               <div className="text-sm text-gray-500 mt-2">
                 {formatDate(f.createdAt)}
               </div>
 
-              {f.reviewImg?.length > 0 && (
+              {f.imageUrls?.length > 0 && ( // f.reviewImg 대신 f.imageUrls 사용
                 <div className="mt-3 flex gap-2 flex-wrap">
-                  {f.reviewImg.map((url, idx) => (
+                  {f.imageUrls.map((url, idx) => (
                     <img
                       key={idx}
                       src={url}
@@ -213,7 +214,6 @@ const FeedbackList = () => {
               )}
 
               <div className="mt-4 flex gap-2 justify-end">
-                {/* 활성화/비활성화 버튼 토글 */}
                 <button
                   onClick={() => handleTogglePublicStatus(f.id, f.isPublic)}
                   className={`px-4 py-2 rounded-md text-white font-medium ${

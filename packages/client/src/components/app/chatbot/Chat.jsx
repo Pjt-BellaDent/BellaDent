@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'; // <--- 이 부분을 추가하거나 확인해 주세요.
-import axios from 'axios';
+import axiosInstance from '../../../libs/axiosInstance';
 import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
 import io from 'socket.io-client';
+
+// 날짜 변환 유틸리티 함수
+const formatMessageDate = (sentAt) => {
+  if (!sentAt) return new Date();
+  if (typeof sentAt._seconds === 'number') {
+    return new Date(
+      sentAt._seconds * 1000 + (sentAt._nanoseconds || 0) / 1000000
+    );
+  }
+  return new Date(sentAt);
+};
 
 const Chat = () => {
   const { userInfo, userToken } = useUserInfo();
@@ -32,14 +43,12 @@ const Chat = () => {
   const fetchConsultations = useCallback(async () => {
     if (!userToken) return;
     try {
-      const response = await axios.get(`http://localhost:3000/consultations/`, {
+      const response = await axiosInstance.get('/consultations/', {
         headers: {
-          Authorization: `Bearer ${userToken}`,
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
           Expires: '0',
         },
-        withCredentials: true,
       });
       const allConsultations = response.data.consultations;
 
@@ -48,7 +57,6 @@ const Chat = () => {
       );
 
       const sortedConsultations = filteredConsultations.sort((a, b) => {
-        // <-- 'filteredConsultations'로 정확히 수정
         const dateA = a.updatedAt ? new Date(a.updatedAt) : new Date(0);
         const dateB = b.updatedAt ? new Date(b.updatedAt) : new Date(0);
         return dateA.getTime() - dateB.getTime();
@@ -64,31 +72,18 @@ const Chat = () => {
   const fetchInitialMessages = useCallback(async () => {
     if (!activeUser || !userToken) return;
     try {
-      const response = await axios.get(
-        `http://localhost:3000/consultations/${activeUser}`,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-            Expires: '0',
-          },
-          withCredentials: true,
-        }
-      );
+      const response = await axiosInstance.get(`/consultations/${activeUser}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      });
       const messages = response.data.messages;
       const formattedMessages = messages.map((msg) => ({
         ...msg,
         content: msg.message || msg.content || '',
-        sentAt:
-          msg.sentAt && typeof msg.sentAt._seconds === 'number'
-            ? new Date(
-                msg.sentAt._seconds * 1000 +
-                  (msg.sentAt._nanoseconds || 0) / 1000000
-              )
-            : msg.sentAt
-            ? new Date(msg.sentAt)
-            : new Date(),
+        sentAt: formatMessageDate(msg.sentAt),
         isActive: msg.isActive !== undefined ? msg.isActive : true,
       }));
       setChatData((prev) => ({ ...prev, [activeUser]: formattedMessages }));
@@ -105,9 +100,6 @@ const Chat = () => {
   useEffect(() => {
     if (!userToken || !staffUid) {
       if (socketRef.current) {
-        console.warn(
-          'Socket: UserToken 또는 StaffUID 없음. 기존 소켓 연결 해제.'
-        );
         socketRef.current.disconnect();
         socketRef.current = null;
       }
@@ -115,68 +107,58 @@ const Chat = () => {
     }
 
     if (socketRef.current) {
-      console.log('Socket: 이미 연결된 소켓이 있습니다. 재연결 건너뜜.');
       return;
     }
 
-    const newSocket = io('http://localhost:3000', {
+    const socketUrl =
+      import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+
+    const newSocket = io(socketUrl, {
       withCredentials: true,
       auth: { token: userToken },
+      path: '/socket.io/',
     });
 
     newSocket.on('connect', () => {
-      console.log('Socket 연결됨:', newSocket.id);
+      console.log('Socket 연결됨 (직원):', newSocket.id);
     });
+
     newSocket.on('connect_error', (err) => {
       console.error('Socket 연결 오류:', err.message);
     });
-    newSocket.on('error', (err) => {
-      console.error('Socket 오류:', err);
+
+    newSocket.on('newMessage', (msg) => {
+      if (msg && msg.consultationId === activeUserRef.current) {
+        // 메시지 ID로 중복을 체크하여 이미 있으면 추가하지 않음
+        setChatData((prev) => {
+          const currentMessages = prev[msg.consultationId] || [];
+          if (currentMessages.some((m) => m.id === msg.id)) {
+            return prev;
+          }
+          return {
+            ...prev,
+            [msg.consultationId]: [
+              ...currentMessages,
+              { ...msg, sentAt: formatMessageDate(msg.sentAt) },
+            ],
+          };
+        });
+      }
+      // 상담 목록을 새로고침하여 상태(예: 읽음/안읽음)를 업데이트
+      fetchConsultations();
     });
 
     newSocket.on('consultationListUpdated', fetchConsultations);
 
-    newSocket.on('newMessage', (msg) => {
-      const currentActiveRoomId = activeUserRef.current;
-      const currentStaffId = userInfo?.id;
-
-      if (msg.consultationId === currentActiveRoomId) {
-        if (msg.senderId === currentStaffId) return;
-
-        setChatData((prev) => {
-          const messagesForCurrentRoom = prev[currentActiveRoomId] || [];
-          if (
-            messagesForCurrentRoom.some(
-              (existingMsg) => existingMsg.id === msg.id
-            )
-          ) {
-            return prev;
-          }
-          const updatedMessages = [
-            ...messagesForCurrentRoom,
-            { ...msg, content: msg.message || msg.content || '' },
-          ];
-          return { ...prev, [currentActiveRoomId]: updatedMessages };
-        });
-      }
-      fetchConsultations();
-    });
-
     socketRef.current = newSocket;
 
     return () => {
-      if (socketRef.current) {
-        console.log(`Socket 연결 해제 요청 (클린업): ${socketRef.current.id}`);
-        socketRef.current.off('consultationListUpdated', fetchConsultations);
-        socketRef.current.off('newMessage');
-        socketRef.current.off('connect');
-        socketRef.current.off('connect_error');
-        socketRef.current.off('error');
-        socketRef.current.disconnect();
+      if (newSocket) {
+        newSocket.disconnect();
         socketRef.current = null;
       }
     };
-  }, [userToken, staffUid, userInfo, fetchConsultations]);
+  }, [userToken, staffUid, fetchConsultations]);
 
   // --- 4. userToken이 유효할 때 상담 목록 초기 로드 ---
   useEffect(() => {
@@ -231,9 +213,9 @@ const Chat = () => {
           console.log(
             `[API] activeUser null 전환: 상담 ${previousConsultationId} 담당자 해제 요청.`
           );
-          axios
+          axiosInstance
             .post(
-              `http://localhost:3000/consultations/handler/${previousConsultationId}`,
+              `/consultations/handler/${previousConsultationId}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -257,12 +239,12 @@ const Chat = () => {
     }
 
     return () => {
-      if (process.env.NODE_ENV === 'development') {
+      /*       if (process.env.NODE_ENV === 'development') {
         console.warn(
           'Development StrictMode: 언마운트 클린업에서 API 호출 건너뜀.'
         );
         return;
-      }
+      } */
 
       const lastActiveUser = activeUserRef.current;
       if (lastActiveUser && staffUid && userToken) {
@@ -273,9 +255,9 @@ const Chat = () => {
           console.log(
             `[API] 컴포넌트 언마운트 클린업: 상담 ${lastActiveUser} 담당자 해제 요청.`
           );
-          axios
+          axiosInstance
             .post(
-              `http://localhost:3000/consultations/handler/${lastActiveUser}`,
+              `/consultations/handler/${lastActiveUser}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -306,60 +288,38 @@ const Chat = () => {
   // --- 8. 메시지 전송 핸들러 ---
   const sendMessage = useCallback(async () => {
     const text = inputText.trim();
-    if (
-      !text ||
-      !activeUser ||
-      !staffUid ||
-      !userToken ||
-      !socketRef.current ||
-      !socketRef.current.connected
-    ) {
-      console.warn('메시지 전송 조건 미달:', {
-        text,
-        activeUser,
-        staffUid,
-        userToken,
-        socketConnected: socketRef.current?.connected,
-      });
+    if (!text || !activeUser || !staffUid || !userToken) {
       return;
     }
 
-    const tempMessageId = Date.now().toString();
-    const staffMessage = {
-      id: tempMessageId,
+    if (!socketRef.current || !socketRef.current.connected) {
+      alert('연결이 불안정합니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    const tempMessage = {
+      id: `temp_${Date.now()}`,
       senderId: staffUid,
       senderType: 'staff',
       content: text,
-      sentAt: new Date(),
+      sentAt: new Date().toISOString(),
       isActive: true,
+      consultationId: activeUser,
     };
 
     setChatData((prev) => ({
       ...prev,
-      [activeUser]: [...(prev[activeUser] || []), staffMessage],
+      [activeUser]: [...(prev[activeUser] || []), tempMessage],
     }));
+
     setInputText('');
 
-    try {
-      await axios.post(
-        `http://localhost:3000/consultations/staff/${activeUser}`,
-        { answer: text },
-        {
-          headers: { Authorization: `Bearer ${userToken}` },
-          withCredentials: true,
-        }
-      );
-      fetchConsultations();
-    } catch (error) {
-      console.error('메시지 전송 실패:', error.response?.data || error.message);
-      setChatData((prev) => ({
-        ...prev,
-        [activeUser]: (prev[activeUser] || []).filter(
-          (msg) => msg.id !== tempMessageId
-        ),
-      }));
-    }
-  }, [activeUser, staffUid, userToken, inputText, fetchConsultations]);
+    socketRef.current.emit('chatMessage', {
+      consultationId: activeUser,
+      senderType: 'staff',
+      content: text,
+    });
+  }, [activeUser, staffUid, userToken, inputText]);
 
   // --- 9. 상담 목록 클릭 핸들러 (다른 직원 상담중인 경우 접근 차단) ---
   const handleChatClick = useCallback(
@@ -421,8 +381,8 @@ const Chat = () => {
             console.log(
               `[API] 클릭: 이전 상담 ${previousActiveUser} 담당자 해제 요청 시작.`
             );
-            await axios.post(
-              `http://localhost:3000/consultations/handler/${previousActiveUser}`,
+            await axiosInstance.post(
+              `/consultations/handler/${previousActiveUser}`,
               { handlerId: null },
               {
                 headers: { Authorization: `Bearer ${userToken}` },
@@ -439,8 +399,8 @@ const Chat = () => {
         console.log(
           `[API] 클릭: 새 상담 ${consultationId} 담당자 설정 요청 시작.`
         );
-        await axios.post(
-          `http://localhost:3000/consultations/handler/${consultationId}`,
+        await axiosInstance.post(
+          `/consultations/handler/${consultationId}`,
           { handlerId: staffUid },
           {
             headers: { Authorization: `Bearer ${userToken}` },
@@ -513,14 +473,14 @@ const Chat = () => {
                     {user.handlerId ? (
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          user.handlerId === staffUid
+                          user.handlerId === staffUid && activeUser === user.id
                             ? 'bg-green-100 text-green-800'
                             : user.handlerId === 'aiChatBot'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {user.handlerId === staffUid
+                        {user.handlerId === staffUid && activeUser === user.id
                           ? '내가 상담중'
                           : user.handlerId === 'aiChatBot'
                           ? 'AI 답변 완료'
@@ -529,6 +489,7 @@ const Chat = () => {
                     ) : (
                       <span className="text-bd-cool-gray text-xs">없음</span>
                     )}
+                    ,
                   </td>
                 </tr>
               ))}
@@ -564,16 +525,18 @@ const Chat = () => {
               : '';
 
             let dateSeparator = null;
-            // `lastDate`는 `map` 함수 외부의 클로저 변수로 유지되어야 함
             if (
               idx === 0 ||
               (messageDate &&
                 messageDate !==
-                  messages[idx - 1]?.sentAt?.toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  }))
+                  new Date(messages[idx - 1]?.sentAt).toLocaleDateString(
+                    'ko-KR',
+                    {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }
+                  ))
             ) {
               dateSeparator = (
                 <div key={`date-${messageDate}`} className="text-center my-4">
@@ -593,7 +556,9 @@ const Chat = () => {
                   className={`
                     max-w-[60%] my-1 break-words relative flex flex-col
                     ${
-                      msg.senderType === 'staff' || msg.senderType === 'ai'
+                      msg.senderId === 'AI_Bot' ||
+                      msg.senderType === 'staff' ||
+                      msg.senderType === 'ai'
                         ? 'self-end items-end'
                         : 'self-start items-start'
                     }
@@ -603,7 +568,7 @@ const Chat = () => {
                     className={`
                       p-3 rounded-xl
                       ${
-                        msg.senderType === 'staff'
+                        msg.senderId === 'AI_Bot' || msg.senderType === 'staff'
                           ? 'bg-yellow-200 text-gray-800'
                           : msg.senderType === 'ai'
                           ? 'bg-purple-100 text-purple-800'
@@ -619,7 +584,9 @@ const Chat = () => {
                     className={`
                       text-xs text-gray-500 mt-1 mx-2
                       ${
-                        msg.senderType === 'staff' || msg.senderType === 'ai'
+                        msg.senderId === 'AI_Bot' ||
+                        msg.senderType === 'staff' ||
+                        msg.senderType === 'ai'
                           ? 'text-right'
                           : 'text-left'
                       }

@@ -60,6 +60,6 @@ router.put("/reapproval/:id", auth, patientRoleCheck, requestReapproval);
 router.put("/enable/:id", auth, managerRoleCheck, enableReview);
 router.put("/disabled/:id", auth, managerRoleCheck, disabledReview);
 
-router.delete("/:id", auth, adminRoleCheck, deleteReview);
+router.delete("/:id", auth, patientRoleCheck, deleteReview);
 
 export default router;

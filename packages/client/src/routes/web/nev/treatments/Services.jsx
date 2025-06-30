@@ -26,32 +26,32 @@ function Services() {
 
   return (
     <>
+      <LineImageBanner
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
+        image={line_banner}
+      >
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          진료과목안내
+        </Title>
+        <Text size="md" CN="text-center">
+          Medical department information
+        </Text>
+      </LineImageBanner>
       <Container>
-        <LineImageBanner
-          CN="w-full h-40 flex justify-center items-center overflow-hidden"
-          image={line_banner}
-        >        <div className="flex flex-col justify-center items-center mt-16 mb-3 mx-5">
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
-            진료과목안내
-          </Title>
-          <Text size="md" CN="text-center">
-            Services
-          </Text>
-        </div></LineImageBanner>
         <RowBox CN="gap-7 mt-15 mx-5 items-center">
           {/* flex -> RowBox, gap, mx 적용 */}
           <img src={teeth} alt="teeth" className="w-72 mb-15" />{' '}
           {/* w-72는 Tailwind 기본값 아님, 적절한 w-XX 필요 */}
           <div className="flex-1">
             {/* flex-1 추가 */}
-            <Title as="h2" size="md" CN="mt-8 mb-8">
+            <Text size="md" CN="mb-3">
               {/* h2 -> Title */}
               <b>충치치료</b> {/* b 태그 제거 */}
-            </Title>
+            </Text>
             <Text size="md">
               {/* p -> Text */}
               치아 신경 치료는 심한 충치, 외상, 파절 등으로 인해 염증이 발생한
@@ -69,13 +69,12 @@ function Services() {
           {/* flex -> RowBox, flex-wrap, justify-center, gap 적용 */}
           <div className="flex flex-col flex-1 items-center mx-5">
             {/* flex-1, items-center 추가 */}
-            <img src={cavities} alt="cavities" className="w-70" />{' '}
-            {/* W-70 -> w-70 */}
+            <img src={cavities} alt="cavities" /> {/* W-70 -> w-70 */}
             <div className="text-center">
               {/* 텍스트 중앙 정렬 */}
-              <Text as="p" size="md" CN="mb-3">
+              <Text as="p" size="md" CN="my-3">
                 {/* p -> Text */}
-                <strong className="text-xl mt-16 mb-3">신경치료</strong>{' '}
+                <strong className="text-xl mt-16 mb-3">신경치료</strong>
                 {/* strong은 Text 컴포넌트 내부에서 처리. 필요시 CN prop으로 font-bold */}
               </Text>
               <Text size="md">
@@ -110,7 +109,7 @@ function Services() {
               </Text>
               <Text size="md">
                 {/* p -> Text */}
-                크라운 치료 (선택적): 약해진 치아를 보호하기 위해 크라운을
+                크라운치료(선택적):약해진 치아를 보호하기 위해 크라운을
                 착용합니다.
               </Text>
             </div>

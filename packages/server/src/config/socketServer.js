@@ -43,7 +43,12 @@ const socketAuthMiddleware = async (socket, next) => {
 export default function initSocketServer(server) {
   const io = new SocketIOServer(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:5174"], // 허용할 클라이언트 도메인
+      origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://belladent.duckdns.org",
+        "https://belladent.duckdns.org",
+      ], // 허용할 클라이언트 도메인
       credentials: true, // 크로스-오리진 요청 시 자격 증명 허용
     },
   });
@@ -57,6 +62,11 @@ export default function initSocketServer(server) {
 
     // 'join' 이벤트: 특정 상담방에 소켓을 조인시킵니다.
     socket.on("join", (consultationId) => {
+      // consultationId가 객체로 전달된 경우 처리
+      if (typeof consultationId === "object" && consultationId.consultationId) {
+        consultationId = consultationId.consultationId;
+      }
+
       if (!consultationId) {
         console.warn(
           `[Socket:join] consultationId가 제공되지 않았습니다. User: ${userUid}`
@@ -71,8 +81,7 @@ export default function initSocketServer(server) {
      * @event chatMessage
      * @description 클라이언트로부터 새 메시지를 수신하고 Firestore에 저장한 후,
      * 해당 상담방의 다른 클라이언트와 전체 상담 목록에 브로드캐스트합니다.
-     * 이 이벤트는 주로 **고객(환자)이 질문을 보낼 때** 사용되어야 합니다.
-     * 스태프 답변은 REST API (`staffReply`)를 통해 처리하는 것이 권장됩니다.
+     * 고객(환자)과 직원(staff) 모두 이 이벤트를 통해 메시지를 전송할 수 있습니다.
      * @param {object} data - 메시지 데이터 { consultationId, senderType, content }
      */
     socket.on("chatMessage", async (data) => {
@@ -127,16 +136,15 @@ export default function initSocketServer(server) {
         } else {
           // 기존 상담 업데이트 (새 메시지 추가)
           const currentConsultationData = consultationDoc.data();
+          const newStatus = senderType === "staff" ? "responded" : "pending";
           batch.update(consultationRef, {
             updatedAt: now,
-            // 스태프가 이 'chatMessage' 이벤트를 사용한다면 'responded'로 변경 가능
-            // 하지만 권장되는 패턴은 REST API (staffReply) 사용
-            status: "pending", // 고객 메시지이므로 다시 'pending' 상태로
+            status: newStatus, // 스태프 메시지면 'responded', 고객 메시지면 'pending'
             handlerId: currentConsultationData.handlerId || null, // 기존 담당자 유지
             hasUnread: true, // 새 메시지가 있으므로 읽지 않음으로 표시
           });
           console.log(
-            `[Firestore Batch] 기존 상담 문서 업데이트 준비: ${consultationId}`
+            `[Firestore Batch] 기존 상담 문서 업데이트 준비: ${consultationId} (상태: ${newStatus})`
           );
         }
 
@@ -190,6 +198,11 @@ export default function initSocketServer(server) {
 
     // 'leave' 이벤트: 특정 상담방에서 소켓을 나갑니다.
     socket.on("leave", (consultationId) => {
+      // consultationId가 객체로 전달된 경우 처리
+      if (typeof consultationId === "object" && consultationId.consultationId) {
+        consultationId = consultationId.consultationId;
+      }
+
       if (!consultationId) {
         console.warn(
           `[Socket:leave] consultationId가 제공되지 않았습니다. User: ${userUid}`
