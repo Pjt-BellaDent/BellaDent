@@ -11,10 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 *.env
-*.env.pjt-belladent
-firebase-adminsdk.*
-
+*.env.*
+firebase-adminsdk*
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
