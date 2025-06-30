@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axiosInstance from '../../../libs/axiosIntance';
+import axiosInstance from '../../../libs/axiosInstance.js';
 
 const UserPermission = () => {
   const [users, setUsers] = useState([]);

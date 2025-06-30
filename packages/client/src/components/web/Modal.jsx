@@ -21,8 +21,8 @@ const Modal = ({ children, show, setShow, activeClick, activeClose }) => {
         {children}
         <div className="mt-20 flex justify-center gap-4">
           <Button
-            variant="primary" // 기본 primary 스타일
-            size="lg" // 큰 사이즈
+            variant="positive"
+            size="lg"
             className="flex-1 w-full"
             onClick={handleClick}
           >
@@ -30,8 +30,8 @@ const Modal = ({ children, show, setShow, activeClick, activeClose }) => {
           </Button>
           {activeClose && (
             <Button
-              variant="secondary" // 보조 secondary 스타일
-              size="lg" // 큰 사이즈
+              variant="secondary"
+              size="lg"
               className="flex-1 w-full"
               onClick={handleClose}
             >

@@ -1,7 +1,7 @@
 // src/app/waiting/components/WaitingManager.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../../../libs/axiosIntance';
+import axios from '../../../libs/axiosInstance.js';
 
 const DEPARTMENTS = ['전체', '보철과', '교정과', '치주과', '심미치료', '교정/미백', '일반 진료/보철'];
 

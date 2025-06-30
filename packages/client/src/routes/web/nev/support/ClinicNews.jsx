@@ -1,6 +1,6 @@
 // src/routes/web/nev/support/ClinicNews.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../../../libs/axiosInstance.js';
 
 import LineImageBanner from '../../../../components/web/LineImageBanner';
 import Container from '../../../../components/web/Container';
@@ -15,10 +15,9 @@ function ClinicNews() {
   // const { userToken } = useUserInfo(); // userToken은 이제 API 호출 조건에 사용되지 않음
 
   useEffect(() => {
-    const url = 'http://localhost:3000/notices';
     const readPosts = async () => {
       try {
-        const res = await axios.get(url, {
+        const res = await axios.get('/notices', {
           headers: {
             // Authorization 헤더는 userToken이 없으므로 제거 (로그인 없이 접근 가능)
             // 'Authorization': `Bearer ${userToken}`, // <-- 이 줄을 제거합니다!
@@ -42,16 +41,28 @@ function ClinicNews() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <Title as="h2" size="lg" CN="text-center">Welcome to Our Clinic</Title>
-        <Text size="xl" CN="text-center">Your health is our priority</Text>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          공지사항
+        </Title>
+        <Text size="xl" CN="text-center">
+          ClinicNews
+        </Text>
       </LineImageBanner>
       <Container CN="py-40">
-        <Title as="h2" size="lg">Welcome to Our Clinic</Title>
+        <Title as="h2" size="lg">
+          공지사항
+        </Title>
         <hr className="my-4" />
-        <Text size="xl" CN="text-center my-4">제목</Text>
+        <Text size="xl" CN="text-center my-4">
+          제목
+        </Text>
         <Board
           posts={posts}
           CN="border-y divide-y border-gray-300 divide-gray-300"

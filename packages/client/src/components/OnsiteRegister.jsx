@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../libs/axiosInstance.js';
 import Button from './web/Button';
-import { useUserInfo } from '../contexts/UserInfoContext.jsx'; // UserInfoContext 임포트
 
 // 현장 접수 시 임시 이메일과 비밀번호를 생성하는 헬퍼 함수
 const generateTemporaryAuth = (phone) => {
@@ -17,8 +16,6 @@ const generateTemporaryAuth = (phone) => {
 };
 
 const OnsiteRegister = () => {
-  const { userToken } = useUserInfo(); // SMS 발송을 위해 userToken 가져옴
-
   const [formData, setFormData] = useState({
     name: '',
     birth: '',
@@ -82,15 +79,7 @@ const OnsiteRegister = () => {
         msg_ad: 'N', // 광고성 아님
       };
 
-      const response = await axios.post(
-        'http://localhost:3000/sms/send',
-        smsData,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
+      const response = await axios.post('/sms/send', smsData);
 
       if (response.status === 201) {
         console.log(`SMS 발송 성공: ${patientName} (${patientPhone})`);
@@ -143,34 +132,33 @@ const OnsiteRegister = () => {
     }
 
     const payload = {
-  role: 'patient',
-  email: patientEmail,
-  password: patientPassword,
-  name: formData.name,
-  birth: formData.birth,
-  gender:
-    formData.gender === '남' ? 'M' : formData.gender === '여' ? 'F' : formData.gender,
-  phone: formData.phone,
-  address: formData.address || '',
-  patientInfo: {
-    insuranceNumber: formData.insuranceNumber || '',
-    allergies: formData.allergies || '',
-    medications: formData.medications || '',
-    memo: formData.memo || '',
-  },
-};
+      role: 'patient',
+      email: patientEmail,
+      password: patientPassword,
+      name: formData.name,
+      birth: formData.birth,
+      gender:
+        formData.gender === '남'
+          ? 'M'
+          : formData.gender === '여'
+          ? 'F'
+          : formData.gender,
+      phone: formData.phone,
+      address: formData.address || '',
+      patientInfo: {
+        insuranceNumber: formData.insuranceNumber || '',
+        allergies: formData.allergies || '',
+        medications: formData.medications || '',
+        memo: formData.memo || '',
+      },
+    };
 
     console.log('최종 제출 payload:', payload);
 
     try {
       const res = await axios.post(
-        'http://localhost:3000/users/patient',
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`// 스태프 토큰 필요
-          },
-        }
+        '/users/patient',
+        payload
       );
 
       if (res.status === 201) {

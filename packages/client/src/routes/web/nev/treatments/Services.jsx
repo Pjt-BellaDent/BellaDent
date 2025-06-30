@@ -26,22 +26,22 @@ function Services() {
 
   return (
     <>
+      <LineImageBanner
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
+        image={line_banner}
+      >
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          진료과목안내
+        </Title>
+        <Text size="md" CN="text-center">
+          Medical department information
+        </Text>
+      </LineImageBanner>
       <Container>
-        <LineImageBanner
-          CN="w-full h-40 flex justify-center items-center overflow-hidden"
-          image={line_banner}
-        >        <div className="flex flex-col justify-center items-center mt-16 mb-3 mx-5">
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
-            진료과목안내
-          </Title>
-          <Text size="md" CN="text-center">
-            Medical department information
-          </Text>
-        </div></LineImageBanner>
         <RowBox CN="gap-7 mt-15 mx-5 items-center">
           {/* flex -> RowBox, gap, mx 적용 */}
           <img src={teeth} alt="teeth" className="w-72 mb-15" />{' '}
@@ -69,8 +69,7 @@ function Services() {
           {/* flex -> RowBox, flex-wrap, justify-center, gap 적용 */}
           <div className="flex flex-col flex-1 items-center mx-5">
             {/* flex-1, items-center 추가 */}
-            <img src={cavities} alt="cavities"  />{' '}
-            {/* W-70 -> w-70 */}
+            <img src={cavities} alt="cavities" /> {/* W-70 -> w-70 */}
             <div className="text-center">
               {/* 텍스트 중앙 정렬 */}
               <Text as="p" size="md" CN="my-3">

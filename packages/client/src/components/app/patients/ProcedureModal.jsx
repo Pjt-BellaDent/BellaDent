@@ -1,6 +1,6 @@
 // src/app/patients/components/ProcedureModal.jsx
 import React, { useEffect, useState, useMemo } from 'react';
-import axios from '../../../libs/axiosIntance';
+import axios from '../../../libs/axiosInstance.js';
 import { addWaitingPatient } from '../../../api/patients';
 
 const PROCEDURE_MAP = {

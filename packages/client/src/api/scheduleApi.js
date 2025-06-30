@@ -1,4 +1,4 @@
-import axios from '../libs/axiosIntance';
+import axios from '../libs/axiosInstance.js';
 
 export const fetchSchedulesByMonth = async (month) => {
   try {

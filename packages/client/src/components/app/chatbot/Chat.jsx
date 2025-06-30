@@ -7,7 +7,9 @@ import io from 'socket.io-client';
 const formatMessageDate = (sentAt) => {
   if (!sentAt) return new Date();
   if (typeof sentAt._seconds === 'number') {
-    return new Date(sentAt._seconds * 1000 + (sentAt._nanoseconds || 0) / 1000000);
+    return new Date(
+      sentAt._seconds * 1000 + (sentAt._nanoseconds || 0) / 1000000
+    );
   }
   return new Date(sentAt);
 };
@@ -71,11 +73,11 @@ const Chat = () => {
     if (!activeUser || !userToken) return;
     try {
       const response = await axiosInstance.get(`/consultations/${activeUser}`, {
-          headers: {
-            'Cache-Control': 'no-cache',
-            Pragma: 'no-cache',
-            Expires: '0',
-          },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
       });
       const messages = response.data.messages;
       const formattedMessages = messages.map((msg) => ({
@@ -105,12 +107,16 @@ const Chat = () => {
     }
 
     if (socketRef.current) {
-      return; // 이미 연결된 소켓이 있으면 재연결 방지
+      return;
     }
 
-    const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
+    const socketUrl =
+      import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+
+    const newSocket = io(socketUrl, {
       withCredentials: true,
       auth: { token: userToken },
+      path: '/socket.io/',
     });
 
     newSocket.on('connect', () => {
@@ -126,12 +132,15 @@ const Chat = () => {
         // 메시지 ID로 중복을 체크하여 이미 있으면 추가하지 않음
         setChatData((prev) => {
           const currentMessages = prev[msg.consultationId] || [];
-          if (currentMessages.some(m => m.id === msg.id)) {
+          if (currentMessages.some((m) => m.id === msg.id)) {
             return prev;
           }
           return {
             ...prev,
-            [msg.consultationId]: [...currentMessages, { ...msg, sentAt: formatMessageDate(msg.sentAt) }],
+            [msg.consultationId]: [
+              ...currentMessages,
+              { ...msg, sentAt: formatMessageDate(msg.sentAt) },
+            ],
           };
         });
       }
@@ -140,7 +149,6 @@ const Chat = () => {
     });
 
     newSocket.on('consultationListUpdated', fetchConsultations);
-
 
     socketRef.current = newSocket;
 
@@ -231,7 +239,7 @@ const Chat = () => {
     }
 
     return () => {
-/*       if (process.env.NODE_ENV === 'development') {
+      /*       if (process.env.NODE_ENV === 'development') {
         console.warn(
           'Development StrictMode: 언마운트 클린업에서 API 호출 건너뜀.'
         );
@@ -305,7 +313,7 @@ const Chat = () => {
     }));
 
     setInputText('');
-    
+
     socketRef.current.emit('chatMessage', {
       consultationId: activeUser,
       senderType: 'staff',
@@ -463,24 +471,25 @@ const Chat = () => {
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-sm w-28">
                     {user.handlerId ? (
-  <span
-    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-      user.handlerId === staffUid && activeUser === user.id
-        ? 'bg-green-100 text-green-800'
-        : user.handlerId === 'aiChatBot'
-        ? 'bg-purple-100 text-purple-800'
-        : 'bg-blue-100 text-blue-800'
-    }`}
-  >
-    {user.handlerId === staffUid && activeUser === user.id
-      ? '내가 상담중'
-      : user.handlerId === 'aiChatBot'
-      ? 'AI 답변 완료'
-      : `${user.handlerName || '다른 직원'} 대응중`}
-  </span>
-) : (
-  <span className="text-bd-cool-gray text-xs">없음</span>
-)},
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          user.handlerId === staffUid && activeUser === user.id
+                            ? 'bg-green-100 text-green-800'
+                            : user.handlerId === 'aiChatBot'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {user.handlerId === staffUid && activeUser === user.id
+                          ? '내가 상담중'
+                          : user.handlerId === 'aiChatBot'
+                          ? 'AI 답변 완료'
+                          : `${user.handlerName || '다른 직원'} 대응중`}
+                      </span>
+                    ) : (
+                      <span className="text-bd-cool-gray text-xs">없음</span>
+                    )}
+                    ,
                   </td>
                 </tr>
               ))}
@@ -520,11 +529,14 @@ const Chat = () => {
               idx === 0 ||
               (messageDate &&
                 messageDate !==
-                  new Date(messages[idx - 1]?.sentAt).toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  }))
+                  new Date(messages[idx - 1]?.sentAt).toLocaleDateString(
+                    'ko-KR',
+                    {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    }
+                  ))
             ) {
               dateSeparator = (
                 <div key={`date-${messageDate}`} className="text-center my-4">
@@ -544,7 +556,9 @@ const Chat = () => {
                   className={`
                     max-w-[60%] my-1 break-words relative flex flex-col
                     ${
-                      msg.senderId === 'AI_Bot' || msg.senderType === 'staff' || msg.senderType === 'ai'
+                      msg.senderId === 'AI_Bot' ||
+                      msg.senderType === 'staff' ||
+                      msg.senderType === 'ai'
                         ? 'self-end items-end'
                         : 'self-start items-start'
                     }
@@ -570,7 +584,9 @@ const Chat = () => {
                     className={`
                       text-xs text-gray-500 mt-1 mx-2
                       ${
-                        msg.senderId === 'AI_Bot' || msg.senderType === 'staff' || msg.senderType === 'ai'
+                        msg.senderId === 'AI_Bot' ||
+                        msg.senderType === 'staff' ||
+                        msg.senderType === 'ai'
                           ? 'text-right'
                           : 'text-left'
                       }

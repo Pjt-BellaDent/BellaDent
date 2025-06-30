@@ -10,22 +10,19 @@ function LiveChat() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        {' '}
-        <div className="flex flex-col justify-center items-center mt-16 mb-3 mx-5">
-          <Title
-            as="h1"
-            size="lg"
-            CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
-          >
-            LiveChat
-          </Title>
-          <Text size="md" CN="text-center">
-            LiveChat
-          </Text>
-        </div>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          실시간 상담
+        </Title>
+        <Text size="md" CN="text-center">
+          LiveChat
+        </Text>
       </LineImageBanner>
       <ChatForm />
     </>

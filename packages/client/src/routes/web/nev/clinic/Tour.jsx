@@ -31,19 +31,19 @@ function Tour() {
   return (
     <>
       <LineImageBanner
-        CN="w-full h-40 flex justify-center items-center overflow-hidden"
+        CN="w-full h-30 flex justify-center items-center overflow-hidden object-cover"
         image={line_banner}
       >
-        <div className="flex flex-col justify-center items-center">
-          {/* Title 컴포넌트에 size prop 적용, <b> 태그 제거 */}
-          <Title as="h1" size="lg" CN="text-center">
-            치과병원 내부 둘러 보기
-          </Title>
-          {/* Text 컴포넌트에 size prop 적용 */}
-          <Text size="md" CN="text-center">
-            Take a look inside our dental clinic
-          </Text>{' '}
-        </div>
+        <Title
+          as="h2"
+          size="lg"
+          CN="text-center text-BD-CharcoalBlack text-shadow-lg/20"
+        >
+          내부 둘러보기
+        </Title>
+        <Text size="md" CN="text-center">
+          Inside our clinic
+        </Text>
       </LineImageBanner>
       <Container CN="py-40">
         <div>
