@@ -2,10 +2,13 @@
 import axios from "axios";
 
 const instance = axios.create({
+
   // PRODUCTION URL
   // baseURL: import.meta.env.VITE_API_URL, 
+
   // DEVELOPMENT URL
-  baseURL: "http://localhost:3000", 
+  baseURL: import.meta.env.VITE_DEVELOP_URL, 
+
   withCredentials: true,
 });
 

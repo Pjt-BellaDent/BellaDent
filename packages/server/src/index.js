@@ -72,13 +72,13 @@ app.use((req, res) => {
 });
 
 // development 환경에서 에러 핸들러
-/* server.listen(port, () => {
+server.listen(port, () => {
   console.log(`BellaDent app + Socket.IO 실행: http://localhost:${port}`);
-}); */
+});
 
 // production 환경에서 에러 핸들러
-server.listen(port, () => {
-  console.log(
-    `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
-  );
-});
+// server.listen(port, () => {
+//   console.log(
+//     `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
+//   );
+// });
