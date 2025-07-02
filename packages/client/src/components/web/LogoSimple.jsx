@@ -1,3 +1,4 @@
+// src/components/web/LogoSimple.jsx
 import React from 'react';
 
 function LogoSimple({ color = "#c8ab7c" }) {

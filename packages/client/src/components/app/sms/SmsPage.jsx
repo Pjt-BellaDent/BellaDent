@@ -1,6 +1,6 @@
-// src/app/sms/index.jsx
-import React from "react";
-import SmsBroadcast from "./SmsBroadcast";
+// src/components/app/sms/SmsPage.jsx
+import React from 'react';
+import SmsBroadcast from './SmsBroadcast';
 
 const SmsPage = () => {
   return (

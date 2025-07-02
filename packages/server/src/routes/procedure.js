@@ -4,9 +4,9 @@ import {
   getProcedureStats,
   getProceduresByName,
   addProcedure,
-  getTodayProcedures,  // 추가
+  getTodayProcedures,
 } from '../controllers/procedureController.js';
-import { db } from '../config/firebase.js'; // db 인스턴스 직접 import
+import { db } from '../config/firebase.js';
 
 const router = express.Router();
 
@@ -14,7 +14,6 @@ router.get('/stats', getProcedureStats);
 router.get('/', getProceduresByName);
 router.post('/', addProcedure);
 
-// 이름+생년월일로 시술 이력 조회 (RESTful)
 router.get('/name/:name/:birth', async (req, res) => {
   const { name, birth } = req.params;
   if (!name || !birth) return res.status(400).json({ error: "이름/생년월일 필요" });
@@ -31,6 +30,6 @@ router.get('/name/:name/:birth', async (req, res) => {
   }
 });
 
-router.get('/today', getTodayProcedures);  // 라우트 추가
+router.get('/today', getTodayProcedures);
 
 export default router;

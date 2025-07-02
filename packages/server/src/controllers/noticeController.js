@@ -1,8 +1,8 @@
+// src/controllers/noticeController.js
 import { db } from "../config/firebase.js";
 import { noticeSchema, updateNoticeSchema } from "../models/notice.js";
 import { Timestamp } from "firebase-admin/firestore";
 
-// 공지 사항 생성
 export const createNotice = async (req, res) => {
   const { value, error } = noticeSchema.validate(req.body, {
     abortEarly: false,
@@ -17,7 +17,7 @@ export const createNotice = async (req, res) => {
 
     const docRef = db.collection("notices").doc();
     await docRef.set({
-      id: docRef.id, // Firestore 문서 ID
+      id: docRef.id,
       ...value,
       createdAt: now,
       updatedAt: now,
@@ -30,7 +30,6 @@ export const createNotice = async (req, res) => {
   }
 };
 
-// 공지 사항 조회
 export const readAllNotices = async (req, res) => {
   try {
     const noticesDoc = await db
@@ -38,14 +37,12 @@ export const readAllNotices = async (req, res) => {
       .orderBy("createdAt", "desc")
       .get();
 
-    // Promise.all을 사용하여 각 공지사항의 작성자 이름을 병렬로 조회
     const noticesData = await Promise.all(
       noticesDoc.docs.map(async (doc) => {
         const data = doc.data();
-        let authorName = "알 수 없음"; // 기본값
+        let authorName = "알 수 없음";
 
         if (data.authorId) {
-          // 공지사항에도 authorId 필드가 있다고 가정
           try {
             const userDoc = await db
               .collection("users")
@@ -65,7 +62,7 @@ export const readAllNotices = async (req, res) => {
         return {
           id: doc.id,
           ...data,
-          authorName: authorName, // <-- authorName 필드 추가
+          authorName: authorName,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
         };
@@ -88,7 +85,6 @@ export const readAllNotices = async (req, res) => {
   }
 };
 
-// 비활성화 공지 사항 조회
 export const readDisabledNoticesById = async (req, res) => {
   try {
     const disabledNoticesData = await db
@@ -97,34 +93,45 @@ export const readDisabledNoticesById = async (req, res) => {
       .get();
 
     if (disabledNoticesData.empty) {
-      console.log("readDisabledNoticesById: 비활성화된 공지사항 내용이 없습니다.");
-      return res.status(200).json({ notices: [], message: "비활성화된 내용을 찾을 수 없습니다." });
+      console.log(
+        "readDisabledNoticesById: 비활성화된 공지사항 내용이 없습니다."
+      );
+      return res
+        .status(200)
+        .json({ notices: [], message: "비활성화된 내용을 찾을 수 없습니다." });
     }
 
-    // Promise.all을 사용하여 각 공지사항의 작성자 이름을 병렬로 조회
-    const disabledNotices = await Promise.all(disabledNoticesData.docs.map(async doc => {
-      const data = doc.data();
-      let authorName = '알 수 없음';
+    const disabledNotices = await Promise.all(
+      disabledNoticesData.docs.map(async (doc) => {
+        const data = doc.data();
+        let authorName = "알 수 없음";
 
-      if (data.authorId) {
-        try {
-          const userDoc = await db.collection('users').doc(data.authorId).get();
-          if (userDoc.exists) {
-            authorName = userDoc.data().name || '이름 없음';
+        if (data.authorId) {
+          try {
+            const userDoc = await db
+              .collection("users")
+              .doc(data.authorId)
+              .get();
+            if (userDoc.exists) {
+              authorName = userDoc.data().name || "이름 없음";
+            }
+          } catch (userErr) {
+            console.warn(
+              `Error fetching author name for disabled notice ${doc.id}:`,
+              userErr.message
+            );
           }
-        } catch (userErr) {
-          console.warn(`Error fetching author name for disabled notice ${doc.id}:`, userErr.message);
         }
-      }
 
-      return {
-        id: doc.id,
-        ...data,
-        authorName: authorName, // <-- authorName 필드 추가
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
-      };
-    }));
+        return {
+          id: doc.id,
+          ...data,
+          authorName: authorName,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+        };
+      })
+    );
 
     res.status(200).json({
       notices: disabledNotices,
@@ -136,7 +143,6 @@ export const readDisabledNoticesById = async (req, res) => {
   }
 };
 
-// 공지 사항 수정
 export const updateNotice = async (req, res) => {
   const noticeId = req.params.id;
   const { value, error } = updateNoticeSchema.validate(req.body, {
@@ -158,7 +164,6 @@ export const updateNotice = async (req, res) => {
       return res.status(404).json({ message: "내용을 찾을 수 없습니다." });
     }
 
-    // 4. Firestore 업데이트
     await docRef.update({
       ...value,
       updatedAt: now,
@@ -171,7 +176,6 @@ export const updateNotice = async (req, res) => {
   }
 };
 
-// 공지 사항 활성화
 export const enableNotice = async (req, res) => {
   try {
     const noticeId = req.params.id;
@@ -196,7 +200,6 @@ export const enableNotice = async (req, res) => {
   }
 };
 
-// 공지 사항 비활성화
 export const disabledNotice = async (req, res) => {
   try {
     const noticeId = req.params.id;
@@ -221,7 +224,6 @@ export const disabledNotice = async (req, res) => {
   }
 };
 
-// 공지 사항 삭제
 export const deleteNotice = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -232,7 +234,6 @@ export const deleteNotice = async (req, res) => {
       return res.status(404).json({ message: "공지 사항를 찾을 수 없습니다." });
     }
 
-    // 2. Firestore 문서 삭제
     await noticeRef.delete();
 
     res.status(204).json({ message: "공지 사항 삭제 성공" });

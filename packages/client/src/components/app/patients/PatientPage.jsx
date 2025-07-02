@@ -1,12 +1,19 @@
-// src/app/patients/index.jsx
+// src/components/app/patients/PatientPage.jsx
 import React, { useState, useEffect } from 'react';
-import PatientTable from "./PatientTable";
-import EditPatientModal from "./EditPatientModal";
-import ProcedureModal from "./ProcedureModal";
-import SurveyModal from "./SurveyModal";
+import PatientTable from './PatientTable';
+import EditPatientModal from './EditPatientModal';
+import ProcedureModal from './ProcedureModal';
+import SurveyModal from './SurveyModal';
 import axios from '../../../libs/axiosInstance.js';
 import { Bar } from 'react-chartjs-2';
-import { Chart, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js';
+import {
+  Chart,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { fetchAllPatients } from '../../../api/patients';
 Chart.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -18,7 +25,6 @@ const SORT_OPTIONS = [
   { value: 'age', label: '나이순' },
 ];
 
-// 나이대 계산 함수
 function getAgeGroup(birth) {
   if (!birth) return '기타';
   const year = Number(birth.split('-')[0]);
@@ -36,31 +42,41 @@ function getAgeGroup(birth) {
 }
 
 const AGE_ORDER = [
-  '10세 미만', '10대', '20대', '30대', '40대', '50대', '60대', '70대', '80세 이상', '기타'
+  '10세 미만',
+  '10대',
+  '20대',
+  '30대',
+  '40대',
+  '50대',
+  '60대',
+  '70대',
+  '80세 이상',
+  '기타',
 ];
 const AgeChart = ({ patients }) => {
   const groups = {};
-  patients.forEach(p => {
+  patients.forEach((p) => {
     const g = getAgeGroup(p.birth);
     groups[g] = (groups[g] || 0) + 1;
   });
-  // 나이대 라벨을 미리 정해진 순서로 정렬
-  const labels = AGE_ORDER.filter(label => groups[label]);
-  const data = labels.map(label => groups[label] || 0);
+  const labels = AGE_ORDER.filter((label) => groups[label]);
+  const data = labels.map((label) => groups[label] || 0);
   return (
     <Bar
       data={{
         labels,
-        datasets: [{
-          label: '인원수',
-          data,
-          backgroundColor: '#4f8cff',
-        }]
+        datasets: [
+          {
+            label: '인원수',
+            data,
+            backgroundColor: '#4f8cff',
+          },
+        ],
       }}
       options={{
         plugins: { legend: { display: false } },
         responsive: true,
-        scales: { y: { beginAtZero: true, stepSize: 1 } }
+        scales: { y: { beginAtZero: true, stepSize: 1 } },
       }}
     />
   );
@@ -68,7 +84,7 @@ const AgeChart = ({ patients }) => {
 
 const GenderChart = ({ patients }) => {
   const counts = { 남: 0, 여: 0, 기타: 0 };
-  patients.forEach(p => {
+  patients.forEach((p) => {
     if (p.gender === '남' || p.gender === 'M') counts['남']++;
     else if (p.gender === '여' || p.gender === 'F') counts['여']++;
     else counts['기타']++;
@@ -77,16 +93,18 @@ const GenderChart = ({ patients }) => {
     <Bar
       data={{
         labels: Object.keys(counts),
-        datasets: [{
-          label: '인원수',
-          data: Object.values(counts),
-          backgroundColor: ['#4f8cff', '#ff6b81', '#aaa'],
-        }]
+        datasets: [
+          {
+            label: '인원수',
+            data: Object.values(counts),
+            backgroundColor: ['#4f8cff', '#ff6b81', '#aaa'],
+          },
+        ],
       }}
       options={{
         plugins: { legend: { display: false } },
         responsive: true,
-        scales: { y: { beginAtZero: true, stepSize: 1 } }
+        scales: { y: { beginAtZero: true, stepSize: 1 } },
       }}
     />
   );
@@ -109,9 +127,10 @@ const PatientPage = ({ events }) => {
   const fetchPatients = async () => {
     try {
       const today = new Date().toISOString().slice(0, 10);
-      const waitingRes = await axios.get('/waiting', { params: { date: today } });
+      const waitingRes = await axios.get('/waiting', {
+        params: { date: today },
+      });
 
-      // [key, value] 쌍의 배열을 사용하여 Map을 올바르게 생성합니다.
       const patientLastVisit = (waitingRes.data || []).reduce((acc, p) => {
         if (p.status === '완료' && p.completedAt) {
           const key = `${p.name}-${p.birth}`;
@@ -122,19 +141,20 @@ const PatientPage = ({ events }) => {
         return acc;
       }, {});
       const waitingMap = new Map(Object.entries(patientLastVisit));
-      
+
       const patientsRes = await fetchAllPatients();
-      // API 응답 구조에 맞게 patientsRes.patientsInfo 배열을 사용합니다.
       const patientsArray = patientsRes.patientsInfo || [];
 
-      // 이름, 성별, 생년월일, 전화번호가 모두 있는 환자만 필터링합니다.
-      const validPatients = patientsArray.filter(p => 
-        p.name && p.gender && p.birth && p.phone
+      const validPatients = patientsArray.filter(
+        (p) => p.name && p.gender && p.birth && p.phone
       );
 
-      const combined = validPatients.map(p => ({
+      const combined = validPatients.map((p) => ({
         ...p,
-        lastVisitDate: waitingMap.get(`${p.name}-${p.birth}`) || p.patientInfo?.lastVisitDate || ''
+        lastVisitDate:
+          waitingMap.get(`${p.name}-${p.birth}`) ||
+          p.patientInfo?.lastVisitDate ||
+          '',
       }));
       setPatients(combined);
 
@@ -146,7 +166,7 @@ const PatientPage = ({ events }) => {
       }
       setProceduresData(procData);
     } catch (err) {
-      console.error("데이터 불러오기 실패", err);
+      console.error('데이터 불러오기 실패', err);
     }
   };
 
@@ -155,10 +175,11 @@ const PatientPage = ({ events }) => {
   }, []);
 
   const applyFilter = (list) => {
-    return list.filter(p =>
-      (!filter.name || p.name.includes(filter.name)) &&
-      (!filter.date || p.lastVisit?.includes(filter.date)) &&
-      (!filter.dept || p.dept === filter.dept)
+    return list.filter(
+      (p) =>
+        (!filter.name || p.name.includes(filter.name)) &&
+        (!filter.date || p.lastVisit?.includes(filter.date)) &&
+        (!filter.dept || p.dept === filter.dept)
     );
   };
 
@@ -168,36 +189,41 @@ const PatientPage = ({ events }) => {
     if (sortBy === 'name') {
       return (a.name || '').localeCompare(b.name || '');
     } else if (sortBy === 'age') {
-      // 생년월일 내림차순(나이 많은 순)
       return (a.birth || '').localeCompare(b.birth || '');
     } else if (sortBy === 'lastVisit') {
-      // 최근 방문일자 내림차순
       return (b.lastVisit || '').localeCompare(a.lastVisit || '');
     }
     return 0;
   });
   const pageCount = Math.ceil(filteredPatients.length / pageSize);
-  const pagedPatients = filteredPatients.slice((page - 1) * pageSize, page * pageSize);
+  const pagedPatients = filteredPatients.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
-  // 네이버 카페 스타일 페이지네이션 계산
   const pageGroup = Math.floor((page - 1) / 10);
   const startPage = pageGroup * 10 + 1;
   const endPage = Math.min(startPage + 9, pageCount);
   const pageNumbers = [];
   for (let i = startPage; i <= endPage; i++) pageNumbers.push(i);
 
-  // 페이지/표시개수 변경 시 첫 페이지로 이동
-  useEffect(() => { setPage(1); }, [pageSize, filter]);
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize, filter]);
 
   const openProcedureModal = (patientObj) => {
-    const patient = patients.find(p => p.name === patientObj.name && p.birth === patientObj.birth);
+    const patient = patients.find(
+      (p) => p.name === patientObj.name && p.birth === patientObj.birth
+    );
     if (!patient) return;
     setSelectedPatient({ ...patient, userId: patient.id });
     setProcedureModalOpen(true);
   };
 
   const openEditModal = (patientObj) => {
-    const patient = patients.find(p => p.name === patientObj.name && p.birth === patientObj.birth);
+    const patient = patients.find(
+      (p) => p.name === patientObj.name && p.birth === patientObj.birth
+    );
     const key = `${patientObj.name}_${patientObj.birth}`;
     const history = proceduresData[key] || [];
     setEditTarget(patient);
@@ -209,10 +235,10 @@ const PatientPage = ({ events }) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
       await axios.delete(`/patients/${id}`);
-      setPatients(prev => prev.filter(p => p.id !== id));
+      setPatients((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      console.error("삭제 실패", err);
-      alert("삭제 중 오류 발생");
+      console.error('삭제 실패', err);
+      alert('삭제 중 오류 발생');
     }
   };
 
@@ -225,35 +251,40 @@ const PatientPage = ({ events }) => {
           className="p-2 border rounded"
           placeholder="이름"
           value={filter.name}
-          onChange={e => setFilter({ ...filter, name: e.target.value })}
+          onChange={(e) => setFilter({ ...filter, name: e.target.value })}
         />
         <input
           type="date"
           className="p-2 border rounded"
           value={filter.date}
-          onChange={e => setFilter({ ...filter, date: e.target.value })}
+          onChange={(e) => setFilter({ ...filter, date: e.target.value })}
         />
         <select
           className="p-2 border rounded"
           value={sortBy}
-          onChange={e => setSortBy(e.target.value)}
+          onChange={(e) => setSortBy(e.target.value)}
         >
-          {SORT_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded"
           onClick={() => setPatients(applyFilter(patients))}
-        >검색</button>
-        {/* 표시 개수 드롭다운 */}
+        >
+          검색
+        </button>
         <select
           className="p-2 border rounded ml-4"
           value={pageSize}
-          onChange={e => setPageSize(Number(e.target.value))}
+          onChange={(e) => setPageSize(Number(e.target.value))}
         >
-          {PAGE_SIZE_OPTIONS.map(opt => (
-            <option key={opt} value={opt}>{opt}명씩 보기</option>
+          {PAGE_SIZE_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}명씩 보기
+            </option>
           ))}
         </select>
       </div>
@@ -265,7 +296,6 @@ const PatientPage = ({ events }) => {
         onDeleteClick={handleDelete}
       />
 
-      {/* 네이버 카페 스타일 페이지네이션 */}
       {pageCount > 1 && (
         <div className="flex justify-center items-center gap-1 mb-8">
           <button
@@ -275,10 +305,14 @@ const PatientPage = ({ events }) => {
           >
             이전
           </button>
-          {pageNumbers.map(num => (
+          {pageNumbers.map((num) => (
             <button
               key={num}
-              className={`px-3 py-1 rounded border text-sm ${num === page ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'}`}
+              className={`px-3 py-1 rounded border text-sm ${
+                num === page
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-gray-800'
+              }`}
               onClick={() => setPage(num)}
             >
               {num}
@@ -301,7 +335,6 @@ const PatientPage = ({ events }) => {
         procedures={editProcedures}
       />
 
-      {/* 나이대/성별 차트 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="font-bold mb-4">환자 나이대 분포</h3>

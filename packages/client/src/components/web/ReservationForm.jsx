@@ -1,3 +1,4 @@
+// src/components/web/ReservationForm.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { addAppointment } from '../../api/patients';
 import { fetchAllStaff } from '../../api/scheduleApi';
@@ -86,7 +87,7 @@ const ReservationForm = ({ open, onClose, selectedDate, onSaveSuccess }) => {
 
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-  const [modalType, setModalType] = useState(''); // 'success', 'error'
+  const [modalType, setModalType] = useState('');
 
   const availableDoctors = useMemo(() => {
     if (!form.department) return [];

@@ -1,3 +1,4 @@
+// src/components/app/reservations/ReservationModal.jsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from '../../../libs/axiosInstance.js';
 
@@ -48,13 +49,13 @@ const INITIAL_FORM = {
   department: '',
   title: '',
   doctor: '',
-  doctorUid: '', // doctorId -> doctorUid로 변경
+  doctorUid: '',
   chairNumber: '',
   memo: '',
   phone: '',
   gender: '',
-  patientUid: '', // userId -> patientUid로 변경
-  status: '대기', // 필요시 '확정' 등으로 변경 가능
+  patientUid: '',
+  status: '대기',
 };
 
 const ReservationModal = ({
@@ -82,9 +83,7 @@ const ReservationModal = ({
 
   const reservedTimes = useMemo(() => {
     if (!form.department || !form.date) return [];
-    // 이 부분은 서버에서 받아온 eventsForDate를 사용해야 합니다.
-    // 현재는 이 prop이 전달되지 않으므로, 임시로 비활성화하거나 수정 필요.
-    return []; // 임시로 빈 배열 반환
+    return [];
   }, [form.department, form.date]);
 
   useEffect(() => {
@@ -100,8 +99,8 @@ const ReservationModal = ({
           ...INITIAL_FORM,
           ...initialData,
           date: initialData.date || date,
-          doctorUid: initialData.doctorUid || initialData.doctorId || '', // doctorId가 있을 경우 doctorUid로 매핑
-          patientUid: initialData.patientUid || initialData.userId || '', // userId가 있을 경우 patientUid로 매핑
+          doctorUid: initialData.doctorUid || initialData.doctorId || '',
+          patientUid: initialData.patientUid || initialData.userId || '',
         };
         setForm(newFormState);
 
@@ -125,7 +124,7 @@ const ReservationModal = ({
       const currentFetch = Date.now();
       latestFetch.current = currentFetch;
     } else {
-      setForm((prev) => ({ ...prev, patientUid: '' })); // patientUid로 변경
+      setForm((prev) => ({ ...prev, patientUid: '' }));
     }
   }, [form.name, form.birth]);
 
@@ -150,7 +149,7 @@ const ReservationModal = ({
         gender: '',
         birth: '',
         patientUid: '',
-      })); // patientUid로 변경
+      }));
       setBirthYear('');
       setBirthMonth('');
       setBirthDay('');
@@ -175,7 +174,7 @@ const ReservationModal = ({
       setBirthDay(d);
       setForm((prev) => ({
         ...prev,
-        patientUid: found.id || found.patientUid || found.userId || '', // patientUid로 변경
+        patientUid: found.id || found.patientUid || found.userId || '',
         phone: found.phone || '',
         gender: found.gender || '',
         birth: found.birth || '',
@@ -191,7 +190,7 @@ const ReservationModal = ({
         gender: '',
         birth: '',
         patientUid: '',
-      })); // patientUid로 변경
+      }));
       setBirthYear('');
       setBirthMonth('');
       setBirthDay('');
@@ -204,7 +203,7 @@ const ReservationModal = ({
     if (found) {
       setForm((prev) => ({
         ...prev,
-        patientUid: found.id || found.patientUid || found.userId || '', // patientUid로 변경
+        patientUid: found.id || found.patientUid || found.userId || '',
         phone: found.phone || '',
         gender: found.gender || '',
         ...(found.birth
@@ -237,7 +236,7 @@ const ReservationModal = ({
       setForm((prev) => ({
         ...prev,
         doctor: value,
-        doctorUid: selectedDoctor ? selectedDoctor.uid : '', // doctorId -> doctorUid로 변경
+        doctorUid: selectedDoctor ? selectedDoctor.uid : '',
         chairNumber: selectedDoctor
           ? selectedDoctor.chairNumber ||
             DEPARTMENT_TO_CHAIR[prev.department] ||
@@ -250,7 +249,7 @@ const ReservationModal = ({
         department: value,
         title: '',
         doctor: '',
-        doctorUid: '', // doctorId -> doctorUid로 변경
+        doctorUid: '',
         chairNumber: '',
       }));
       setSelectedTimes([]);
@@ -279,23 +278,22 @@ const ReservationModal = ({
       (!form.patientUid ||
         form.patientUid !== (found.id || found.patientUid || found.userId))
     ) {
-      // patientUid로 변경
       setForm((prev) => ({
         ...prev,
-        patientUid: found.id || found.patientUid || found.userId || '', // patientUid로 변경
+        patientUid: found.id || found.patientUid || found.userId || '',
       }));
     }
   };
 
   const handleSubmit = () => {
-    let finalPatientUid = form.patientUid; // userId -> patientUid로 변경
+    let finalPatientUid = form.patientUid;
     if (!finalPatientUid) {
       const found = patients.find(
         (p) =>
           p.name === form.name && (!showPhoneDropdown || p.phone === form.phone)
       );
       if (found)
-        finalPatientUid = found.id || found.patientUid || found.userId || ''; // patientUid로 변경
+        finalPatientUid = found.id || found.patientUid || found.userId || '';
     }
     const missing = [];
     if (!form.title) missing.push('시술명');
@@ -303,7 +301,7 @@ const ReservationModal = ({
     if (!form.name) missing.push('이름');
     if (!form.department) missing.push('진료과');
     if (!form.doctor) missing.push('담당의');
-    if (!finalPatientUid) missing.push('환자'); // userId -> finalPatientUid로 변경
+    if (!finalPatientUid) missing.push('환자');
     if (selectedTimes.length === 0) missing.push('예약 시간');
 
     if (missing.length > 0) {
@@ -315,12 +313,11 @@ const ReservationModal = ({
       ...form,
       startTime: selectedTimes[0] || '',
       endTime: selectedTimes[selectedTimes.length - 1] || '',
-      patientUid: finalPatientUid, // userId -> patientUid로 변경
-      // doctorUid는 form.doctorUid에 이미 올바르게 설정됨
+      patientUid: finalPatientUid,
     };
 
     if (!payload.chairNumber) {
-      payload.chairNumber = '1'; // 체어번호가 없으면 1번으로 자동 할당
+      payload.chairNumber = '1';
     }
 
     onSave(payload);

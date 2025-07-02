@@ -1,3 +1,4 @@
+// src/layout/Footer.jsx
 import React from 'react';
 import { useHospitalInfo } from '../contexts/HospitalContext';
 import Logo from '../components/web/Logo.jsx';
@@ -5,9 +6,8 @@ import Logo from '../components/web/Logo.jsx';
 function Footer() {
   const { hospitalInfo, loading } = useHospitalInfo();
 
-  // 데이터 로딩 중이거나 hospitalInfo가 없을 경우 아무것도 렌더링하지 않음
   if (loading || !hospitalInfo) {
-    return null; 
+    return null;
   }
 
   return (
@@ -21,7 +21,7 @@ function Footer() {
           <p>Tel: {hospitalInfo?.phone}</p>
           <p>Copyright ⓒ 2025 {hospitalInfo?.name}. All rights reserved.</p>
         </div>
-        <p className='text-md'>Marketing Management By team A</p>
+        <p className="text-md">Marketing Management By team A</p>
       </div>
     </footer>
   );

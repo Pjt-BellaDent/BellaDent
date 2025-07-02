@@ -1,3 +1,4 @@
+// src/models/review.js
 import Joi from "joi";
 
 export const reviewSchema = Joi.object({

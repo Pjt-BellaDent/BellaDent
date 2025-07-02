@@ -1,3 +1,4 @@
+// src/components/Sms/SmsBroadcast.jsx
 import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { collection, getDocs } from 'firebase/firestore';
@@ -5,7 +6,6 @@ import { db } from '../../config/firebase';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
-// 스타일 정의
 const Container = styled.div`
   padding: 30px;
   background-color: #f8f9fc;
@@ -97,7 +97,6 @@ const SearchInput = styled.input`
   width: 200px;
 `;
 
-// 모달 캘린더
 const CalendarOverlay = styled.div`
   display: ${({ show }) => (show ? 'flex' : 'none')};
   position: fixed;
@@ -115,7 +114,7 @@ const CalendarBox = styled.div`
   background: #1a1a1a;
   padding: 24px;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   color: white;
 `;
 
@@ -182,7 +181,7 @@ const DarkCalendarWrapper = styled.div`
     font-weight: 500;
   }
 `;
-// 날짜 관련
+
 const SmsBroadcast = () => {
   const [patients, setPatients] = useState([]);
   const [selected, setSelected] = useState([]);
@@ -196,7 +195,7 @@ const SmsBroadcast = () => {
   useEffect(() => {
     const fetchPatients = async () => {
       const snapshot = await getDocs(collection(db, 'patients'));
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setPatients(data);
     };
     fetchPatients();
@@ -274,11 +273,15 @@ const SmsBroadcast = () => {
         msg_ad: message.includes('(광고)') ? 'Y' : 'N',
       };
 
-      const response = await axios.post('http://localhost:3000/sms/send', smsData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      const response = await axios.post(
+        'http://localhost:3000/sms/send',
+        smsData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
 
       if (response.status === 201) {
         alert(`총 ${selected.length}명에게 문자 발송 완료`);
@@ -298,8 +301,12 @@ const SmsBroadcast = () => {
 
       <div style={{ marginBottom: '20px' }}>
         <Button onClick={insertAd}>📢 광고 보내기</Button>
-        <Button onClick={toggleAll} color="#6c757d">전체 선택</Button>
-        <Button onClick={insertRevisit} color="#17a2b8">재진 안내</Button>
+        <Button onClick={toggleAll} color="#6c757d">
+          전체 선택
+        </Button>
+        <Button onClick={insertRevisit} color="#17a2b8">
+          재진 안내
+        </Button>
       </div>
 
       <SearchInput
@@ -354,10 +361,15 @@ const SmsBroadcast = () => {
 
       <div>
         <Button onClick={sendSms}>발송</Button>
-        <Button color="#dc3545" onClick={() => setMessage('')}>초기화</Button>
+        <Button color="#dc3545" onClick={() => setMessage('')}>
+          초기화
+        </Button>
       </div>
 
-      <CalendarOverlay show={calendarShow} onClick={() => setCalendarShow(false)}>
+      <CalendarOverlay
+        show={calendarShow}
+        onClick={() => setCalendarShow(false)}
+      >
         <CalendarBox onClick={(e) => e.stopPropagation()}>
           <DarkCalendarWrapper>
             <Calendar

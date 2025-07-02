@@ -1,3 +1,4 @@
+// src/controllers/aiChatController.js
 import axios from "axios";
 import dotenv from "dotenv";
 import { db, admin } from "../config/firebase.js";
@@ -31,13 +32,12 @@ const defaultFaqs = [
 export const GeminiChat = async (req, res) => {
   try {
     const { message, consultationId } = req.body;
-    const { io } = req; // 소켓 인스턴스 가져오기
+    const { io } = req;
 
     if (!message || !consultationId) {
       return res.status(400).json({ error: "'message' 또는 'consultationId'가 누락되었습니다." });
     }
 
-    // 1. 챗봇 설정 및 운영 시간 확인
     const settingsDoc = await db.collection('hospital').doc('chatbot_settings').get();
     const settings = settingsDoc.exists ? settingsDoc.data() : {};
     const { answerTimeRange } = settings;
@@ -60,7 +60,6 @@ export const GeminiChat = async (req, res) => {
       }
     }
 
-    // 사용자 메시지 저장
     const userMessageData = {
       senderId: consultationId,
       senderType: "patient",
@@ -69,16 +68,13 @@ export const GeminiChat = async (req, res) => {
     };
     const userMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add(userMessageData);
 
-    // [수정] 저장된 사용자 메시지를 즉시 클라이언트에 전송
     const savedUserMessage = (await userMessageRef.get()).data();
     io.to(consultationId).emit('newMessage', {
       id: userMessageRef.id,
       ...savedUserMessage
     });
-    // [추가] 상담 목록도 새로고침하도록 전체 알림
     io.emit('consultationListUpdated');
     
-    // 운영 시간이 아닐 경우 안내 메시지 전송 후 종료
     if (isOffHours) {
       const offHoursMessage = `현재는 AI 챗봇 운영 시간이 아닙니다. 운영 시간은 ${answerTimeRange.start}부터 ${answerTimeRange.end}까지입니다.`;
       const aiMessageRef = await db.collection("consultations").doc(consultationId).collection("messages").add({
@@ -92,7 +88,6 @@ export const GeminiChat = async (req, res) => {
       return res.status(200).json({ answer: offHoursMessage, isOffHours: true });
     }
 
-    // 2. FAQ에서 답변 검색
     let faqReply = null;
     const faqs = settings.faqs || [];
     const matchedFaq = faqs.find(faq => {
@@ -108,11 +103,9 @@ export const GeminiChat = async (req, res) => {
     }
 
     let aiReplyContent;
-    // FAQ에서 답변을 찾았을 경우
     if (faqReply) {
       aiReplyContent = faqReply;
     } 
-    // FAQ에 답변이 없을 경우, 외부 AI (Gemini) 호출
     else {
       try {
         const response = await axios.post(
@@ -134,13 +127,11 @@ export const GeminiChat = async (req, res) => {
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // DB에서 방금 저장한 AI 메시지 데이터를 다시 가져옴 (Timestamp 변환 등)
     const aiMessageData = (await aiMessageRef.get()).data();
     
-    // 실시간으로 클라이언트에 새 AI 메시지 전송
     io.to(consultationId).emit('newMessage', {
-      id: aiMessageRef.id, // 문서 ID
-      ...aiMessageData   // 문서 데이터
+      id: aiMessageRef.id,
+      ...aiMessageData
     });
         
     return res.status(200).json({ answer: aiReplyContent });
@@ -156,18 +147,13 @@ export const GeminiChat = async (req, res) => {
 
 const settingsDocRef = db.collection('hospital').doc('chatbot_settings');
 
-/**
- * 챗봇 설정 정보 조회
- */
 export const getChatbotSettings = async (req, res) => {
   try {
     let doc = await settingsDocRef.get();
     if (!doc.exists) {
-      // 문서가 없으면 기존 faqs 컬렉션에서 마이그레이션 시도
       const faqsSnapshot = await db.collection('faqs').get();
       const oldFaqs = faqsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // 클라이언트 형식에 맞게 데이터 변환 (question, answer)
       const migratedFaqs = oldFaqs.map(faq => ({
         id: faq.id || uuidv4(),
         question: faq.title,
@@ -183,14 +169,12 @@ export const getChatbotSettings = async (req, res) => {
           '의료적 진단이나 처방은 제공하지 않습니다.',
           '민감한 개인정보는 수집하지 않습니다.'
         ],
-        faqs: migratedFaqs, // 마이그레이션된 데이터 사용
+        faqs: migratedFaqs,
         aiMode: true
       };
       
-      // 새 위치에 데이터 저장
       await settingsDocRef.set(defaultSettings);
       
-      // 새로 저장된 데이터를 다시 읽어서 반환
       doc = await settingsDocRef.get();
     }
     res.status(200).json(doc.data());
@@ -200,13 +184,9 @@ export const getChatbotSettings = async (req, res) => {
   }
 };
 
-/**
- * 챗봇 설정 정보 업데이트
- */
 export const updateChatbotSettings = async (req, res) => {
   try {
     const settings = req.body;
-    // TODO: Joi를 사용한 입력값 검증 추가
     await settingsDocRef.set(settings, { merge: true });
     res.status(200).json({ message: '챗봇 설정이 성공적으로 업데이트되었습니다.' });
   } catch (error) {

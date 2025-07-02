@@ -1,3 +1,4 @@
+// src/components/Notice/NoticeModal.jsx
 import { useEffect, useState } from 'react';
 import axios from '../../libs/axiosInstance';
 import { getAuth } from 'firebase/auth';

@@ -1,3 +1,4 @@
+// src/components/web/Wrapper.jsx
 import React from 'react';
 
 function Wrapper({ children, CN, BG }) {

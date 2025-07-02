@@ -1,3 +1,4 @@
+// src/models/notice.js
 import Joi from "joi";
 
 export const noticeSchema = Joi.object({

@@ -1,6 +1,6 @@
+// src/controllers/activitiesController.js
 import { db } from '../config/firebase.js';
 
-// 최근 활동 리스트 조회 (예: 최근 20건)
 export const getRecentActivities = async (req, res) => {
   try {
     const snapshot = await db.collection('activities')

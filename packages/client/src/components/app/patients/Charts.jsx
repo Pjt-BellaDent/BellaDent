@@ -1,4 +1,4 @@
-// src/app/patients/components/Charts.jsx
+// src/components/app/patients/Charts.jsx
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 
@@ -20,38 +20,44 @@ const Charts = ({ proceduresData }) => {
       type: 'bar',
       data: {
         labels: Object.keys(counts),
-        datasets: [{
-          label: '시술 횟수',
-          data: Object.values(counts),
-          backgroundColor: '#007bff'
-        }]
+        datasets: [
+          {
+            label: '시술 횟수',
+            data: Object.values(counts),
+            backgroundColor: '#007bff',
+          },
+        ],
       },
       options: {
         responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
+        scales: { y: { beginAtZero: true } },
+      },
     });
 
     const surveys = JSON.parse(localStorage.getItem('surveys') || '[]');
     if (surveys.length > 0) {
-      const avg = ['q1', 'q2', 'q3'].map(q => (
-        (surveys.reduce((sum, s) => sum + Number(s[q]), 0) / surveys.length).toFixed(2)
-      ));
+      const avg = ['q1', 'q2', 'q3'].map((q) =>
+        (
+          surveys.reduce((sum, s) => sum + Number(s[q]), 0) / surveys.length
+        ).toFixed(2)
+      );
       if (surveyChartRef.current) surveyChartRef.current.destroy();
       surveyChartRef.current = new Chart(surveyRef.current, {
         type: 'bar',
         data: {
           labels: ['설명 만족', '대기 시간', '전반적 만족'],
-          datasets: [{
-            label: '평균 점수',
-            data: avg,
-            backgroundColor: '#28a745'
-          }]
+          datasets: [
+            {
+              label: '평균 점수',
+              data: avg,
+              backgroundColor: '#28a745',
+            },
+          ],
         },
         options: {
           responsive: true,
-          scales: { y: { beginAtZero: true, max: 5 } }
-        }
+          scales: { y: { beginAtZero: true, max: 5 } },
+        },
       });
     }
 

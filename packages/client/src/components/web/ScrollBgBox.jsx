@@ -1,3 +1,4 @@
+// src/components/web/ScrollBgBox.jsx
 import React from 'react';
 
 function ScrollBgBox({ children, CN, url }) {

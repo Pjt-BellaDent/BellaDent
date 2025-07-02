@@ -1,3 +1,4 @@
+// src/components/web/Map.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 

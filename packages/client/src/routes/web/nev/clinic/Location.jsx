@@ -1,4 +1,3 @@
-// src/routes/web/nev/clinic/location.jsx
 import React from 'react';
 import { useHospitalInfo } from '../../../../contexts/HospitalContext';
 

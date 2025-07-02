@@ -1,3 +1,4 @@
+// src/components/web/CardMap.jsx
 import React from 'react';
 import Map from './Map';
 

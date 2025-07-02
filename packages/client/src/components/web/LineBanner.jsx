@@ -1,3 +1,4 @@
+// src/components/web/LineBanner.jsx
 import React from 'react';
 
 function LineBanner({ children, CN }) {

@@ -1,3 +1,4 @@
+// src/components/web/Container.jsx
 import React from 'react';
 
 function Container({ children, CN, BG }) {

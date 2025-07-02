@@ -1,3 +1,4 @@
+// src/models/faq.js
 import Joi from "joi";
 
 export const faqSchema = Joi.object({

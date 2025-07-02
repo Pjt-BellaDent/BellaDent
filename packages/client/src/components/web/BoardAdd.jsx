@@ -1,3 +1,4 @@
+// src/components/web/BoardAdd.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../../libs/axiosInstance.js';
 import { useNavigate } from 'react-router-dom';

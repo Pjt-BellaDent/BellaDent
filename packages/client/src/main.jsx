@@ -1,3 +1,4 @@
+// src/main.jsx
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HospitalProvider } from './contexts/HospitalContext.jsx';

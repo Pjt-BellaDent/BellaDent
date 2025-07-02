@@ -1,9 +1,7 @@
-// src/app/patients/components/EditPatientModal.jsx
-
+// src/components/app/patients/EditPatientModal.jsx
 import React, { useState, useEffect } from 'react';
 import axios from '../../../libs/axiosInstance.js';
 
-// 폼 초기화를 위한 기본값 정의
 const INITIAL_FORM = {
   name: '',
   birth: '',
@@ -18,8 +16,6 @@ const INITIAL_FORM = {
 };
 
 const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
-  // ★★★ useState 초기화를 안전하게 변경 ★★★
-  // patientData가 null 또는 undefined일 경우 INITIAL_FORM으로 초기화
   const [form, setForm] = useState(() =>
     patientData
       ? {
@@ -28,20 +24,16 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
           gender: patientData.gender || '',
           phone: patientData.phone || '',
           address: patientData.address || '',
-          userId: patientData.id || '', // id는 항상 있을 것이므로 nullish coalescing 불필요할 수 있지만 안전하게
+          userId: patientData.id || '',
           insuranceNumber: patientData.patientInfo?.insuranceNumber || '',
           allergies: patientData.patientInfo?.allergies || '',
           medications: patientData.patientInfo?.medications || '',
           memo: patientData.patientInfo?.memo || '',
         }
       : INITIAL_FORM
-  ); // patientData가 없을 때는 INITIAL_FORM으로 초기화
-
-  // procedures 상태는 이 모달에서 직접 수정하지 않는다면 필요 없음 (주석 처리 또는 삭제)
-  // const [editedProcedures, setEditedProcedures] = useState([]);
+  );
 
   useEffect(() => {
-    // ★★★ patientData가 유효할 때만 폼을 업데이트하도록 변경 ★★★
     if (patientData) {
       setForm({
         name: patientData.name || '',
@@ -55,12 +47,10 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
         medications: patientData.patientInfo?.medications || '',
         memo: patientData.patientInfo?.memo || '',
       });
-      // setEditedProcedures([...procedures]); // 이 모달에서 시술 내역을 직접 수정하지 않는다면 이 라인 제거
     } else {
-      // patientData가 null/undefined가 되면 폼을 초기화 (모달 닫힐 때 등)
       setForm(INITIAL_FORM);
     }
-  }, [patientData]); // procedures는 이제 의존성에서 제거
+  }, [patientData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,7 +58,6 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
   };
 
   const handleSave = async () => {
-    // 클라이언트 측 유효성 검증 강화
     if (!form.name.trim()) {
       alert('이름은 필수 입력값입니다.');
       return;
@@ -103,7 +92,7 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
 
       await axios.put(`/users/patient/${form.userId}`, payload);
       alert('환자 정보가 저장되었습니다.');
-      onClose(); // 저장 성공 시 모달 닫기
+      onClose();
     } catch (err) {
       console.error('저장 실패:', err.response?.data || err.message);
       alert(
@@ -113,7 +102,6 @@ const EditPatientModal = ({ open, onClose, patientData, procedures }) => {
     }
   };
 
-  // 모달이 열려있지 않거나 patientData가 없을 때는 렌더링하지 않음
   if (!open || !patientData) return null;
 
   return (

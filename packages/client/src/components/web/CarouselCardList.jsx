@@ -1,3 +1,4 @@
+// src/components/web/CarouselCardList.jsx
 import React, { useEffect, useState } from 'react';
 
 const CarouselCardList = ({

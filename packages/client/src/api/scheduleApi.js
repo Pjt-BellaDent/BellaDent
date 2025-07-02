@@ -1,3 +1,4 @@
+// src/api/scheduleApi.js
 import axios from '../libs/axiosInstance.js';
 
 export const fetchSchedulesByMonth = async (month) => {
@@ -81,7 +82,6 @@ export const fetchAllStaff = async () => {
     return [];
   } catch (error) {
     console.error('직원 목록 조회 실패:', error);
-    // 에러 발생 시 빈 배열 반환하여 UI가 깨지지 않도록 함
     return [];
   }
 };

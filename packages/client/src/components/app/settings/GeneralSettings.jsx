@@ -1,3 +1,4 @@
+// src/components/app/settings/GeneralSettings.jsx
 import React, { useState } from 'react';
 import { useHospitalInfo } from '../../../contexts/HospitalContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,22 +8,27 @@ const GeneralSettings = () => {
   const { hospitalInfo, setHospitalInfo } = useHospitalInfo();
   const [editMode, setEditMode] = useState(false);
   const [hospital, setHospital] = useState({ ...hospitalInfo });
-  const [system, setSystem] = useState({ 
-    notify: 'ON', 
-    interval: 15, 
+  const [system, setSystem] = useState({
+    notify: 'ON',
+    interval: 15,
     emr: '사용',
     autoBackup: true,
     darkMode: false,
     language: 'ko',
-    timezone: 'Asia/Seoul'
+    timezone: 'Asia/Seoul',
   });
   const [activeTab, setActiveTab] = useState('general');
   const [showAddCard, setShowAddCard] = useState(false);
-  const [newCard, setNewCard] = useState({ title: '', description: '', icon: '🔧', path: '', color: 'blue' });
+  const [newCard, setNewCard] = useState({
+    title: '',
+    description: '',
+    icon: '🔧',
+    path: '',
+    color: 'blue',
+  });
   const navigate = useNavigate();
   const [editQuickSettings, setEditQuickSettings] = useState(false);
 
-  // 기본 빠른 설정 카드들
   const [quickSettings, setQuickSettings] = useState([
     {
       id: 1,
@@ -30,7 +36,7 @@ const GeneralSettings = () => {
       description: '기본 정보 관리',
       icon: '🏥',
       path: '/Dashboard/hospital-info',
-      color: 'blue'
+      color: 'blue',
     },
     {
       id: 2,
@@ -38,7 +44,7 @@ const GeneralSettings = () => {
       description: '권한 및 역할 관리',
       icon: '👥',
       path: '/Dashboard/user-permissions',
-      color: 'green'
+      color: 'green',
     },
     {
       id: 3,
@@ -46,8 +52,8 @@ const GeneralSettings = () => {
       description: 'AI 챗봇 관리',
       icon: '🤖',
       path: '/Dashboard/chatbot-settings',
-      color: 'purple'
-    }
+      color: 'purple',
+    },
   ]);
 
   const saveHospitalInfo = async () => {
@@ -68,17 +74,26 @@ const GeneralSettings = () => {
   };
 
   const saveSystemSettings = () => {
-    // 시스템 설정 저장 로직
     alert('시스템 설정이 저장되었습니다.');
   };
 
   const handleAddCard = () => {
     setShowAddCard(true);
-    setNewCard({ title: '', description: '', icon: '🔧', path: '', color: 'blue' });
+    setNewCard({
+      title: '',
+      description: '',
+      icon: '🔧',
+      path: '',
+      color: 'blue',
+    });
   };
 
   const handleSaveNewCard = () => {
-    if (!newCard.title.trim() || !newCard.description.trim() || !newCard.path.trim()) {
+    if (
+      !newCard.title.trim() ||
+      !newCard.description.trim() ||
+      !newCard.path.trim()
+    ) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
@@ -89,17 +104,23 @@ const GeneralSettings = () => {
       description: newCard.description,
       icon: newCard.icon,
       path: newCard.path,
-      color: newCard.color
+      color: newCard.color,
     };
 
     setQuickSettings([...quickSettings, cardToAdd]);
     setShowAddCard(false);
-    setNewCard({ title: '', description: '', icon: '🔧', path: '', color: 'blue' });
+    setNewCard({
+      title: '',
+      description: '',
+      icon: '🔧',
+      path: '',
+      color: 'blue',
+    });
   };
 
   const handleDeleteCard = (id) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
-      setQuickSettings(quickSettings.filter(card => card.id !== id));
+      setQuickSettings(quickSettings.filter((card) => card.id !== id));
     }
   };
 
@@ -114,7 +135,7 @@ const GeneralSettings = () => {
       purple: 'bg-purple-100 text-purple-600',
       red: 'bg-red-100 text-red-600',
       yellow: 'bg-yellow-100 text-yellow-600',
-      indigo: 'bg-indigo-100 text-indigo-600'
+      indigo: 'bg-indigo-100 text-indigo-600',
     };
     return colorMap[color] || colorMap.blue;
   };
@@ -147,8 +168,8 @@ const GeneralSettings = () => {
             <button
               onClick={handleEditQuickSettings}
               className={`px-3 py-1 rounded text-sm transition-colors ${
-                editQuickSettings 
-                  ? 'bg-red-600 text-white hover:bg-red-700' 
+                editQuickSettings
+                  ? 'bg-red-600 text-white hover:bg-red-700'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
@@ -161,8 +182,8 @@ const GeneralSettings = () => {
             <div
               key={card.id}
               className={`bg-white p-4 rounded-lg shadow-sm border border-gray-200 transition-all ${
-                editQuickSettings 
-                  ? 'cursor-default' 
+                editQuickSettings
+                  ? 'cursor-default'
                   : 'hover:shadow-md cursor-pointer'
               } ${editQuickSettings ? 'relative' : ''}`}
               onClick={() => !editQuickSettings && handleCardClick(card)}
@@ -179,7 +200,11 @@ const GeneralSettings = () => {
                 </button>
               )}
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getColorClasses(card.color)}`}>
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${getColorClasses(
+                    card.color
+                  )}`}
+                >
                   <span className="text-xl">{card.icon}</span>
                 </div>
                 <div>
@@ -190,7 +215,6 @@ const GeneralSettings = () => {
             </div>
           ))}
 
-          {/* 새 카드 추가 폼 */}
           {editQuickSettings && showAddCard && (
             <div className="bg-white p-4 rounded-lg shadow-sm border-2 border-blue-300">
               <h4 className="font-medium text-gray-900 mb-3">새 카드 추가</h4>
@@ -199,14 +223,18 @@ const GeneralSettings = () => {
                   type="text"
                   placeholder="제목"
                   value={newCard.title}
-                  onChange={(e) => setNewCard({ ...newCard, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewCard({ ...newCard, title: e.target.value })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                 />
                 <input
                   type="text"
                   placeholder="설명"
                   value={newCard.description}
-                  onChange={(e) => setNewCard({ ...newCard, description: e.target.value })}
+                  onChange={(e) =>
+                    setNewCard({ ...newCard, description: e.target.value })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                 />
                 <div className="flex gap-2">
@@ -214,12 +242,16 @@ const GeneralSettings = () => {
                     type="text"
                     placeholder="아이콘 (이모지)"
                     value={newCard.icon}
-                    onChange={(e) => setNewCard({ ...newCard, icon: e.target.value })}
+                    onChange={(e) =>
+                      setNewCard({ ...newCard, icon: e.target.value })
+                    }
                     className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
                   />
                   <select
                     value={newCard.color}
-                    onChange={(e) => setNewCard({ ...newCard, color: e.target.value })}
+                    onChange={(e) =>
+                      setNewCard({ ...newCard, color: e.target.value })
+                    }
                     className="border border-gray-300 rounded px-3 py-2 text-sm"
                   >
                     <option value="blue">파랑</option>
@@ -234,7 +266,9 @@ const GeneralSettings = () => {
                   type="text"
                   placeholder="경로 (예: /Dashboard/settings)"
                   value={newCard.path}
-                  onChange={(e) => setNewCard({ ...newCard, path: e.target.value })}
+                  onChange={(e) =>
+                    setNewCard({ ...newCard, path: e.target.value })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
                 />
                 <div className="flex gap-2">
@@ -258,7 +292,8 @@ const GeneralSettings = () => {
         {editQuickSettings && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              💡 편집 모드: 카드를 클릭하여 삭제하거나 "+ 추가" 버튼으로 새 카드를 만들 수 있습니다.
+              💡 편집 모드: 카드를 클릭하여 삭제하거나 "+ 추가" 버튼으로 새
+              카드를 만들 수 있습니다.
             </p>
           </div>
         )}
@@ -352,7 +387,6 @@ const GeneralSettings = () => {
         <p className="text-gray-600 mt-1">시스템의 모든 설정을 관리합니다.</p>
       </div>
 
-      {/* 탭 네비게이션 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => (
@@ -372,11 +406,8 @@ const GeneralSettings = () => {
         </div>
       </div>
 
-      {/* 탭 콘텐츠 */}
       <div className="bg-white rounded-lg shadow-md mt-6">
-        <div className="p-4 sm:p-6">
-          {renderTabContent()}
-        </div>
+        <div className="p-4 sm:p-6">{renderTabContent()}</div>
       </div>
     </div>
   );

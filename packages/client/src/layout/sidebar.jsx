@@ -1,3 +1,4 @@
+// src/layout/sidebar.jsx
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';
@@ -58,14 +59,12 @@ const menuItems = [
   { path: '/Dashboard/settings', label: '설정', roles: ['admin'] },
 ];
 
-// 사용자 역할을 한국어 문자열로 매핑한 객체입니다.
 const roleToKorean = {
   admin: '관리자',
   manager: '매니저',
   staff: '직원',
 };
 
-// Sidebar 컴포넌트 정의
 const Sidebar = ({ role = 'admin', name = '홍길동', onOpenNotice }) => {
   const location = useLocation();
   const navigate = useNavigate();

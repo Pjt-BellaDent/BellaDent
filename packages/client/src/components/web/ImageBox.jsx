@@ -1,3 +1,4 @@
+// src/components/web/ImageBox.jsx
 import React from 'react';
 
 function ImageBox({ images, CN, CCN, setThumbnail }) {

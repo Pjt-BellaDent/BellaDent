@@ -1,3 +1,4 @@
+// src/components/app/settings/UserPermission.jsx
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../libs/axiosInstance.js';
 
@@ -9,10 +10,14 @@ const UserPermission = () => {
   const [keyword, setKeyword] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState('추가');
-  const [formData, setFormData] = useState({ name: '', role: '', email: '', phone: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    email: '',
+    phone: '',
+  });
   const [saving, setSaving] = useState(false);
 
-  // 사용자 목록 조회
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -31,9 +36,11 @@ const UserPermission = () => {
     fetchUsers();
   }, []);
 
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     if (filterKey === '전체') {
-      return Object.values(user).some(value => String(value).includes(keyword));
+      return Object.values(user).some((value) =>
+        String(value).includes(keyword)
+      );
     }
     return String(user[filterKey] || '').includes(keyword);
   });
@@ -44,7 +51,7 @@ const UserPermission = () => {
       name: target.name || '',
       role: target.role || '',
       email: target.email || '',
-      phone: target.phone || ''
+      phone: target.phone || '',
     });
     setShowForm(true);
   };
@@ -53,7 +60,7 @@ const UserPermission = () => {
     if (window.confirm(`${target.name} 사용자를 삭제하시겠습니까?`)) {
       try {
         await axiosInstance.delete(`/users/${target.id}`);
-        await fetchUsers(); // 목록 새로고침
+        await fetchUsers();
       } catch (err) {
         console.error('사용자 삭제 실패:', err);
         alert('사용자 삭제에 실패했습니다.');
@@ -69,15 +76,14 @@ const UserPermission = () => {
 
     try {
       setSaving(true);
-      
+
       if (formMode === '추가') {
         await axiosInstance.post('/users/staff', formData);
       } else {
-        // 수정 시에는 기존 사용자 ID가 필요하므로, 현재는 새로고침으로 처리
         await axiosInstance.put(`/users/staff/${formData.id}`, formData);
       }
-      
-      await fetchUsers(); // 목록 새로고침
+
+      await fetchUsers();
       setShowForm(false);
       setFormData({ name: '', role: '', email: '', phone: '' });
     } catch (err) {
@@ -123,7 +129,7 @@ const UserPermission = () => {
           <select
             className="border rounded px-3 py-2"
             value={filterKey}
-            onChange={e => setFilterKey(e.target.value)}
+            onChange={(e) => setFilterKey(e.target.value)}
           >
             <option>전체</option>
             <option value="name">이름</option>
@@ -135,7 +141,7 @@ const UserPermission = () => {
             className="border rounded px-3 py-2"
             placeholder="검색어 입력"
             value={keyword}
-            onChange={e => setKeyword(e.target.value)}
+            onChange={(e) => setKeyword(e.target.value)}
           />
         </div>
         <button
@@ -172,11 +178,15 @@ const UserPermission = () => {
                   <button
                     className="px-2 py-1 text-white bg-blue-500 rounded mr-1 hover:bg-blue-600"
                     onClick={() => handleEdit(user)}
-                  >수정</button>
+                  >
+                    수정
+                  </button>
                   <button
                     className="px-2 py-1 text-white bg-red-500 rounded hover:bg-red-600"
                     onClick={() => handleDelete(user)}
-                  >삭제</button>
+                  >
+                    삭제
+                  </button>
                 </td>
               </tr>
             ))}
@@ -191,24 +201,32 @@ const UserPermission = () => {
             <input
               placeholder="이름"
               value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               className="border rounded px-3 py-2"
             />
             <input
               placeholder="이메일"
               value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               className="border rounded px-3 py-2"
             />
             <input
               placeholder="연락처"
               value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               className="border rounded px-3 py-2"
             />
             <select
               value={formData.role}
-              onChange={e => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, role: e.target.value })
+              }
               className="border rounded px-3 py-2"
             >
               <option value="">권한 선택</option>

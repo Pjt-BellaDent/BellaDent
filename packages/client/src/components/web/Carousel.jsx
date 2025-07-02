@@ -1,3 +1,4 @@
+// src/components/web/Carousel.jsx
 import { useState, useEffect } from 'react';
 
 function Carousel({ images, CN }) {

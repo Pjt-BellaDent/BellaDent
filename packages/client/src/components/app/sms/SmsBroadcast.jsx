@@ -1,3 +1,4 @@
+// src/components/app/sms/SmsBroadcast.jsx
 import React, { useState, useEffect } from 'react';
 import axios from '../../../libs/axiosInstance.js';
 import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
@@ -17,10 +18,8 @@ const SmsBroadcast = () => {
   const [sendPhoneLoading, setSendPhoneLoading] = useState(true);
   const [sendPhoneError, setSendPhoneError] = useState(null);
 
-  // ★★★ 추가된 상태: 광고 메시지 체크박스 상태 ★★★
   const [isAdMessage, setIsAdMessage] = useState(false);
 
-  // 광고 메시지 기본 템플릿
   const AD_MESSAGE_TEMPLATE = '(광고) 안녕하세요 BellaDent 치과입니다!';
 
   useEffect(() => {
@@ -62,7 +61,6 @@ const SmsBroadcast = () => {
     fetchSendingNumber();
   }, [userToken]);
 
-  // 이름으로 환자 정보를 검색하는 함수
   const searchPatientsByName = async () => {
     if (!searchTerm.trim()) {
       alert('검색할 이름을 입력해주세요.');
@@ -124,14 +122,12 @@ const SmsBroadcast = () => {
     setSelectedRecipients((prev) => prev.filter((p) => p.id !== patientId));
   };
 
-  // ★★★ isAdMessage 상태에 따라 메시지 내용 변경 핸들러 ★★★
   const handleAdCheckboxChange = (e) => {
     const checked = e.target.checked;
     setIsAdMessage(checked);
     if (checked) {
       setMessage(AD_MESSAGE_TEMPLATE);
     } else {
-      // 체크 해제 시 광고 문구 제거 (기존 메시지에 광고 문구가 있다면)
       if (message.startsWith(AD_MESSAGE_TEMPLATE)) {
         setMessage('');
       }
@@ -162,12 +158,12 @@ const SmsBroadcast = () => {
 
       const smsData = {
         senderId: 'admin',
-        smsLogType: isAdMessage ? '광고' : '진료알림', // ★★★ isAdMessage 상태 사용 ★★★
+        smsLogType: isAdMessage ? '광고' : '진료알림',
         destId: destIds,
         dest_phone: destPhones,
         send_phone: sendingPhone,
         msg_body: message,
-        msg_ad: isAdMessage ? 'Y' : 'N', // ★★★ isAdMessage 상태 사용 ★★★
+        msg_ad: isAdMessage ? 'Y' : 'N',
       };
 
       const response = await axios.post('/sms/send', smsData);
@@ -179,7 +175,7 @@ const SmsBroadcast = () => {
         setPatients([]);
         setSearchExecuted(false);
         setSearchTerm('');
-        setIsAdMessage(false); // ★★★ 발송 후 광고 체크박스 초기화 ★★★
+        setIsAdMessage(false);
       } else {
         alert(
           '발송 실패: ' +
@@ -199,7 +195,6 @@ const SmsBroadcast = () => {
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       <h2 className="text-2xl font-semibold mb-5 text-gray-800">sms 발송</h2>
 
-      {/* ★★★ 광고 보내기 체크박스로 변경 ★★★ */}
       <div className="mb-5 flex items-center">
         <input
           type="checkbox"
@@ -213,7 +208,6 @@ const SmsBroadcast = () => {
         </label>
       </div>
 
-      {/* 발신번호 표시 */}
       <div className="mb-5 text-gray-700">
         <span className="font-semibold">발신번호: </span>
         {sendPhoneLoading ? (
@@ -388,7 +382,6 @@ const SmsBroadcast = () => {
         onChange={(e) => {
           const newValue = e.target.value.slice(0, 80);
           setMessage(newValue);
-          // 사용자가 직접 메시지를 수정하면 광고 체크박스 해제 (선택 사항)
           if (isAdMessage && !newValue.startsWith(AD_MESSAGE_TEMPLATE)) {
             setIsAdMessage(false);
           }
@@ -406,7 +399,7 @@ const SmsBroadcast = () => {
         <button
           onClick={() => {
             setMessage('');
-            setIsAdMessage(false); // ★★★ 초기화 버튼 클릭 시 광고 체크박스도 해제 ★★★
+            setIsAdMessage(false);
           }}
           className="px-5 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-opacity-50"
         >

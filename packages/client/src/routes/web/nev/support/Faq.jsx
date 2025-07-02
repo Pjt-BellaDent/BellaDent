@@ -1,4 +1,3 @@
-// src/routes/web/nev/support/Faq.jsx
 import React, { useState, useEffect } from 'react';
 import axios from '../../../../libs/axiosInstance.js';
 

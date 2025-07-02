@@ -1,19 +1,31 @@
+// src/components/app/StaffSchedule/ScheduleList.jsx
 import React from 'react';
 
-const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdit, filterStaffId }) => {
+const ScheduleList = ({
+  selectedDate,
+  scheduleData,
+  onDelete,
+  onOpenPopup,
+  onEdit,
+  filterStaffId,
+}) => {
   if (!selectedDate) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6 h-full flex items-center justify-center">
-        <h4 className="text-gray-500 text-center">📅 날짜를 클릭해 스케줄을 확인하세요.</h4>
+        <h4 className="text-gray-500 text-center">
+          📅 날짜를 클릭해 스케줄을 확인하세요.
+        </h4>
       </div>
     );
   }
 
-  const key = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+  const key = `${selectedDate.getFullYear()}-${String(
+    selectedDate.getMonth() + 1
+  ).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
   let list = scheduleData[key] || [];
 
   if (filterStaffId !== '전체') {
-    list = list.filter(e => (e.uid === filterStaffId));
+    list = list.filter((e) => e.uid === filterStaffId);
   }
 
   return (
@@ -29,23 +41,31 @@ const ScheduleList = ({ selectedDate, scheduleData, onDelete, onOpenPopup, onEdi
       </div>
 
       {list.length === 0 ? (
-        <p className="text-gray-500 text-center py-4">등록된 스케줄이 없습니다.</p>
+        <p className="text-gray-500 text-center py-4">
+          등록된 스케줄이 없습니다.
+        </p>
       ) : (
         <div className="space-y-3">
           {list.map((item) => (
-            <div key={item.uid} className="flex justify-between items-start bg-gray-50 rounded-lg p-4 hover:bg-gray-100">
+            <div
+              key={item.uid}
+              className="flex justify-between items-start bg-gray-50 rounded-lg p-4 hover:bg-gray-100"
+            >
               <div>
                 <p className="text-gray-900">
-                  <span className="font-semibold">{item.position}</span> {item.name}
+                  <span className="font-semibold">{item.position}</span>{' '}
+                  {item.name}
                   {item.startTime && item.endTime && (
-                    <span className="mx-2 text-blue-600">{item.startTime}~{item.endTime}</span>
+                    <span className="mx-2 text-blue-600">
+                      {item.startTime}~{item.endTime}
+                    </span>
                   )}
-                  {item.off && <span className="ml-2 text-red-500">🌙 휴무</span>}
+                  {item.off && (
+                    <span className="ml-2 text-red-500">🌙 휴무</span>
+                  )}
                 </p>
                 {item.memo && (
-                  <p className="text-gray-600 mt-1 text-sm">
-                    📝 {item.memo}
-                  </p>
+                  <p className="text-gray-600 mt-1 text-sm">📝 {item.memo}</p>
                 )}
               </div>
               <div className="flex gap-2">

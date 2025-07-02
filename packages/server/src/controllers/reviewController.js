@@ -1,9 +1,9 @@
+// src/controllers/reviewController.js
 import { db, bucket } from "../config/firebase.js";
 import { v4 as uuidv4 } from "uuid";
 import { reviewSchema, updateReviewSchema } from "../models/review.js";
 import { Timestamp } from "firebase-admin/firestore";
 
-// 후기 등록
 export const createReview = async (req, res) => {
   const files = req.files || {};
   const { value, error } = reviewSchema.validate(req.body, {
@@ -43,8 +43,8 @@ export const createReview = async (req, res) => {
       title: value.title,
       content: value.content,
       authorId: value.authorId,
-      isPublic: value.isPublic, // Joi 스키마의 default(true)를 따름
-      approved: value.approved, // Joi 스키마의 default(true)를 따름
+      isPublic: value.isPublic,
+      approved: value.approved,
       imageUrls,
       createdAt: now,
       updatedAt: now,
@@ -57,7 +57,6 @@ export const createReview = async (req, res) => {
   }
 };
 
-// 전체 후기 조회
 export const readAllReviews = async (req, res) => {
   try {
     const reviewsDoc = await db
@@ -90,7 +89,7 @@ export const readAllReviews = async (req, res) => {
         return {
           id: doc.id,
           title: data.title || "제목 없음",
-          content: data.content, // ★★★ data.content로 직접 접근 ★★★
+          content: data.content,
           authorId: data.authorId,
           authorName: authorName,
           imageUrls: data.imageUrls || [],
@@ -117,7 +116,6 @@ export const readAllReviews = async (req, res) => {
   }
 };
 
-// 후기 목록 조회 (작성자 ID)
 export const readReviewsByAuthorId = async (req, res) => {
   const authorId = req.params.id;
 
@@ -153,7 +151,7 @@ export const readReviewsByAuthorId = async (req, res) => {
         return {
           id: doc.id,
           title: data.title || "제목 없음",
-          content: data.content, // ★★★ data.content로 직접 접근 ★★★
+          content: data.content,
           authorId: data.authorId,
           authorName: authorName,
           imageUrls: data.imageUrls || [],
@@ -181,7 +179,6 @@ export const readReviewsByAuthorId = async (req, res) => {
   }
 };
 
-// 단일 후기 조회 (Review ID)
 export const readSingleReviewById = async (req, res) => {
   const reviewId = req.params.id;
 
@@ -217,7 +214,7 @@ export const readSingleReviewById = async (req, res) => {
     const formattedReview = {
       id: reviewDoc.id,
       title: data.title || "제목 없음",
-      content: data.content, // ★★★ data.content로 직접 접근 ★★★
+      content: data.content,
       authorId: data.authorId,
       authorName: authorName,
       imageUrls: data.imageUrls || [],
@@ -227,7 +224,6 @@ export const readSingleReviewById = async (req, res) => {
       updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
     };
 
-    // ★★★ { review: formattedReview, message: ... } 대신 formattedReview 자체를 반환 ★★★
     res.status(200).json(formattedReview);
   } catch (err) {
     console.error("readSingleReviewById 에러:", err);
@@ -235,7 +231,6 @@ export const readSingleReviewById = async (req, res) => {
   }
 };
 
-// 비활성화 후기 목록 조회 (by authorId)
 export const readDisabledReviewsByAuthorId = async (req, res) => {
   const authorId = req.params.id;
 
@@ -244,7 +239,7 @@ export const readDisabledReviewsByAuthorId = async (req, res) => {
       .collection("reviews")
       .where("authorId", "==", authorId)
       .where("isPublic", "==", false)
-      .orderBy("createdAt", "desc") // 정렬 기준 포함. 인덱스 필요
+      .orderBy("createdAt", "desc")
       .get();
 
     const disabledReviews = await Promise.all(
@@ -272,7 +267,7 @@ export const readDisabledReviewsByAuthorId = async (req, res) => {
         return {
           id: doc.id,
           title: data.title || "제목 없음",
-          content: data.content, // ★★★ data.content로 직접 접근 ★★★
+          content: data.content,
           authorId: data.authorId,
           authorName: authorName,
           imageUrls: data.imageUrls || [],
@@ -294,7 +289,6 @@ export const readDisabledReviewsByAuthorId = async (req, res) => {
   }
 };
 
-// 승인 대기 후기 목록 조회
 export const readPendingReviews = async (req, res) => {
   try {
     const pendingReviewsData = await db
@@ -328,7 +322,7 @@ export const readPendingReviews = async (req, res) => {
         return {
           id: doc.id,
           title: data.title || "제목 없음",
-          content: data.content, // ★★★ data.content로 직접 접근 ★★★
+          content: data.content,
           authorId: data.authorId,
           authorName: authorName,
           imageUrls: data.imageUrls || [],
@@ -356,7 +350,6 @@ export const readPendingReviews = async (req, res) => {
   }
 };
 
-// 후기 수정
 export const updateReview = async (req, res) => {
   const reviewId = req.params.id;
   const files = req.files || {};
@@ -413,10 +406,9 @@ export const updateReview = async (req, res) => {
       newImageUrls.push(publicUrl);
     }
 
-    // ★★★ 'content' 필드를 업데이트 ★★★
     await docRef.update({
       title: value.title,
-      content: value.content, // 'content' 필드를 업데이트
+      content: value.content,
       imageUrls: [...remainingImageUrls, ...newImageUrls],
       updatedAt: now,
     });
@@ -428,7 +420,6 @@ export const updateReview = async (req, res) => {
   }
 };
 
-// 후기 활성화 승인 요청
 export const requestReapproval = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -453,7 +444,6 @@ export const requestReapproval = async (req, res) => {
   }
 };
 
-// 후기 활성화
 export const enableReview = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -479,7 +469,6 @@ export const enableReview = async (req, res) => {
   }
 };
 
-// 후기 비활성화
 export const disabledReview = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -504,7 +493,6 @@ export const disabledReview = async (req, res) => {
   }
 };
 
-// 후기 삭제
 export const deleteReview = async (req, res) => {
   try {
     const reviewId = req.params.id;
@@ -518,24 +506,21 @@ export const deleteReview = async (req, res) => {
     const data = doc.data();
 
     if (req.user.uid !== data.authorId && req.user.role !== "admin") {
-      // req.user.role은 roleCheck 미들웨어에서 추가되어야 함
       return res
         .status(403)
         .json({ message: "자신이 작성한 후기만 삭제할 수 있습니다." });
     }
-    
+
     const imageUrls = data.imageUrls || [];
 
-    // 1. Storage 이미지 삭제
     for (const url of imageUrls) {
       const fileName = decodeURIComponent(url.split("/").pop());
       await bucket
         .file(fileName)
         .delete()
-        .catch(() => {}); // 실패해도 진행
+        .catch(() => {});
     }
 
-    // 2. Firestore 문서 삭제
     await docRef.delete();
 
     res.status(204).json({ message: "치료 후기 삭제 성공" });

@@ -1,3 +1,4 @@
+// src/components/web/RowBox.jsx
 import React from 'react';
 
 function RowBox({ children, CN }) {
