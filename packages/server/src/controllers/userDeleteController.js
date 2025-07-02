@@ -1,10 +1,10 @@
+// src/controllers/userDeleteController.js
 import { db, auth } from "../config/firebase.js";
 
 export const deleteUser = async (req, res) => {
   const paramsId = req.params.id;
 
   try {
-    // Firestore에서 수정 대상 사용자의 현재 정보 및 역할을 조회
     const userDocRef = db.collection("users").doc(paramsId);
     const userDoc = await userDocRef.get();
 
@@ -15,16 +15,14 @@ export const deleteUser = async (req, res) => {
     }
 
     const existingUserData = userDoc.data();
-    const userRole = existingUserData.role; // 현재 사용자의 역할
+    const userRole = existingUserData.role;
 
-    // ** 1. Firebase Authentication 사용자 계정 삭제 **
     await auth.deleteUser(paramsId);
 
-    // ** 2. Firestore 문서 삭제 **
-    const batch = db.batch(); // Batch 인스턴스 생성
+    const batch = db.batch();
 
     const userInfoDelete = db.collection("users").doc(paramsId);
-    batch.delete(userInfoDelete); // 사용자 공통 정보 문서 삭제
+    batch.delete(userInfoDelete);
 
     if (userRole === "patient") {
       const patientInfoDelete = db
@@ -32,7 +30,7 @@ export const deleteUser = async (req, res) => {
         .doc(paramsId)
         .collection("patients")
         .doc(paramsId);
-      batch.delete(patientInfoDelete); // 환자 정보 문서 삭제
+      batch.delete(patientInfoDelete);
     }
 
     if (["staff", "manager", "admin"].includes(userRole)) {
@@ -41,7 +39,7 @@ export const deleteUser = async (req, res) => {
         .doc(paramsId)
         .collection("staffs")
         .doc(paramsId);
-      batch.delete(staffInfoDelete); // 직원 정보 문서 삭제
+      batch.delete(staffInfoDelete);
     }
 
     await batch.commit();

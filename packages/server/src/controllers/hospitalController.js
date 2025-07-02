@@ -1,3 +1,4 @@
+// src/controllers/hospitalController.js
 import { db } from '../config/firebase.js';
 import * as admin from 'firebase-admin';
 
@@ -21,7 +22,6 @@ export const updateHospitalInfo = async (req, res) => {
     const docRef = db.doc(HOSPITAL_DOC);
     const updateData = { ...req.body };
 
-    // isChatEnabled 필드가 요청에 포함된 경우, 명시적으로 boolean으로 변환
     if (updateData.isChatEnabled !== undefined) {
       updateData.isChatEnabled = Boolean(updateData.isChatEnabled);
     }

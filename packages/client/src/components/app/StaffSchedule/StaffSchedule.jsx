@@ -1,3 +1,4 @@
+// src/components/app/StaffSchedule/StaffSchedule.jsx 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ScheduleCalendar from './ScheduleCalendar';
@@ -23,7 +24,10 @@ const StaffSchedule = () => {
   const navigate = useNavigate();
 
   const formatKey = (date) =>
-    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(date.getDate()).padStart(2, '0')}`;
 
   const changeMonth = (delta) => {
     const newDate = new Date(currentDate);
@@ -34,7 +38,9 @@ const StaffSchedule = () => {
   const loadSchedules = async () => {
     setLoading(true);
     try {
-      const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      const month = `${currentDate.getFullYear()}-${String(
+        currentDate.getMonth() + 1
+      ).padStart(2, '0')}`;
       const data = await fetchSchedulesByMonth(month);
       const grouped = {};
       data.forEach((d) => {
@@ -48,7 +54,7 @@ const StaffSchedule = () => {
       });
       setScheduleData(grouped);
     } catch (err) {
-      console.error("스케줄 불러오기 실패:", err);
+      console.error('스케줄 불러오기 실패:', err);
     } finally {
       setLoading(false);
     }
@@ -62,12 +68,14 @@ const StaffSchedule = () => {
     const loadStaff = async () => {
       try {
         const staff = await fetchAllStaff();
-        setStaffList(staff.map(s => ({
-          ...s,
-          uid: s.uid || s.id || s.staffId,
-          position: s.position || s.staffInfo?.position || '',
-          department: s.department || s.staffInfo?.department || '',
-        })));
+        setStaffList(
+          staff.map((s) => ({
+            ...s,
+            uid: s.uid || s.id || s.staffId,
+            position: s.position || s.staffInfo?.position || '',
+            department: s.department || s.staffInfo?.department || '',
+          }))
+        );
       } catch (error) {
         console.error('직원 목록 로드 실패:', error);
         setStaffList([]);
@@ -102,8 +110,8 @@ const StaffSchedule = () => {
       setEditData(null);
       loadSchedules();
     } catch (error) {
-      console.error("스케줄 저장 실패:", error);
-      alert("스케줄 저장에 실패했습니다. 다시 시도해주세요.");
+      console.error('스케줄 저장 실패:', error);
+      alert('스케줄 저장에 실패했습니다. 다시 시도해주세요.');
     }
   };
 

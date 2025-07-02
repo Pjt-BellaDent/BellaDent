@@ -1,20 +1,14 @@
 // client/src/libs/axiosInstance.js
-import axios from "axios";
+import axios from 'axios';
 
 const instance = axios.create({
-
-  // PRODUCTION URL
-  // baseURL: import.meta.env.VITE_API_URL, 
-
-  // DEVELOPMENT URL
-  baseURL: import.meta.env.VITE_DEVELOP_URL, 
-
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
 
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("userToken");
+    const token = localStorage.getItem('userToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,8 +21,8 @@ instance.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401 || err.response?.status === 403) {
-      localStorage.removeItem("userToken");
-      window.location.href = "/login";
+      localStorage.removeItem('userToken');
+      window.location.href = '/login';
     }
     return Promise.reject(err);
   }

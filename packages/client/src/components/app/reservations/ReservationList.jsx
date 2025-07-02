@@ -1,4 +1,4 @@
-// ReservationList.jsx (Tailwind 버전)
+// src/components/app/reservations/ReservationList.jsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReservationModal from './ReservationModal';
@@ -22,7 +22,10 @@ const ReservationList = () => {
 
   const getCurrentMonth = () => {
     const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}`;
   };
 
   const fetchReservations = async () => {
@@ -44,13 +47,12 @@ const ReservationList = () => {
     fetchReservations();
   }, []);
 
-  const filtered = reservations.filter(r => {
+  const filtered = reservations.filter((r) => {
     const matchText =
       (r.name && r.name.includes(search)) ||
       (r.department && r.department.includes(search));
     const matchDateRange =
-      (!startDate || r.date >= startDate) &&
-      (!endDate || r.date <= endDate);
+      (!startDate || r.date >= startDate) && (!endDate || r.date <= endDate);
 
     return matchText && matchDateRange;
   });
@@ -87,9 +89,13 @@ const ReservationList = () => {
     }
   };
 
-  // 전체 예약 삭제 함수
   const handleDeleteAll = async () => {
-    if (!window.confirm('정말 모든 예약을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    if (
+      !window.confirm(
+        '정말 모든 예약을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'
+      )
+    )
+      return;
     setLoading(true);
     try {
       for (const r of reservations) {
@@ -108,7 +114,6 @@ const ReservationList = () => {
 
   return (
     <div className="min-h-screen bg-[#f7fafd] font-sans">
-      {/* 상단 고정 헤더 */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 flex items-center justify-between px-6 py-4 shadow-sm">
         <div className="flex items-center gap-4">
           <button
@@ -140,7 +145,6 @@ const ReservationList = () => {
         </div>
       </div>
 
-      {/* 필터/검색 영역 */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-6 py-4 bg-white border-b border-gray-100">
         <div className="flex flex-wrap gap-2 items-center">
           <label className="text-gray-700 font-medium">기간</label>
@@ -168,44 +172,91 @@ const ReservationList = () => {
       </div>
 
       {loading ? (
-        <p className="text-center py-10 text-lg text-blue-600 font-semibold">🔄 예약 불러오는 중...</p>
+        <p className="text-center py-10 text-lg text-blue-600 font-semibold">
+          🔄 예약 불러오는 중...
+        </p>
       ) : error ? (
-        <p className="text-center py-10 text-lg text-red-500 font-semibold">⚠️ {error}</p>
+        <p className="text-center py-10 text-lg text-red-500 font-semibold">
+          ⚠️ {error}
+        </p>
       ) : (
         <div className="overflow-x-auto px-2 py-6">
           <table className="min-w-[900px] w-full border-separate border-spacing-0 rounded-lg bg-white shadow text-[15px]">
             <thead>
               <tr className="bg-blue-50 text-blue-700">
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">예약일</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">시간</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">이름</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">생년월일</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">진료과</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">상태</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">메모</th>
-                <th className="px-4 py-3 font-semibold border-b border-gray-200">관리</th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  예약일
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  시간
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  이름
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  생년월일
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  진료과
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  상태
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  메모
+                </th>
+                <th className="px-4 py-3 font-semibold border-b border-gray-200">
+                  관리
+                </th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan="8" className="text-center py-8 text-gray-400">일치하는 예약이 없습니다.</td></tr>
+                <tr>
+                  <td colSpan="8" className="text-center py-8 text-gray-400">
+                    일치하는 예약이 없습니다.
+                  </td>
+                </tr>
               ) : (
                 filtered
-                  .sort((a, b) => (a.date + (a.startTime || '')).localeCompare(b.date + (b.startTime || '')))
+                  .sort((a, b) =>
+                    (a.date + (a.startTime || '')).localeCompare(
+                      b.date + (b.startTime || '')
+                    )
+                  )
                   .map((r, i) => (
-                    <tr key={r.appointmentId || i} className="hover:bg-blue-50 transition">
+                    <tr
+                      key={r.appointmentId || i}
+                      className="hover:bg-blue-50 transition"
+                    >
                       <td className="px-4 py-3 text-center border-b border-gray-100">
-                        {r.date ? (() => {
-                          const [year, month, day] = r.date.split('-');
-                          return `${year}년 ${month}월 ${day}일`;
-                        })() : '-'}
+                        {r.date
+                          ? (() => {
+                              const [year, month, day] = r.date.split('-');
+                              return `${year}년 ${month}월 ${day}일`;
+                            })()
+                          : '-'}
                       </td>
-                      <td className="px-4 py-3 text-center border-b border-gray-100">{(r.startTime && r.endTime) ? `${r.startTime}~${r.endTime}` : '-'}</td>
-                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.name || '-'}</td>
-                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.birth || '-'}</td>
-                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.department || '-'}</td>
-                      <td className="px-4 py-3 text-center border-b border-gray-100">{r.status || '-'}</td>
-                      <td className="px-4 py-3 text-left border-b border-gray-100">{r.memo || '-'}</td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.startTime && r.endTime
+                          ? `${r.startTime}~${r.endTime}`
+                          : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.name || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.birth || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.department || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-center border-b border-gray-100">
+                        {r.status || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-left border-b border-gray-100">
+                        {r.memo || '-'}
+                      </td>
                       <td className="px-4 py-3 text-center border-b border-gray-100">
                         <button
                           className="text-xs bg-yellow-100 text-yellow-800 rounded px-3 py-1 font-semibold mr-2 hover:bg-yellow-200 transition"
@@ -213,11 +264,15 @@ const ReservationList = () => {
                             setEditData(r);
                             setModalOpen(true);
                           }}
-                        >수정</button>
+                        >
+                          수정
+                        </button>
                         <button
                           className="text-xs bg-red-100 text-red-700 rounded px-3 py-1 font-semibold hover:bg-red-200 transition"
                           onClick={() => handleDelete(r.appointmentId)}
-                        >삭제</button>
+                        >
+                          삭제
+                        </button>
                       </td>
                     </tr>
                   ))

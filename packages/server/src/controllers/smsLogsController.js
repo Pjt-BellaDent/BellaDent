@@ -1,4 +1,4 @@
-// controllers/smsLogsController.js
+// src/controllers/smsLogsController.js
 import { smsLogSchema } from "../models/smsLog.js";
 import { db } from "../config/firebase.js";
 import dotenv from "dotenv";
@@ -21,22 +21,18 @@ export const GetSendNumber = async (req, res) => {
     });
     const data = await response.json();
 
-    // ★★★ 외부 SMS API (GetSendNumber) 원본 응답 데이터 로깅은 삭제됨 ★★★
-
     if (
       response.ok &&
       data.content &&
       data.content.sendphones &&
       data.content.sendphones.length > 0
     ) {
-      // 외부 API 응답에서 실제 발신번호 경로: data.content.sendphones 배열의 첫 번째 객체 안에 number 필드
       const sendingNumber = data.content.sendphones[0].number;
 
       if (sendingNumber) {
-        // 클라이언트가 기대하는 { content: { number: '...' } } 형태로 응답 구성
         res.status(200).json({
           message: "발신번호 조회 성공",
-          content: { number: sendingNumber }, // ★★★ 클라이언트의 기대에 맞춰 'content' 키 아래 'number'로 전달 ★★★
+          content: { number: sendingNumber },
         });
       } else {
         console.error(

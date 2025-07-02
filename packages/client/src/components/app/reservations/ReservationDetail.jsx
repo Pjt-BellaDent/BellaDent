@@ -1,3 +1,4 @@
+// src/components/app/reservations/ReservationDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { fetchProceduresByName } from '../../../api/patients';
 

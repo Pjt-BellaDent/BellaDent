@@ -1,17 +1,16 @@
+// src/components/OnsiteRegister.jsx  
 import React, { useState } from 'react';
 import axios from '../libs/axiosInstance.js';
 import Button from './web/Button';
 
-// 현장 접수 시 임시 이메일과 비밀번호를 생성하는 헬퍼 함수
 const generateTemporaryAuth = (phone) => {
   const timestamp = new Date().getTime();
-  // 전화번호가 유효한 경우 전화번호 기반, 그렇지 않으면 타임스탬프 기반
   const base =
     phone && phone.length >= 8
       ? phone.replace(/[^0-9]/g, '').slice(-8)
       : String(timestamp).slice(-8);
-  const email = `temp_${base}@belladent.com`; // 임시 도메인 사용
-  const password = `tempPass${Math.random().toString(36).substring(2, 8)}`; // 강력한 임시 비밀번호
+  const email = `temp_${base}@belladent.com`;
+  const password = `tempPass${Math.random().toString(36).substring(2, 8)}`;
   return { email, password };
 };
 
@@ -22,14 +21,14 @@ const OnsiteRegister = () => {
     gender: '',
     phone: '',
     address: '',
-    email: '', // 이메일 입력 필드 추가
+    email: '',
     insuranceNumber: '',
     allergies: '',
     medications: '',
     memo: '',
   });
 
-  const [patients, setPatients] = useState([]); // 최근 접수된 환자 목록 표시용
+  const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -37,46 +36,39 @@ const OnsiteRegister = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // SMS 발송 함수
-  // destId 인자를 userId로 명확하게 받도록 수정
   const sendSms = async (
     patientPhone,
     patientName,
     patientEmail,
     patientPassword,
-    firebaseUserId // Firebase Auth의 고유 ID인 userId를 받습니다.
+    firebaseUserId
   ) => {
-    // 발신 번호는 현재 컴포넌트에서 동적으로 가져오지 않으므로 하드코딩
-    // 실제 운영 시에는 GetSendNumber API를 통해 가져오는 로직 필요
-    const send_phone = '010-1234-5678'; // 테스트 환경 발신 번호 (백엔드 스키마와 일치해야 함)
+    const send_phone = '010-1234-5678';
 
     if (!userToken) {
       console.error('로그인 정보가 없어 SMS를 발송할 수 없습니다.');
       return;
     }
-    if (!send_phone) {
-      // 발신번호가 없는 경우
+    if (!send_phone) {    
       console.error('발신번호를 불러올 수 없어 SMS를 발송할 수 없습니다.');
       return;
     }
-    // userId가 없으면 SMS를 보내지 않거나 에러를 보고 (중요: userId는 필수)
     if (!firebaseUserId) {
       console.error('Firebase User ID가 없어 SMS를 발송할 수 없습니다.');
       return;
     }
 
-    // 환자에게 보낼 메시지 구성
     const messageBody = `안녕하세요 ${patientName}님!\nBellaDent에 환자로 등록되셨습니다.\n아이디(이메일): ${patientEmail}\n임시 비밀번호: ${patientPassword}\n로그인 후 비밀번호를 변경해주세요.`;
 
     try {
       const smsData = {
-        senderId: 'admin', // 실제 발신 관리자 ID로 대체 필요
-        smsLogType: '진료알림', // 환자 등록 안내는 진료알림으로 분류
-        destId: [firebaseUserId], // ★★★ Firebase Auth의 고유 ID인 userId를 destId로 사용 ★★★
-        dest_phone: [patientPhone], // 수신자 전화번호
+        senderId: 'admin',
+        smsLogType: '진료알림',
+        destId: [firebaseUserId],
+        dest_phone: [patientPhone],
         send_phone: send_phone,
         msg_body: messageBody,
-        msg_ad: 'N', // 광고성 아님
+        msg_ad: 'N',
       };
 
       const response = await axios.post('/sms/send', smsData);
@@ -100,7 +92,6 @@ const OnsiteRegister = () => {
     e.preventDefault();
     setLoading(true);
 
-    // 필수 필드 유효성 검사
     if (
       !formData.name ||
       !formData.birth ||
@@ -115,14 +106,12 @@ const OnsiteRegister = () => {
     let patientEmail = formData.email.trim();
     let patientPassword = '';
 
-    // 이메일이 입력되지 않은 경우 임시 이메일 생성
     if (!patientEmail) {
       const { email, password } = generateTemporaryAuth(formData.phone);
       patientEmail = email;
       patientPassword = password;
       console.log('임시 이메일/비밀번호 생성:', patientEmail, patientPassword);
-    } else {
-      // 이메일이 입력된 경우, 임의의 비밀번호만 생성
+    } else {  
       patientPassword = `tempPass${Math.random().toString(36).substring(2, 8)}`;
       console.log(
         '입력된 이메일 사용, 임시 비밀번호 생성:',
@@ -156,19 +145,13 @@ const OnsiteRegister = () => {
     console.log('최종 제출 payload:', payload);
 
     try {
-      const res = await axios.post(
-        '/users/patient',
-        payload
-      );
+      const res = await axios.post('/users/patient', payload);
 
       if (res.status === 201) {
         alert('현장 접수 및 환자 계정 생성 성공');
 
-        // ★★★ 백엔드 응답에서 userId 추출 (백엔드 수정 필수) ★★★
         const createdUserId = res.data.userId;
 
-        // SMS로 환자 등록 사실 및 계정 정보 안내
-        // destId로 createdUserId를 전달하도록 수정
         sendSms(
           formData.phone,
           formData.name,
@@ -178,7 +161,7 @@ const OnsiteRegister = () => {
         );
 
         setPatients((prev) => [
-          { ...formData, id: createdUserId || Date.now() }, // 응답에 userId가 있다면 사용, 없으면 임시 ID
+          { ...formData, id: createdUserId || Date.now() },
           ...prev,
         ]);
         setFormData({
@@ -187,7 +170,7 @@ const OnsiteRegister = () => {
           gender: '',
           phone: '',
           address: '',
-          email: '', // 이메일 필드 초기화
+          email: '',
           insuranceNumber: '',
           allergies: '',
           medications: '',
@@ -214,7 +197,6 @@ const OnsiteRegister = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
-          {/* 기본 정보 */}
           <div className="mb-5">
             <label
               htmlFor="name"
@@ -317,7 +299,6 @@ const OnsiteRegister = () => {
             />
           </div>
 
-          {/* 진료 관련 정보 */}
           <h3 className="text-xl font-bold mt-10 mb-4 text-center">
             진료 관련 정보
           </h3>

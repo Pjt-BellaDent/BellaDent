@@ -1,3 +1,4 @@
+// src/config/firebase.js
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';

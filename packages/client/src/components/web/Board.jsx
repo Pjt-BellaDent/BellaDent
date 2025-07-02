@@ -1,3 +1,4 @@
+// src/components/web/Board.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import Title from './Title';
 import Text from './Text';

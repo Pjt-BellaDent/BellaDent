@@ -1,3 +1,4 @@
+// src/components/web/Card.jsx
 import React from 'react';
 import ScrollFadeIn from './ScrollFadeIn';
 

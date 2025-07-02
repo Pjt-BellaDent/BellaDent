@@ -1,3 +1,4 @@
+// src/contexts/UserInfoContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import axiosInstance from '../libs/axiosInstance';
@@ -10,10 +11,8 @@ const UserInfoContext = createContext({
   signOutUser: async () => {},
 });
 
-// fetchServerUserInfo 함수는 signIn API가 반환하는 최소 정보만 가져오도록 유지
 const fetchServerUserInfo = async () => {
   try {
-    // signIn API는 현재 { id, role, isActive, name } 등 최소 정보만 반환
     const res = await axiosInstance.post('/users/signIn');
     return res.data.userInfo;
   } catch (fetchError) {
@@ -43,7 +42,6 @@ export const UserInfoProvider = ({ children }) => {
             'Authorization'
           ] = `Bearer ${idToken}`;
 
-          // ★★★ signIn API 호출로 최소 정보만 가져오도록 유지 ★★★
           const serverUserInfo = await fetchServerUserInfo();
           setUserInfo(serverUserInfo);
           setIsLogin(true);

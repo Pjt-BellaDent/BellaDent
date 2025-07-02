@@ -1,3 +1,4 @@
+// src/components/web/ChatForm.jsx
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../../contexts/UserInfoContext.jsx';

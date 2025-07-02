@@ -1,7 +1,7 @@
 // packages/functions/src/index.js
 
-const {onRequest} = require("firebase-functions/v2/https");
-const {defineString} = require("firebase-functions/params");
+const { onRequest } = require("firebase-functions/v2/https");
+const { defineString } = require("firebase-functions/params");
 const cors = require("cors");
 
 // --- Firebase Admin SDK 임포트 및 명시적 초기화 ---
@@ -16,7 +16,7 @@ if (admin.apps.length === 0) {
 // 이 초기화는 함수 인스턴스가 처음 로드될 때 한 번만 실행됩니다.
 
 // --- 필요한 라이브러리 임포트 ---
-const {GoogleGenerativeAI} = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // --- Parameterized Configuration 정의 (API 키) ---
 const geminiApiKey = defineString("GEMINI_API_KEY", {
@@ -25,10 +25,9 @@ const geminiApiKey = defineString("GEMINI_API_KEY", {
     "API key for accessing the Google Gemini API for text generation.",
 });
 
-// --- 함수 정의 ---
 exports.chatWithGemini = onRequest(async (request, response) => {
   // --- CORS 미들웨어 적용 ---
-  cors({origin: "*"})(request, response, async () => {
+  cors({ origin: "*" })(request, response, async () => {
     // 이 안에서는 Admin SDK가 초기화되어 있다고 강하게 가정합니다.
     const db = admin.firestore(); // <-- 이제 여기서 안전하게 인스턴스 가져옵니다.
 
@@ -49,8 +48,8 @@ exports.chatWithGemini = onRequest(async (request, response) => {
         // <<< 이 if 문의 시작 부분이 50번째 줄일 수 있습니다.
         console.error("No message received in request body.");
         response
-            .status(400)
-            .json({error: "Bad Request: 'message' not found in request body."});
+          .status(400)
+          .json({ error: "Bad Request: 'message' not found in request body." });
         return; // 요청 처리를 중단하고 함수 종료
       }
       console.log("Received question:", question);
@@ -79,7 +78,7 @@ exports.chatWithGemini = onRequest(async (request, response) => {
         faqContext = "병원 FAQ 정보가 없습니다.\n";
       }
       console.log(
-          `FAQ Context included in prompt:\n ${faqContext.substring(0, 500)}...`,
+        `FAQ Context included in prompt:\n ${faqContext.substring(0, 500)}...`
       );
 
       // --- 2. Gemini API 클라이언트 및 생성 모델 초기화 ---
@@ -123,8 +122,8 @@ ${faqContext} // Firestore에서 가져온 FAQ 컨텍스트 포함
       console.error("Error during Function execution:", error);
       if (!response.headersSent) {
         response
-            .status(500)
-            .json({error: `Error processing your request: ${error.message}`});
+          .status(500)
+          .json({ error: `Error processing your request: ${error.message}` });
       }
     }
   }); // cors 미들웨어 콜백 끝

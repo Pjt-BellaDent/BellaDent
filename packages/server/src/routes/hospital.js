@@ -1,3 +1,4 @@
+// src/routes/hospital.js
 import express from 'express';
 import { getHospitalInfo, updateHospitalInfo } from '../controllers/hospitalController.js';
 

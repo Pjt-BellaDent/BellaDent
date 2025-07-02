@@ -1,11 +1,10 @@
+// src/api/hospital.js
 import axios from '../libs/axiosInstance.js';
 
-// 병원 정보 조회 API
-export const getHospitalInfo = () => {
+export const getHospitalInfo = async () => {
   return axios.get('/hospital/info');
 };
 
-// 병원 정보 업데이트 API
-export const updateHospitalInfo = (data) => {
-  return axios.put('/hospital/info', data); // 백엔드 명세에 따라 경로 수정 필요
+export const updateHospitalInfo = async (data) => {
+  return axios.put('/hospital/info', data);
 };

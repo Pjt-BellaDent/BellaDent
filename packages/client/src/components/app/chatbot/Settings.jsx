@@ -1,3 +1,4 @@
+// src/components/app/chatbot/Settings.jsx
 import React, {
   useState,
   useEffect,
@@ -16,7 +17,6 @@ import { useHospitalInfo } from '../../../contexts/HospitalContext';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// 모달 컴포넌트 (FAQ 추가/수정용)
 const FaqModal = ({ isOpen, onClose, onSave, faq, isSaving }) => {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -108,7 +108,6 @@ const FaqModal = ({ isOpen, onClose, onSave, faq, isSaving }) => {
   );
 };
 
-// 시간 설정 모달 컴포넌트
 const TimeSettingModal = ({
   isOpen,
   onClose,
@@ -252,7 +251,6 @@ const ChatbotSettings = () => {
   });
   const { hospitalInfo, loading: hospitalLoading } = useHospitalInfo();
 
-  // 시간 설정 관련 상태
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState({ start: '09:00', end: '18:00' });
 
@@ -267,7 +265,6 @@ const ChatbotSettings = () => {
       setAnswerTimeRange(
         res.answerTimeRange || { start: '09:00', end: '18:00' }
       );
-      // 서버에서 받은 시간 설정으로 초기화
       if (res.answerTimeRange) {
         setTimeRange(res.answerTimeRange);
       }
@@ -288,7 +285,7 @@ const ChatbotSettings = () => {
       setIsSaving(true);
       setError(null);
       await updateChatbotSettings(newSettings);
-      await fetchSettings(); // 최신 정보 다시 로드
+      await fetchSettings();
       toast.success('설정이 저장되었습니다.');
     } catch (error) {
       setError('설정 저장에 실패했습니다.');
@@ -311,12 +308,10 @@ const ChatbotSettings = () => {
   const handleSaveFaq = async (data) => {
     let updatedFaqs;
     if (editingFaq) {
-      // 수정
       updatedFaqs = faqs.map((faq) =>
         faq.id === editingFaq.id ? { ...faq, ...data } : faq
       );
     } else {
-      // 추가
       const newFaq = { id: uuidv4(), ...data, isPublic: true };
       updatedFaqs = [...faqs, newFaq];
     }
@@ -372,13 +367,11 @@ const ChatbotSettings = () => {
     setFaqs(newFaqs);
   };
 
-  // 시간 설정 저장
   const handleSaveTimeRange = async (newTimeRange) => {
     await updateSettings({ answerTimeRange: newTimeRange });
-    setIsTimeModalOpen(false); // 저장 후 모달 닫기
+    setIsTimeModalOpen(false);
   };
 
-  // 로딩
   if (isLoading || hospitalLoading)
     return <div className="p-6">로딩 중...</div>;
 
@@ -393,7 +386,6 @@ const ChatbotSettings = () => {
         <h1 className="text-3xl font-bold">AI 챗봇 설정</h1>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* 왼쪽: 질문 설정 */}
         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold">자주 묻는 질문 설정</h2>
@@ -458,7 +450,6 @@ const ChatbotSettings = () => {
           </div>
         </div>
 
-        {/* 오른쪽: 응답 예시 */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">고객에게 보이는 응답 예시</h2>

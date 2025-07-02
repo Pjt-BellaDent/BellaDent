@@ -1,3 +1,4 @@
+// src/components/web/LineImageBanner.jsx
 import React from 'react';
 
 function LineImageBanner({ children, CN, image }) {

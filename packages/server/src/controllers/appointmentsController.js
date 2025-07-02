@@ -1,7 +1,6 @@
 // src/controllers/appointmentsController.js
 import { db } from "../config/firebase.js";
 
-// 오늘의 예약 전체 조회
 export const getTodayAppointments = async (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   try {
@@ -19,7 +18,6 @@ export const getTodayAppointments = async (req, res) => {
   }
 };
 
-// 예약 생성
 export const createAppointment = async (req, res) => {
   try {
     const {
@@ -40,7 +38,6 @@ export const createAppointment = async (req, res) => {
       status,
     } = req.body;
 
-    // --- 👇 기존에 추가했던 로깅 코드는 유지하여 입력 값 확인에는 도움이 되도록 합니다. 👇 ---
     console.log("--- 서버: createAppointment 요청 바디 수신 ---");
     console.log("수신된 req.body:", req.body);
     console.log("주요 필드 값 및 타입 확인:");
@@ -73,7 +70,6 @@ export const createAppointment = async (req, res) => {
     }
     console.log("-------------------------------------------");
 
-    // Firestore 문서에 들어가는 모든 데이터가 정의되었는지 확인합니다.
     const newAppointmentRef = await db.collection("appointments").add({
       name,
       phone,
@@ -82,8 +78,8 @@ export const createAppointment = async (req, res) => {
       date,
       department,
       doctor,
-      doctorUid, // 이 값은 여전히 유효해야 합니다.
-      chairNumber, // 이 값도 여전히 유효해야 합니다.
+      doctorUid,
+      chairNumber,
       title,
       startTime,
       endTime,
@@ -113,7 +109,6 @@ export const updateAppointment = async (req, res) => {
   const payload = req.body;
 
   try {
-    // --- 👇 이 아래에 로깅 코드를 추가하여 입력 값 확인에 도움이 되도록 합니다. 👇 ---
     console.log("--- 서버: updateAppointment 요청 수신 ---");
     console.log(`업데이트 대상 예약 ID: ${id}`);
     console.log("수신된 payload:", payload);
@@ -146,7 +141,6 @@ export const updateAppointment = async (req, res) => {
       }
     }
     console.log("-------------------------------------------");
-    // --- 👆 로깅 코드 추가 끝 👆 ---
 
     const appointmentRef = db.collection("appointments").doc(id);
     await appointmentRef.update(payload);
@@ -161,7 +155,6 @@ export const updateAppointment = async (req, res) => {
   }
 };
 
-// 예약 삭제
 export const deleteAppointment = async (req, res) => {
   const { id } = req.params;
   try {
@@ -172,7 +165,6 @@ export const deleteAppointment = async (req, res) => {
   }
 };
 
-// 특정 환자(이름+생년월일) 전체 예약 조회
 export const getAppointmentsByName = async (req, res) => {
   try {
     const { name, birth } = req.query;
@@ -191,7 +183,6 @@ export const getAppointmentsByName = async (req, res) => {
   }
 };
 
-// 특정 의사의 모든 예약 조회
 export const getAppointmentsByDoctorId = async (req, res) => {
   const { id } = req.params;
   try {
@@ -209,7 +200,6 @@ export const getAppointmentsByDoctorId = async (req, res) => {
   }
 };
 
-// 예약 대시보드/통계 (주간/월간 등은 추가 함수로 분리 권장)
 export const getDashboardStats = async (req, res) => {
   try {
     const stats = {
@@ -223,10 +213,9 @@ export const getDashboardStats = async (req, res) => {
   }
 };
 
-// 월간 예약 조회 (date 필드 기준)
 export const getMonthlyAppointments = async (req, res) => {
   try {
-    const { month } = req.query; // "YYYY-MM" 형식
+    const { month } = req.query;
     if (!month) {
       return res
         .status(400)
@@ -247,12 +236,11 @@ export const getMonthlyAppointments = async (req, res) => {
   }
 };
 
-// 주간 예약 조회 (date 필드 기준)
 export const getWeeklyReservations = async (req, res) => {
   try {
     const today = new Date();
-    const day = today.getDay(); // 요일 (0~6)
-    const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1); // 월요일 날짜 계산
+    const day = today.getDay();
+    const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1);
 
     const monday = new Date(today.setDate(diffToMonday));
     const sunday = new Date(today.setDate(monday.getDate() + 6));

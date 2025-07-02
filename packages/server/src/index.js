@@ -1,4 +1,4 @@
-// backend/index.js (최신 ERD, 라우트/미들웨어 통합)
+// src/index.js
 import http from "http";
 import express from "express";
 import logger from "morgan";
@@ -55,7 +55,6 @@ app.use("/sms", smsLogsRouter);
 app.use("/faqs", faqsRouter);
 app.use("/notices", noticeRoutes);
 
-// ===== 엔티티별 라우트 등록 (최종본) =====
 app.use("/appointments", appointmentsRouter);
 app.use("/procedures", procedureRouter);
 app.use("/staff-schedules", staffSchedulesRouter);
@@ -66,19 +65,12 @@ app.use("/hospital", hospitalRouter);
 app.use("/activities", activitiesRouter);
 app.use("/ai", aiChatRouter);
 
-// ===== 404 핸들러 =====
 app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+  res.status(404).json({ error: "Route not found" });
 });
 
-// development 환경에서 에러 핸들러
 server.listen(port, () => {
-  console.log(`BellaDent app + Socket.IO 실행: http://localhost:${port}`);
+  console.log(
+    `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
+  );
 });
-
-// production 환경에서 에러 핸들러
-// server.listen(port, () => {
-//   console.log(
-//     `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
-//   );
-// });

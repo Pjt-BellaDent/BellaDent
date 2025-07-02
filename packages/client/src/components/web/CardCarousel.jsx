@@ -1,3 +1,4 @@
+// src/components/web/CardCarousel.jsx
 import React from 'react';
 import Carousel from './Carousel';
 

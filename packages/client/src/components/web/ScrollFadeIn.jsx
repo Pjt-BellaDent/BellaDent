@@ -1,3 +1,4 @@
+// src/components/web/ScrollFadeIn.jsx
 import React, { useEffect, useRef, useState } from 'react';
 
 const ScrollFadeIn = ({ children, delay = 0, duration = 0.8 }) => {

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'; // <--- 이 부분을 추가하거나 확인해 주세요.
+// src/components/app/chatbot/Chat.jsx
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axiosInstance from '../../../libs/axiosInstance';
 import { useUserInfo } from '../../../contexts/UserInfoContext.jsx';
 import io from 'socket.io-client';
 
-// 날짜 변환 유틸리티 함수
 const formatMessageDate = (sentAt) => {
   if (!sentAt) return new Date();
   if (typeof sentAt._seconds === 'number') {
@@ -29,17 +29,14 @@ const Chat = () => {
 
   const messages = activeUser ? chatData[activeUser] || [] : [];
 
-  // --- 스크롤을 가장 아래로 이동시키는 함수 ---
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // --- 메시지가 업데이트될 때마다 스크롤 이동 ---
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // --- 1. 상담 목록 가져오기 ---
   const fetchConsultations = useCallback(async () => {
     if (!userToken) return;
     try {
@@ -68,7 +65,6 @@ const Chat = () => {
     }
   }, [userToken, staffUid]);
 
-  // --- 2. 특정 상담방의 초기 메시지 가져오기 ---
   const fetchInitialMessages = useCallback(async () => {
     if (!activeUser || !userToken) return;
     try {
@@ -96,7 +92,6 @@ const Chat = () => {
     }
   }, [activeUser, userToken]);
 
-  // --- 3. Socket.IO 클라이언트 초기화 및 이벤트 등록 ---
   useEffect(() => {
     if (!userToken || !staffUid) {
       if (socketRef.current) {
@@ -129,7 +124,6 @@ const Chat = () => {
 
     newSocket.on('newMessage', (msg) => {
       if (msg && msg.consultationId === activeUserRef.current) {
-        // 메시지 ID로 중복을 체크하여 이미 있으면 추가하지 않음
         setChatData((prev) => {
           const currentMessages = prev[msg.consultationId] || [];
           if (currentMessages.some((m) => m.id === msg.id)) {
@@ -144,7 +138,6 @@ const Chat = () => {
           };
         });
       }
-      // 상담 목록을 새로고침하여 상태(예: 읽음/안읽음)를 업데이트
       fetchConsultations();
     });
 
@@ -160,14 +153,12 @@ const Chat = () => {
     };
   }, [userToken, staffUid, fetchConsultations]);
 
-  // --- 4. userToken이 유효할 때 상담 목록 초기 로드 ---
   useEffect(() => {
     if (userToken) {
       fetchConsultations();
     }
   }, [userToken, fetchConsultations]);
 
-  // --- 5. activeUser 변경 시 (방 조인/나가기 및 메시지 로드) ---
   useEffect(() => {
     activeUserRef.current = activeUser;
 
@@ -197,7 +188,6 @@ const Chat = () => {
     };
   }, [activeUser, fetchInitialMessages, staffUid]);
 
-  // --- 6. 컴포넌트 언마운트 시 또는 activeUser가 명시적으로 null이 될 때의 최종 담당자 해제 ---
   useEffect(() => {
     if (activeUser === null) {
       const previousConsultationId = activeUserRef.current;
@@ -239,13 +229,6 @@ const Chat = () => {
     }
 
     return () => {
-      /*       if (process.env.NODE_ENV === 'development') {
-        console.warn(
-          'Development StrictMode: 언마운트 클린업에서 API 호출 건너뜀.'
-        );
-        return;
-      } */
-
       const lastActiveUser = activeUserRef.current;
       if (lastActiveUser && staffUid && userToken) {
         const currentConsultation = userList.find(
@@ -280,12 +263,10 @@ const Chat = () => {
     };
   }, [activeUser, staffUid, userToken, fetchConsultations, userList]);
 
-  // --- 7. 메시지 입력 필드 변경 핸들러 ---
   const handleInputChange = (e) => {
     setInputText(e.target.value);
   };
 
-  // --- 8. 메시지 전송 핸들러 ---
   const sendMessage = useCallback(async () => {
     const text = inputText.trim();
     if (!text || !activeUser || !staffUid || !userToken) {
@@ -321,45 +302,33 @@ const Chat = () => {
     });
   }, [activeUser, staffUid, userToken, inputText]);
 
-  // --- 9. 상담 목록 클릭 핸들러 (다른 직원 상담중인 경우 접근 차단) ---
   const handleChatClick = useCallback(
     async (consultationId) => {
       if (!staffUid || !userToken) {
         return;
       }
 
-      // 클릭한 상담 정보를 userList에서 찾습니다.
       const clickedConsultation = userList.find((c) => c.id === consultationId);
 
-      // 다른 직원이 담당 중인 상담인지 확인
-      // handlerId가 있고 (null이 아니며), 그 handlerId가 현재 직원(staffUid)의 ID와 다르면
       if (
         clickedConsultation &&
         clickedConsultation.handlerId &&
         clickedConsultation.handlerId !== staffUid
       ) {
-        // AI 챗봇이 담당 중인 경우는 허용 (필요시 AI 담당방은 들어갈 수 있도록)
         if (clickedConsultation.handlerId === 'aiChatBot') {
-          // AI 챗봇 담당방은 들어갈 수 있도록 허용. 단, 여기서는 담당자를 AI에서 나로 변경하는 로직이 필요.
-          // 현재는 AI 답변 완료 상태에서 직원이 재상담하는 시나리오가 아닐 수 있으므로,
-          // 일단 AI 챗봇 담당방도 다른 직원처럼 접근 차단하거나,
-          // 아니면 AI 챗봇 담당방은 자유롭게 들어가서 답변을 이어갈 수 있도록 할 수 있습니다.
-          // 일단은 다른 직원처럼 차단하는 방향으로 하겠습니다.
           console.log(
             `[handleChatClick] AI 챗봇이 담당 중인 상담 ${consultationId}입니다. 접근 차단.`
           );
-          alert(`AI 챗봇이 답변 중인 상담입니다.`); // 사용자에게 알림
+          alert(`AI 챗봇이 답변 중인 상담입니다.`);
           return;
         }
 
         console.log(
           `[handleChatClick] 다른 직원이 담당 중인 상담 ${consultationId}입니다. 접근 차단.`
         );
-        alert(`다른 직원이 상담 중인 채팅방입니다.`); // 사용자에게 알림
-        return; // 접근 차단
+        alert(`다른 직원이 상담 중인 채팅방입니다.`);
       }
 
-      // 이미 활성 상태이거나 같은 상담을 클릭했다면 무시
       if (activeUser === consultationId) {
         console.log(
           `[handleChatClick] 이미 선택된 상담: ${consultationId}. 재선택 무시.`
@@ -372,7 +341,6 @@ const Chat = () => {
       setActiveUser(consultationId);
 
       try {
-        // 이전 상담 담당자 해제 (내가 담당하고 있었다면)
         if (previousActiveUser) {
           const prevConsultation = userList.find(
             (c) => c.id === previousActiveUser
@@ -395,7 +363,6 @@ const Chat = () => {
           }
         }
 
-        // 새로운 상담 담당자 지정
         console.log(
           `[API] 클릭: 새 상담 ${consultationId} 담당자 설정 요청 시작.`
         );
@@ -409,24 +376,23 @@ const Chat = () => {
         );
         console.log(`[API] 클릭: 새 상담 ${consultationId} 담당자 설정 성공.`);
 
-        await fetchConsultations(); // 최종 상담 목록 새로고침
+        await fetchConsultations();
       } catch (error) {
         console.error(
           `[API Error] 담당자 변경 실패:`,
           error.response?.data || error.message
         );
-        setActiveUser(previousActiveUser); // 실패 시 이전 activeUser로 롤백
-        await fetchConsultations(); // 목록 새로고침 (UI 원상복구)
+        setActiveUser(previousActiveUser);
+        await fetchConsultations();
       }
     },
     [activeUser, staffUid, userToken, fetchConsultations, userList]
   );
 
-  let lastDate = ''; // 날짜 구분선 표시를 위한 변수 (return 문 내부에서 초기화되어야 함)
+  let lastDate = '';
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* 상담 목록 섹션 */}
       <div className="w-80 bg-bd-pure-white border-r border-bd-soft-gray-line flex flex-col flex-shrink-0">
         <h3 className="p-4 font-bold m-0 text-bd-charcoal-black flex-shrink-0">
           미답변 상담 목록
@@ -498,7 +464,6 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* 채팅방 섹션 */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="bg-white p-4 font-bold border-b border-bd-soft-gray-line text-bd-charcoal-black flex-shrink-0">
           {activeUser
@@ -508,7 +473,6 @@ const Chat = () => {
             : '상담 선택 대기 중'}
         </div>
 
-        {/* 메시지 목록 부분: flex-1과 overflow-y-auto로 스크롤 가능하게 합니다. */}
         <div className="flex-1 overflow-y-auto p-4 bg-[#e9edf5] flex flex-col">
           {messages.length === 0 && activeUser && (
             <div className="text-center text-bd-cool-gray mt-10">
@@ -548,9 +512,7 @@ const Chat = () => {
             }
 
             return (
-              <React.Fragment key={msg.id || idx}>
-                {' '}
-                {/* key는 React.Fragment에 주는 것이 아니라, 실제 요소에 줘야 합니다. */}
+              <React.Fragment key={msg.id || idx}>      
                 {dateSeparator}
                 <div
                   className={`
@@ -606,7 +568,6 @@ const Chat = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* 메시지 입력 및 전송 섹션 */}
         <div className="flex p-3 border-t border-bd-soft-gray-line bg-white h-16 box-border flex-shrink-0">
           <input
             type="text"

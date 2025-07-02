@@ -1,3 +1,4 @@
+// src/layout/Header.jsx
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUserInfo } from '../contexts/UserInfoContext.jsx';

@@ -1,3 +1,4 @@
+// src/routes/activities.js
 import express from 'express';
 import { getRecentActivities } from '../controllers/activitiesController.js';
 

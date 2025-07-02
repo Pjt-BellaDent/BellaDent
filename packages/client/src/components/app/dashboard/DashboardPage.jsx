@@ -1,3 +1,4 @@
+// src/components/app/dashboard/DashboardPage.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import axios from '../../../libs/axiosInstance.js';
 import Chart from 'chart.js/auto';

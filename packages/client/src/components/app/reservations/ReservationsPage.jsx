@@ -1,3 +1,4 @@
+// src/components/app/reservations/ReservationsPage.jsx
 import React from 'react';
 import ReservationManager from './ReservationManager';
 import { Outlet } from 'react-router-dom';

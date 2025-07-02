@@ -1,3 +1,4 @@
+// src/components/app/settings/HospitalInfo.jsx
 import React, { useState } from 'react';
 import { useHospitalInfo } from '../../../contexts/HospitalContext';
 
@@ -24,12 +25,11 @@ const HospitalInfo = () => {
     homepage: '홈페이지',
   };
 
-  // 진료시간, 진료과목 등 추가 필드
   const openHourFields = {
     weekday: '평일 진료시간',
     saturday: '토요일 진료시간',
     lunch: '점심시간',
-    holiday: '공휴일'
+    holiday: '공휴일',
   };
 
   if (loading) return <div className="p-8">로딩 중...</div>;
@@ -46,7 +46,6 @@ const HospitalInfo = () => {
             </div>
           </div>
         ))}
-        {/* 진료시간 */}
         <div className="mb-4">
           <label className="block font-semibold mb-1">진료시간</label>
           <div className="border border-gray-300 rounded px-3 py-2 bg-gray-50">
@@ -58,7 +57,6 @@ const HospitalInfo = () => {
             ))}
           </div>
         </div>
-        {/* 진료과목 */}
         <div className="mb-4">
           <label className="block font-semibold mb-1">진료과목</label>
           <div className="border border-gray-300 rounded px-3 py-2 bg-gray-50">
@@ -82,12 +80,11 @@ const HospitalInfo = () => {
               <input
                 type="text"
                 value={form[key] || ''}
-                onChange={e => setForm({ ...form, [key]: e.target.value })}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 className="w-full border border-gray-300 rounded px-3 py-2"
               />
             </div>
           ))}
-          {/* 진료시간 입력 */}
           <div className="mb-4">
             <label className="block font-semibold mb-1">진료시간</label>
             {Object.entries(openHourFields).map(([k, v]) => (
@@ -96,25 +93,33 @@ const HospitalInfo = () => {
                 <input
                   type="text"
                   value={form.openHours?.[k] || ''}
-                  onChange={e => setForm({
-                    ...form,
-                    openHours: { ...form.openHours, [k]: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      openHours: { ...form.openHours, [k]: e.target.value },
+                    })
+                  }
                   className="w-40 border border-gray-300 rounded px-2 py-1 ml-2"
                 />
               </div>
             ))}
           </div>
-          {/* 진료과목 입력 */}
           <div className="mb-4">
-            <label className="block font-semibold mb-1">진료과목 (쉼표로 구분)</label>
+            <label className="block font-semibold mb-1">
+              진료과목 (쉼표로 구분)
+            </label>
             <input
               type="text"
               value={(form.departments || []).join(', ')}
-              onChange={e => setForm({
-                ...form,
-                departments: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-              })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  departments: e.target.value
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                })
+              }
               className="w-full border border-gray-300 rounded px-3 py-2"
             />
           </div>

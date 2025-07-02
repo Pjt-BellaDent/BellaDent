@@ -1,3 +1,4 @@
+// src/contexts/StyledContext.jsx
 import { createContext, useState, useContext } from 'react';
 
 const StyledContext = createContext(null);

@@ -1,7 +1,7 @@
+// src/routes/patients.js
 import express from 'express';
 const router = express.Router();
 
-// UI 요구사항에 맞춘 더미 환자 데이터
 const patients = [
   {
     id: 1,
@@ -23,12 +23,10 @@ const patients = [
   }
 ];
 
-// GET /patients - 환자 전체 목록 반환
 router.get('/', (req, res) => {
   res.json(patients);
 });
 
-// DELETE /patients/:id - 환자 삭제 (더미 데이터에서 삭제)
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
   const idx = patients.findIndex(p => String(p.id) === String(id));

@@ -1,7 +1,7 @@
+// src/components/app/reservations/ReservationTimeTable.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addWaitingPatient } from '../../../api/patients'; // addWaitingPatient는 그대로 사용
-import axios from '../../../libs/axiosInstance.js'; // axiosInstance는 그대로 사용
+import { addWaitingPatient } from '../../../api/patients';
 
 const times = ['10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -9,7 +9,7 @@ const isTimeInReservation = (res, time) => {
   if (!res.startTime) return false;
   const idxStart = times.indexOf(res.startTime);
   const idxEnd = res.endTime ? times.indexOf(res.endTime) : idxStart;
-  const idx = times.indexOf(time);
+  const idx = times.indexOf(time); //
   return idx >= idxStart && idx <= idxEnd;
 };
 
@@ -28,7 +28,6 @@ function ReservationTimeTable({
     console.log('1. 접수 시작. Appointment data:', appointment);
 
     if (!appointment.id || !appointment.doctorUid) {
-      // doctorId -> doctorUid로 변경
       alert('예약 정보에 ID 또는 의사 ID가 없습니다. 접수할 수 없습니다.');
       console.error('접수 실패: 예약 정보 부족', appointment);
       return;
@@ -41,8 +40,8 @@ function ReservationTimeTable({
         birth: appointment.birth,
         phone: appointment.phone,
         department: appointment.department,
-        doctorUid: appointment.doctorUid, // doctorId -> doctorUid로 변경
-        patientUid: appointment.patientUid, // userId -> patientUid로 변경
+        doctorUid: appointment.doctorUid,
+        patientUid: appointment.patientUid,
         title: appointment.title,
         status: '대기',
         appointmentId: appointment.id,
@@ -74,9 +73,8 @@ function ReservationTimeTable({
   const dateStr = getDateStr(selectedDate);
 
   const getReservation = (doctorUid, time) => {
-    // doctorId -> doctorUid로 변경
     return events.find((res) => {
-      const doctorMatch = res.doctorUid === doctorUid; // res.doctorId -> res.doctorUid로 변경
+      const doctorMatch = res.doctorUid === doctorUid;
       const timeMatch = isTimeInReservation(res, time);
       return doctorMatch && timeMatch;
     });
@@ -144,7 +142,7 @@ function ReservationTimeTable({
                   {time}
                 </td>
                 {staff.map((doc) => {
-                  const res = getReservation(doc.uid, time); // doc.uid를 doctorUid로 전달
+                  const res = getReservation(doc.uid, time);
                   if (res) {
                     return (
                       <td
@@ -192,7 +190,7 @@ function ReservationTimeTable({
                           date: dateStr,
                           department: doc.department,
                           doctor: doc.name,
-                          doctorUid: doc.uid, // doctorId -> doctorUid로 변경
+                          doctorUid: doc.uid,
                         })
                       }
                     >
@@ -231,7 +229,6 @@ function ReservationTimeTable({
                 {(staff.find((d) => d.uid === detailData.doctorUid) || {})
                   .name || '미지정'}
               </p>{' '}
-              {/* doctorId -> doctorUid로 변경 */}
               <p>
                 <b>시술:</b> {detailData.title}
               </p>

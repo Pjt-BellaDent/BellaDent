@@ -1,3 +1,4 @@
+// src/components/app/reviews/reviews-manager.jsx
 import React, { useState, useEffect } from 'react';
 import axios from '../../../libs/axiosInstance.js';
 
@@ -28,28 +29,24 @@ const FeedbackList = () => {
     fetchReviews();
   }, []);
 
-  // ★★★ 수정된 부분: handleTogglePublicStatus 함수 ★★★
   const handleTogglePublicStatus = async (reviewId, currentIsPublic) => {
     try {
       if (currentIsPublic) {
-        // 현재 isPublic이 true이면 -> 비활성화 (disabledReview 호출)
-        await axios.put(`/reviews/disabled/${reviewId}`); // disabledReview API 호출
+        await axios.put(`/reviews/disabled/${reviewId}`);
       } else {
-        // 현재 isPublic이 false이면 -> 활성화 (enableReview 호출)
-        await axios.put(`/reviews/enable/${reviewId}`); // enableReview API 호출
+        await axios.put(`/reviews/enable/${reviewId}`);
       }
 
-      // API 호출 성공 시 로컬 상태 업데이트
       setReviews((prevReviews) =>
         prevReviews.map((review) => {
           if (review.id === reviewId) {
             const newIsPublic = !currentIsPublic;
-            const newApproved = newIsPublic ? true : review.approved; // 활성화 시 approved도 true로
+            const newApproved = newIsPublic ? true : review.approved;
             return {
               ...review,
               isPublic: newIsPublic,
               approved: newApproved,
-              updatedAt: new Date(), // 업데이트 시간 반영 (필요시)
+              updatedAt: new Date(),
             };
           }
           return review;
@@ -60,7 +57,6 @@ const FeedbackList = () => {
       );
     } catch (err) {
       console.error('공개 상태 변경 실패:', err);
-      // 서버에서 403 (권한 없음) 에러가 올 수도 있으므로, 상세 메시지 전달
       alert(err.response?.data?.message || '공개 상태 변경에 실패했습니다.');
     }
   };
@@ -182,25 +178,23 @@ const FeedbackList = () => {
                     승인 대기 중
                   </span>
                 )}
-                {/* isPublic 상태에 따라 활성/비활성 상태 표시 */}
                 {f.isPublic === true && f.approved === true && (
                   <span className="bg-green-200 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                     활성화
                   </span>
                 )}
-                {f.isPublic === false &&
-                  f.approved === true && ( // 승인되었으나 비공개 상태
-                    <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      비활성화 (관리자)
-                    </span>
-                  )}
+                {f.isPublic === false && f.approved === true && (
+                  <span className="bg-gray-200 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    비활성화 (관리자)
+                  </span>
+                )}
               </div>
               <div className="text-gray-800 text-base">{f.content}</div>
               <div className="text-sm text-gray-500 mt-2">
                 {formatDate(f.createdAt)}
               </div>
 
-              {f.imageUrls?.length > 0 && ( // f.reviewImg 대신 f.imageUrls 사용
+              {f.imageUrls?.length > 0 && (
                 <div className="mt-3 flex gap-2 flex-wrap">
                   {f.imageUrls.map((url, idx) => (
                     <img

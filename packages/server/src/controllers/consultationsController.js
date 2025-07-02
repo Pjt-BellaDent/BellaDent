@@ -1,5 +1,4 @@
-// consultationsController.js
-
+// src/controllers/consultationsController.js
 import axios from "axios";
 import dotenv from "dotenv";
 import { db } from "../config/firebase.js";
@@ -14,13 +13,6 @@ import {
 
 dotenv.config();
 
-/**
- * @function handleValidationError
- * @description Joi 유효성 검사 오류를 처리하고 표준화된 응답을 보냅니다.
- * @param {object} res - Express 응답 객체
- * @param {object} error - Joi 유효성 검사 오류 객체
- * @returns {Response} 400 Bad Request 응답
- */
 const handleValidationError = (
   res,
   error,
@@ -36,13 +28,6 @@ const handleValidationError = (
   });
 };
 
-/**
- * @function createOrAddMessage
- * @description 새로운 상담을 시작하거나 기존 상담에 고객 메시지를 추가합니다.
- * Socket.IO를 통해 새 메시지와 상담 목록 업데이트를 브로드캐스트합니다.
- * @param {object} req - Express 요청 객체 (req.user, req.io 포함)
- * @param {object} res - Express 응답 객체
- */
 export const createOrAddMessage = async (req, res) => {
   const authenticatedUser = req.user;
   const consultationId = authenticatedUser.uid;
@@ -142,12 +127,6 @@ export const createOrAddMessage = async (req, res) => {
   }
 };
 
-/**
- * @function aiChatBotReply
- * @description AI 챗봇의 답변을 생성하고 저장하며, Socket.IO를 통해 브로드캐스트합니다.
- * @param {object} req - Express 요청 객체 (req.user, req.io 포함)
- * @param {object} res - Express 응답 객체
- */
 export const aiChatBotReply = async (req, res) => {
   const authenticatedUser = req.user;
   const consultationId = authenticatedUser.uid;
@@ -293,12 +272,6 @@ export const aiChatBotReply = async (req, res) => {
   }
 };
 
-/**
- * @function staffReply
- * @description 스태프의 답변을 저장하고, Socket.IO를 통해 브로드캐스트합니다.
- * @param {object} req - Express 요청 객체 (req.user, req.io, req.params.id 포함)
- * @param {object} res - Express 응답 객체
- */
 export const staffReply = async (req, res) => {
   const authenticatedUser = req.user;
   const staffId = authenticatedUser.uid;
@@ -553,11 +526,9 @@ export const setConsultationHandler = async (req, res) => {
     console.warn(
       `setConsultationHandler: 요청한 스태프 ID (${staffId})와 handlerId (${handlerId}) 불일치.`
     );
-    return res
-      .status(403)
-      .json({
-        message: "요청한 스태프 ID와 일치하지 않습니다. 권한이 없습니다.",
-      });
+    return res.status(403).json({
+      message: "요청한 스태프 ID와 일치하지 않습니다. 권한이 없습니다.",
+    });
   }
 
   try {
@@ -702,12 +673,7 @@ export const disabledMessage = async (req, res) => {
   }
 };
 
-/**
- * @function deleteConsultation
- * @description 특정 상담과 그 하위의 모든 메시지를 완전히 삭제합니다.
- * @param {object} req - Express 요청 객체 (req.params.id 포함)
- * @param {object} res - Express 응답 객체
- */
+
 export const deleteConsultation = async (req, res) => {
   const consultationId = req.params.id;
   try {
