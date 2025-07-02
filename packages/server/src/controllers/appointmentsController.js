@@ -103,7 +103,6 @@ export const createAppointment = async (req, res) => {
   }
 };
 
-// 예약 수정
 export const updateAppointment = async (req, res) => {
   const { id } = req.params;
   const payload = req.body;

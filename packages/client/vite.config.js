@@ -6,11 +6,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/appointments': 'http://belladent.duckdns.org',
-      '/waiting': 'http://belladent.duckdns.org',
-      '/api': 'http://belladent.duckdns.org',
+      '/appointments': 'http://localhost:3000',
+      '/waiting': 'http://localhost:3000',
+      '/api': 'http://localhost:3000',
       '/socket.io': {
-        target: 'http://belladent.duckdns.org',
+        target: 'http://localhost:3000',
         ws: true,
         changeOrigin: true,
       },

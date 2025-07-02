@@ -70,7 +70,5 @@ app.use((req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(
-    `BellaDent 서버 실행: http://belladent.duckdns.org (포트:${port})`
-  );
+  console.log(`BellaDent app + Socket.IO 실행: http://localhost:${port}`);
 });

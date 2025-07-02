@@ -18,7 +18,6 @@ const router = express.Router();
 router.get("/today", getTodayAppointments);
 router.get("/stats/chart", getDashboardStats);
 router.get("/week", getWeeklyReservations);
-router.get("/available-times", getAvailableTimes);
 
 router.get("/", (req, res, next) => {
   if (req.query.name && req.query.birth) {
