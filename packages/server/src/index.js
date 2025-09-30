@@ -3,7 +3,7 @@ import http from "http";
 import express from "express";
 import logger from "morgan";
 import cors from "cors";
-import cookieParser from "cookie-parser";
+// import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import initSocketServer from "./config/socketServer.js";
 
@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(
   cors({
     origin: [process.env.DEVELOP_URL, process.env.PRODUCTION_URL],
