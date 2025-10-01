@@ -1,6 +1,40 @@
+<style>
+/* PDF 변환을 위한 페이지 설정 */
+@media print {
+    .page-break {
+        page-break-before: always;
+    }
+    
+    /* 주요 섹션들 페이지 분할 */
+    h2 {
+        page-break-before: auto;
+        margin-top: 20px;
+    }
+    
+    /* 이미지와 테이블 페이지 분할 방지 */
+    img, table {
+        page-break-inside: avoid;
+        max-width: 100%;
+    }
+    
+    /* 코드 블록 페이지 분할 방지 */
+    pre, blockquote {
+        page-break-inside: avoid;
+    }
+    
+    /* 마진 조정 */
+    @page {
+        margin: 2cm;
+        size: A4;
+    }
+}
+</style>
+
 # SmileOn (스마일온)
 
 **SmileOn (스마일온)**은 '미소(Smile)'와 '온라인(On)'의 합성어입니다. 환자분들이 언제 어디서든 온라인으로 편리하게 미소를 되찾기 위한 진료 예약 및 상담을 할 수 있도록 돕는 지능형 병원 관리 시스템이라는 의미를 담고 있습니다.
+
+<div class="page-break"></div>
 
 ## 프로젝트 개요 (Overview)
 
@@ -45,6 +79,8 @@
 - **진료 과목**: 일반치과, 교정과, 임플란트, 심미치료
 - **주요 환자층**: 20~50대 성인, 가족, 교정환자
 
+<div class="page-break"></div>
+
 ## 주요 기능 및 구현 내용 (Features & Implementation)
 
 ### 기능 1: 실시간 AI 챗봇 상담 시스템
@@ -61,6 +97,8 @@
 ![AI 챗봇 상담 화면](images/ai-chatbot-demo.JPG)
 *AI 챗봇을 통한 실시간 상담 및 예약 안내 화면*
 
+<div class="page-break"></div>
+
 ### 기능 2: 통합 CRM 대시보드 및 환자 관리
 **상세 설명**: 예약 현황, 환자 정보, 진료 기록, 대기 현황을 실시간으로 모니터링할 수 있는 종합 관리 시스템입니다. Chart.js를 활용한 데이터 시각화로 예약 트렌드와 진료 통계를 직관적으로 제공합니다. 직원 권한에 따라 접근 가능한 기능이 구분되며, 관리자는 모든 기능에 접근 가능합니다.
 
@@ -75,14 +113,22 @@
 ![CRM 대시보드 - 현장 접수](images/crm-dashboard_1.JPG)
 *현장 방문 환자 등록 및 접수 처리*
 
+<div class="page-break"></div>
+
 ![CRM 대시보드 - 환자 목록](images/crm-dashboard_2.JPG)
 *환자 정보 조회 및 관리 테이블*
+
+<div class="page-break"></div>
 
 ![CRM 대시보드 - 예약 관리](images/crm-dashboard_3.JPG)
 *예약 일정 조회 및 관리*
 
+<div class="page-break"></div>
+
 ![CRM 대시보드 - 대기 현황](images/crm-dashboard_4.JPG)
 *실시간 대기 현황 모니터링*
+
+<div class="page-break"></div>
 
 ### 기능 3: 자동화된 SMS 발송 시스템  
 **상세 설명**: SSODAA API를 연동한 자동 SMS 발송 시스템으로 예약 확인, 방문 안내, 광고성 문자를 상황별로 자동 발송합니다. 환자별 맞춤형 메시지 템플릿과 발송 이력 관리 기능을 포함합니다.
@@ -158,6 +204,8 @@
 - 시스템 보안 설정
 - 백업 및 복구 관리
 
+<div class="page-break"></div>
+
 ## 기술 스택 (Tech Stack)
 
 ### Frontend
@@ -188,6 +236,8 @@
 - **Yarn Workspaces**: 모노레포 패키지 관리
 - **ESLint**: 코드 품질 관리
 - **Vite**: 빌드 도구 및 개발 서버
+
+<div class="page-break"></div>
 
 ## 결과 및 성과 (Results & Achievements)
 
@@ -221,9 +271,10 @@
 - **AI 기반 자동화**: 반복적 상담 업무의 AI 자동화로 직원 만족도 향상
 - **확장 가능한 아키텍처**: 모노레포 구조와 Firebase 기반으로 추후 확장 용이성 확보
 
-**시스템 아키텍처 구현**:
+### 시스템 아키텍처 (System Architecture)
+
 ![시스템 아키텍처 실제 구현](images/architecture-implementation.jpg)
-*실제 구현된 SmileOn 시스템 아키텍처와 데이터 플로우*
+*SmileOn 시스템의 실제 구현된 아키텍처와 데이터 플로우*
 
 ### 배운 점 및 향후 계획
 
@@ -244,27 +295,6 @@
    - 예약 최적화 알고리즘
    - 매출 예측 모델
 4. **보안 강화**: 의료 정보 보안 강화 및 HIPAA 컴플라이언스 준수
-
-## 시스템 아키텍처 (System Architecture)
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Frontend      │    │     Backend      │    │    Database     │
-│   (React)       │◄──►│   (Node.js)      │◄──►│   (Firebase)    │
-│                 │    │                  │    │                 │
-│ • Patient Web   │    │ • Express Server │    │ • Firestore     │
-│ • CRM Dashboard │    │ • Socket.IO      │    │ • Authentication│
-│ • Real-time UI  │    │ • API Routes     │    │ • Storage       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                        │
-         │               ┌──────────────────┐             │
-         └──────────────►│  External APIs   │◄────────────┘
-                         │                  │
-                         │ • Gemini AI      │
-                         │ • SSODAA SMS     │
-                         │ • Google Maps    │
-                         └──────────────────┘
-```
 
 ## 프로젝트 구조 (Project Structure)
 
